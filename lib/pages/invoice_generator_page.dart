@@ -1,5 +1,5 @@
 import 'package:amount_input_formatter/amount_input_formatter.dart';
-import 'package:currency_text_input_formatter/currency_text_input_formatter.dart';
+
 import 'package:flutter/material.dart';
 import 'package:moment_dart/moment_dart.dart';
 import 'package:printing/printing.dart';
@@ -49,7 +49,9 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
   String? currentTypeIncomeId = '01';
   TaxPayer? taxPayer;
   TextEditingController description = TextEditingController();
+  TextEditingController issueDateController = TextEditingController();
   TextEditingController retentionDateController = TextEditingController();
+  DateTime issueDate = DateTime.now();
   DateTime? retentionDate;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   AmountInputFormatter amountInputFormatter =
@@ -83,6 +85,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
         widget.sale.clientName = clientName.text;
         widget.sale.retentionDate = retentionDate;
         widget.sale.currencyId = currentCurrencyId;
+        widget.sale.createdAt = issueDate;
 
         widget.sale.rate = 1;
 
@@ -259,7 +262,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
       total,
       retentionIsr,
       retentionTax,
-      (total - (retentionIsr + retentionTax))
+      (total - (retentionIsr + retentionTax)).ceilToDouble()
     ];
   }
 
@@ -335,12 +338,25 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
   _showDatePicker() async {
     var result = await showDatePicker(
         context: context,
-        firstDate: DateTime.now(),
+        firstDate: DateTime.now().subtract(const Duration(days: 365)),
         lastDate: DateTime.now().add(const Duration(days: 365 * 25)));
 
     retentionDate = result;
     retentionDateController.value = TextEditingValue(
         text: retentionDate?.format(payload: 'DD/MM/YYYY') ?? '');
+  }
+
+  _showDatePicker2()async{
+        var result = await showDatePicker(
+        context: context,
+        firstDate: DateTime.now().subtract(const Duration(days: 365)),
+        lastDate: DateTime.now().add(const Duration(days: 365 * 25)));
+
+   if(result != null){
+     issueDate = result;
+    issueDateController.value = TextEditingValue(
+        text: issueDate.format(payload: 'DD/MM/YYYY'));
+   }
   }
 
   bool get isSale {
@@ -351,6 +367,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
     if (widget.sale.amountPaid != null && widget.editing) {
       return (calcs[6] - (widget.sale.amountPaid!));
     }
+  
     return (calcs[6] - (amountInputFormatter.doubleValue));
   }
 
@@ -399,6 +416,13 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
       }
     }
 
+    issueDate = widget.sale.createdAt ?? DateTime.now();
+
+    issueDateController.value = TextEditingValue(
+      text: issueDate.format(payload: 'DD/MM/YYYY')
+    );
+
+
     if (widget.editing) {
       clientName.value = TextEditingValue(text: widget.sale.clientName ?? '');
       rncOrId.value = TextEditingValue(text: widget.sale.clientId ?? '');
@@ -410,6 +434,9 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
       description.value = TextEditingValue(text: widget.sale.description ?? '');
       currentCurrencyId = widget.sale.currencyId;
     }
+
+    
+ 
 
     setState(() {});
     super.initState();
@@ -626,6 +653,20 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                             height: kDefaultPadding,
                           ),
                           TextFormField(
+                            controller: issueDateController,
+                            readOnly: true,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                            decoration: InputDecoration(
+                                labelText: 'FECHA DE EMISION',
+                                hintText: 'DD/MM/YYYY',
+                                suffixIcon: IconButton(
+                                    onPressed: _showDatePicker2,
+                                    icon: Icon(Icons.calendar_month))),
+                          ),
+                              SizedBox(
+                            height: kDefaultPadding,
+                          ),
+                               TextFormField(
                             controller: retentionDateController,
                             readOnly: true,
                             style: Theme.of(context).textTheme.bodyMedium,

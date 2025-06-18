@@ -5,10 +5,11 @@ import 'package:flutter_svg/svg.dart';
 import 'package:moment_dart/moment_dart.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:uresax_invoice_sys/models/credit.note.service.dart';
+
 import 'package:uresax_invoice_sys/models/sale.abs.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/utils/extensions.dart';
+import 'package:uresax_invoice_sys/utils/functions.dart';
 import 'package:uresax_invoice_sys/utils/invoices.functions.dart';
 import 'package:path/path.dart' as path;
 import 'package:uresax_invoice_sys/widgets/date.range_widget.dart';
@@ -40,10 +41,12 @@ class _CreditNotesPageState extends State<CreditNotesPage> {
 
       sale.items = items;
       var doc = createDefaultInvoice(sale);
-      var dir = await getApplicationDocumentsDirectory();
+    
       var bytes = await doc.save();
+      var dir = await getUresaxInvoiceDir();
 
-      var file = File(path.join(dir.path, 'URESAX-INVOICE-SYS', 'PDFS',
+      var file = File(path.join(dir.path,'NOTAS DE CREDITO',sale.createdAt?.format(payload:'YYYYMM'),
+      'PDFS',
           '${sale.ncf}-${company?.name}.PDF'));
       await file.create(recursive: true);
       await file.writeAsBytes(bytes);

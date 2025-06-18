@@ -8,6 +8,7 @@ import 'package:uresax_invoice_sys/models/payment.dart';
 import 'package:uresax_invoice_sys/models/sale.abs.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/utils/extensions.dart';
+import 'package:uresax_invoice_sys/utils/functions.dart';
 import 'package:uresax_invoice_sys/utils/invoices.functions.dart';
 import 'package:path/path.dart' as path;
 
@@ -32,10 +33,11 @@ class _PaymentSalesPageState extends State<PaymentSalesPage> {
 
   _showPaymentInvoice(Payment payment) async {
     var doc = await createPaymentInvoice(payment);
-    var dir = await getApplicationDocumentsDirectory();
+    var dir = await getUresaxInvoiceDir();
     var bytes = await doc.save();
 
-    var file = File(path.join(dir.path, 'URESAX-INVOICE-SYS', 'PAGOS',
+    var file = File(path.join(dir.path,'PAGOS', payment.createdAt?.format(payload: 'YYYYMM'),
+        'PDFS',
         'PAGO-${payment.id}-${payment.ncf}-${company?.name}.PDF'));
     await file.create(recursive: true);
     await file.writeAsBytes(bytes);

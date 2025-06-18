@@ -1,4 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:path/path.dart' as path;
+
 
 void showTopSnackBar(BuildContext context,
     {required String message,
@@ -48,4 +52,9 @@ void showTopSnackBar(BuildContext context,
       animationController.dispose();
     });
   });
+}
+
+Future<Directory> getUresaxInvoiceDir()async{
+  var dir = Directory(path.join(Platform.environment['URESAX_INVOICE_STATIC_LOCAL_SERVER_PATH'] ?? 'x', 'URESAX-INVOICE'));
+  return await dir.create(recursive: true);
 }

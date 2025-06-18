@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:uresax_invoice_sys/apis/sql.dart';
 import 'package:uresax_invoice_sys/models/bank.dart';
 import 'package:uresax_invoice_sys/models/company.dart';
@@ -28,8 +29,7 @@ void main() async {
       minimumSize: sizeWindow,
       center: true,
       backgroundColor: Colors.transparent,
-      skipTaskbar: false,
-      titleBarStyle: TitleBarStyle.hidden);
+     );
 
   await SqlConector.initialize();
 
@@ -38,6 +38,8 @@ void main() async {
   windowManager.waitUntilReadyToShow(windowOptions, () async {
     await windowManager.show();
     await windowManager.focus();
+    await windowManager.setMinimizable(true);
+    await windowManager.setMaximizable(true);
   });
 }
 
@@ -88,6 +90,15 @@ class _MyAppState extends State<MyApp> {
         menus: [PlatformMenuItem(label: 'URESAX INVOICE SYS')],
         child: MaterialApp(
           title: 'URESAX INVOICE SYS',
+          locale: Locale('es', 'ES'),
+            localizationsDelegates: [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: [
+        Locale('es', 'ES'),
+      ],
           debugShowCheckedModeBanner: false,
           scrollBehavior: ScrollConfiguration.of(context).copyWith(
               dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse}),

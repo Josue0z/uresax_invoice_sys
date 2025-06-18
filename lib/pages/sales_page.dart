@@ -13,6 +13,7 @@ import 'package:uresax_invoice_sys/pages/payments.sales_page.dart';
 import 'package:uresax_invoice_sys/pages/report.sales.page.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/utils/extensions.dart';
+import 'package:uresax_invoice_sys/utils/functions.dart';
 import 'package:uresax_invoice_sys/utils/invoices.functions.dart';
 import 'package:path/path.dart' as path;
 import 'package:uresax_invoice_sys/widgets/date.range_widget.dart';
@@ -65,10 +66,12 @@ class _SalesPageState extends State<SalesPage> {
 
       sale.items = items;
       var doc = createDefaultInvoice(sale);
-      var dir = await getApplicationDocumentsDirectory();
+  
       var bytes = await doc.save();
+      var dir = await getUresaxInvoiceDir();
 
-      var file = File(path.join(dir.path, 'URESAX-INVOICE-SYS', 'PDFS',
+      var file = File(path.join(dir.path,'VENTAS', sale.createdAt?.format(payload:'YYYYMM'),
+      'PDFS',
           '${sale.ncf}-${company?.name}.PDF'));
       await file.create(recursive: true);
       await file.writeAsBytes(bytes);

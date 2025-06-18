@@ -9,6 +9,7 @@ import 'package:uresax_invoice_sys/models/sale.abs.dart';
 import 'package:uresax_invoice_sys/models/sale.service.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 import 'package:path/path.dart' as path;
+import 'package:uresax_invoice_sys/utils/functions.dart';
 
 class Sales607FormPage extends StatefulWidget {
   const Sales607FormPage({super.key});
@@ -44,10 +45,10 @@ class _Sales607FormPageState extends State<Sales607FormPage> {
       ],
       ...lists
     ], fieldDelimiter: '|');
-    var dir = await getApplicationDocumentsDirectory();
+
+    var dir = await getUresaxInvoiceDir();
     var file = File(path.join(
         dir.path,
-        'URESAX-INVOICE-SYS',
         '607',
         period.text,
         'DGII_F_${company?.rncOrId?.replaceAll('-', '')}_${period.text}.TEXT'));

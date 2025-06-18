@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:postgres/postgres.dart';
 
 class SqlConector {
@@ -6,10 +8,10 @@ class SqlConector {
   static Future<void> initialize() async {
     connection = await Connection.open(
         Endpoint(
-          host: 'localhost',
-          database: 'uresax-invoice',
-          username: 'root',
-          password: '827ccb0eea8a706c4c34a16891f84e7b',
+          host: Platform.environment['URESAX_INVOICE_DATABASE_HOSTNAME']!,
+          database: Platform.environment['URESAX_INVOICE_DATABASE_NAME']!,
+          username: Platform.environment['URESAX_INVOICE_DATABASE_USERNAME'],
+          password: Platform.environment['URESAX_INVOICE_DATABASE_PASSWORD'],
         ),
         settings: ConnectionSettings(sslMode: SslMode.disable));
     loading = false;

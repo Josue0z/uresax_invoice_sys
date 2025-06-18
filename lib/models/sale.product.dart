@@ -202,7 +202,8 @@ class SaleProduct implements Sale {
       "invoiceTypeId": invoiceTypeId,
       'currencyId': currencyId,
       'rate': rate,
-      'maxSequence': maxSequence
+      'maxSequence': maxSequence,
+      'createdAt': createdAt
     };
   }
 
@@ -377,8 +378,8 @@ class SaleProduct implements Sale {
       await conne?.runTx((conne) async {
         await conne.execute(Sql.named('''
          INSERT INTO public."Sale"(
-	       id, "clientId", ncf, discount, net, tax, total, effective, "creditCard", "checkOrTransf", "saleToCredit", law10, "typeIncomeId", "clientType", "retentionTax", "retentionIsr", "ncfTypeId", description, "retentionDate", prefix,"invoiceTypeId", "currencyId", rate, "maxSequence")
-	       VALUES (@id, @clientId, $seqParams, @discount, @net, @tax, @total, @effective, @creditCard, @checkOrTransf, @saleToCredit, @law10, @typeIncomeId, @clientType, @retentionTax, @retentionIsr, @ncfTypeId, @description, @retentionDate, @prefix,@invoiceTypeId, @currencyId, @rate, @maxSequence);
+	       id, "clientId", ncf, discount, net, tax, total, effective, "creditCard", "checkOrTransf", "saleToCredit", law10, "typeIncomeId", "clientType", "retentionTax", "retentionIsr", "ncfTypeId", description, "retentionDate", prefix,"invoiceTypeId", "currencyId", rate, "maxSequence","createdAt")
+	       VALUES (@id, @clientId, $seqParams, @discount, @net, @tax, @total, @effective, @creditCard, @checkOrTransf, @saleToCredit, @law10, @typeIncomeId, @clientType, @retentionTax, @retentionIsr, @ncfTypeId, @description, @retentionDate, @prefix,@invoiceTypeId, @currencyId, @rate, @maxSequence, @createdAt);
        
       '''), parameters: map);
 
