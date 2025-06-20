@@ -43,11 +43,22 @@ class Services implements SaleElement {
     }
   }
 
-  static Future<List<Services>> get() async {
+  static Future<List<Services>> get({String? search}) async {
     try {
       final conne = SqlConector.connection;
-      var result = await conne
-          ?.execute('select id, name, price, "taxId" from public."Services"');
+
+      var parameters = {};
+      String params = '';
+
+      if (search != null) {
+        params += "where lower(name) like  lower(@search)";
+        parameters.addAll({'search': '%$search%'});
+      }
+
+      var result = await conne?.execute(
+          Sql.named(
+              'select id, name, price, "taxId" from public."Services" $params'),
+          parameters: parameters);
       return result
               ?.map((e) => Services(
                   id: e[0] as int,

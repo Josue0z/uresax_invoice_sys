@@ -346,17 +346,17 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
         text: retentionDate?.format(payload: 'DD/MM/YYYY') ?? '');
   }
 
-  _showDatePicker2()async{
-        var result = await showDatePicker(
+  _showDatePicker2() async {
+    var result = await showDatePicker(
         context: context,
         firstDate: DateTime.now().subtract(const Duration(days: 365)),
         lastDate: DateTime.now().add(const Duration(days: 365 * 25)));
 
-   if(result != null){
-     issueDate = result;
-    issueDateController.value = TextEditingValue(
-        text: issueDate.format(payload: 'DD/MM/YYYY'));
-   }
+    if (result != null) {
+      issueDate = result;
+      issueDateController.value =
+          TextEditingValue(text: issueDate.format(payload: 'DD/MM/YYYY'));
+    }
   }
 
   bool get isSale {
@@ -367,7 +367,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
     if (widget.sale.amountPaid != null && widget.editing) {
       return (calcs[6] - (widget.sale.amountPaid!));
     }
-  
+
     return (calcs[6] - (amountInputFormatter.doubleValue));
   }
 
@@ -418,10 +418,8 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
 
     issueDate = widget.sale.createdAt ?? DateTime.now();
 
-    issueDateController.value = TextEditingValue(
-      text: issueDate.format(payload: 'DD/MM/YYYY')
-    );
-
+    issueDateController.value =
+        TextEditingValue(text: issueDate.format(payload: 'DD/MM/YYYY'));
 
     if (widget.editing) {
       clientName.value = TextEditingValue(text: widget.sale.clientName ?? '');
@@ -434,9 +432,6 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
       description.value = TextEditingValue(text: widget.sale.description ?? '');
       currentCurrencyId = widget.sale.currencyId;
     }
-
-    
- 
 
     setState(() {});
     super.initState();
@@ -663,10 +658,10 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                                     onPressed: _showDatePicker2,
                                     icon: Icon(Icons.calendar_month))),
                           ),
-                              SizedBox(
+                          SizedBox(
                             height: kDefaultPadding,
                           ),
-                               TextFormField(
+                          TextFormField(
                             controller: retentionDateController,
                             readOnly: true,
                             style: Theme.of(context).textTheme.bodyMedium,

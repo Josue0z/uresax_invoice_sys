@@ -343,6 +343,40 @@ Future<List<Sale>> getSalesList({String? search, int? invoiceTypeId}) async {
   }
 }
 
+Future<List<Sale>> getSalesListByIdAndNcf(
+    {String? rncOrId, String? ncf, int? invoiceTypeId}) async {
+  try {
+    String params = '';
+
+    var parameters = {};
+
+    if (ncf != null) {
+      parameters.addAll({'ncf': ncf, 'rncOrId': rncOrId});
+
+      params += ' and ncf = @ncf and "clientId" = @rncOrId';
+    }
+
+    if (invoiceTypeId != null) {
+      parameters.addAll({'invoiceTypeId': invoiceTypeId});
+      params += ' and "invoiceTypeId" = @invoiceTypeId';
+    }
+
+    final conne = SqlConector.connection;
+    var result = await conne?.execute(
+        Sql.named(
+            '''select * from public."SalesView" where  ("ncfTypeId" = '01' or "ncfTypeId" = '15') $params order by "ncfTypeId" '''),
+        parameters: parameters);
+    return result
+            ?.map((e) => e.toColumnMap()['invoiceTypeId'] == 1
+                ? SaleService.fromMap(e.toColumnMap())
+                : SaleProduct.fromMap(e.toColumnMap()))
+            .toList() ??
+        [];
+  } catch (e) {
+    rethrow;
+  }
+}
+
 Future<void> calcDifOfNetsNcfs(String ncf) async {
   try {
     final conne = SqlConector.connection;

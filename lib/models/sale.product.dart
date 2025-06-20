@@ -552,16 +552,21 @@ class SaleProduct implements Sale {
     try {
       final conne = SqlConector.connection;
       await conne?.runTx((conne) async {
+        DateTime paymentDate = DateTime.now();
+        if (retentionDate != null) {
+          paymentDate = retentionDate!;
+        }
         await conne.execute(
             Sql.named(
-                '''insert into public."Payments" (id,"saleId","paymentMethodId", "bankId", "transfRef", amount) values(@id,@saleId,@paymentMethodId,@bankId, @transfRef, @amount)'''),
+                '''insert into public."Payments" (id,"saleId","paymentMethodId", "bankId", "transfRef", amount,"createdAt") values(@id,@saleId,@paymentMethodId,@bankId, @transfRef, @amount,@createdAt)'''),
             parameters: {
               'id': Uuid().v4(),
               'saleId': id,
               'paymentMethodId': paymentMethodId,
               'bankId': bankId,
               'transfRef': transfRef,
-              'amount': amount
+              'amount': amount,
+              'createdAt': paymentDate
             });
         await conne.execute(Sql.named('''update public."Sale" set
       effective = @effective, 

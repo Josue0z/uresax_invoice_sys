@@ -5,7 +5,8 @@ import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/utils/extensions.dart';
 
 class ProductsPage extends StatefulWidget {
-  const ProductsPage({super.key});
+  bool selectedMode;
+  ProductsPage({super.key, this.selectedMode = false});
 
   @override
   State<ProductsPage> createState() => _ProductsPageState();
@@ -61,6 +62,11 @@ class _ProductsPageState extends State<ProductsPage> {
             var product = products[index];
             return ListTile(
               minVerticalPadding: kDefaultPadding,
+              onTap: widget.selectedMode
+                  ? () {
+                      Navigator.pop(context, product);
+                    }
+                  : null,
               leading: Container(
                 width: 80,
                 decoration: BoxDecoration(

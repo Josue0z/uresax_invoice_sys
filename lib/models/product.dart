@@ -70,11 +70,21 @@ class Products implements SaleElement {
     }
   }
 
-  static Future<List<Products>> get() async {
+  static Future<List<Products>> get({String? search}) async {
     try {
       final conne = SqlConector.connection;
+      var parameters = {};
+      String params = '';
+
+      if (search != null) {
+        params += 'where lower(name) like lower(@search)';
+        parameters.addAll({'search': '%$search%'});
+      }
+
       var result = await conne?.execute(
-          'select id, name, price, quantity, chassis, "licensePlate", "taxId" from public."Products" order by "createdAt"');
+          Sql.named(
+              'select id, name, price, quantity, chassis, "licensePlate", "taxId" from public."Products" $params order by "createdAt"'),
+          parameters: parameters);
       return result
               ?.map(
                 (e) => Products(

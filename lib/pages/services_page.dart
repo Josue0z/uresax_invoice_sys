@@ -5,7 +5,8 @@ import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/utils/extensions.dart';
 
 class ServicesPage extends StatefulWidget {
-  const ServicesPage({super.key});
+  bool selectedMode;
+  ServicesPage({super.key, this.selectedMode = false});
 
   @override
   State<ServicesPage> createState() => _ServicesPageState();
@@ -59,6 +60,11 @@ class _ServicesPageState extends State<ServicesPage> {
             var service = services[index];
             return ListTile(
               minVerticalPadding: kDefaultPadding,
+              onTap: widget.selectedMode
+                  ? () {
+                      Navigator.pop(context, service);
+                    }
+                  : null,
               leading: Container(
                 width: 80,
                 decoration: BoxDecoration(

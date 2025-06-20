@@ -66,12 +66,15 @@ class _SalesPageState extends State<SalesPage> {
 
       sale.items = items;
       var doc = createDefaultInvoice(sale);
-  
+
       var bytes = await doc.save();
       var dir = await getUresaxInvoiceDir();
 
-      var file = File(path.join(dir.path,'VENTAS', sale.createdAt?.format(payload:'YYYYMM'),
-      'PDFS',
+      var file = File(path.join(
+          dir.path,
+          'VENTAS',
+          sale.createdAt?.format(payload: 'YYYYMM'),
+          'PDFS',
           '${sale.ncf}-${company?.name}.PDF'));
       await file.create(recursive: true);
       await file.writeAsBytes(bytes);
@@ -97,7 +100,6 @@ class _SalesPageState extends State<SalesPage> {
     if (res is Map) {
       ncfTypeId = res['ncfTypeId'];
       saleStatus = res['saleStatus'];
-      print(res);
 
       _renderInvoices();
     }

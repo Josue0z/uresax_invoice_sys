@@ -61,10 +61,10 @@ class User {
         if (checkPassword) {
           return user;
         } else {
-          throw 'USUARIO NO ENCONTRADO';
+          throw 'CLAVE NO VALIDA';
         }
       } else {
-        throw 'PROBLEMAS DE CONEXION';
+        throw 'NO SE ENCONTRO EL USUARIO';
       }
     } catch (e) {
       rethrow;

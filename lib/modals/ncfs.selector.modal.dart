@@ -13,14 +13,18 @@ class NcfsSelectorModal extends StatefulWidget {
 
 class _NcfsSelectorModalState extends State<NcfsSelectorModal> {
   List<Sale> sales = [];
+  TextEditingController rncOrId = TextEditingController();
+  TextEditingController ncf = TextEditingController();
   Sale? _currentSale;
-  _initAsync() async {
+  _onSubmit() async {
     try {
       if (widget.saleMode == SaleMode.service) {
-        sales = await getSalesList(invoiceTypeId: 1);
+        sales = await getSalesListByIdAndNcf(
+            invoiceTypeId: 1, rncOrId: rncOrId.text, ncf: ncf.text);
       }
       if (widget.saleMode == SaleMode.product) {
-        sales = await getSalesList(invoiceTypeId: 2);
+        sales = await getSalesListByIdAndNcf(
+            invoiceTypeId: 2, rncOrId: rncOrId.text, ncf: ncf.text);
       }
 
       setState(() {});
@@ -31,7 +35,6 @@ class _NcfsSelectorModalState extends State<NcfsSelectorModal> {
 
   @override
   void initState() {
-    _initAsync();
     super.initState();
   }
 
@@ -62,6 +65,28 @@ class _NcfsSelectorModalState extends State<NcfsSelectorModal> {
                               },
                               icon: Icon(Icons.close))
                         ],
+                      ),
+                      SizedBox(
+                        height: kDefaultPadding,
+                      ),
+                      TextFormField(
+                        controller: rncOrId,
+                        decoration: InputDecoration(
+                            labelText: 'RNC/CEDULA',
+                            hintText: 'Escribir algo...'),
+                      ),
+                      SizedBox(
+                        height: kDefaultPadding,
+                      ),
+                      TextFormField(
+                        controller: ncf,
+                        onFieldSubmitted: (_) => _onSubmit(),
+                        decoration: InputDecoration(
+                            labelText: 'NCF',
+                            hintText: 'Escribir algo...',
+                            suffixIcon: IconButton(
+                                onPressed: _onSubmit,
+                                icon: Icon(Icons.search))),
                       ),
                       SizedBox(
                         height: kDefaultPadding,
