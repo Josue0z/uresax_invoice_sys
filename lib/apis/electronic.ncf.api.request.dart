@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:uresax_invoice_sys/settings.dart';
+import 'package:path/path.dart' as p;
 
 Future<Dio> createDioWithClientCert() async {
   if (certFile != null) {
@@ -34,9 +35,10 @@ Future<String> extraerInfoPfx({
   required String path,
   required String password,
 }) async {
+  var dirOrigin = Platform.resolvedExecutable;
   final opensslPath = Platform.isMacOS
       ? '/usr/bin/openssl'
-      : 'windows/runner/openssl/openssl.exe';
+      : p.join(dirOrigin, 'openssl', 'openssl.exe');
   final process = await Process.start(
     opensslPath,
     [
