@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:flutter/material.dart';
 import 'package:uresax_invoice_sys/models/bank.dart';
 import 'package:uresax_invoice_sys/models/company.dart';
 import 'package:uresax_invoice_sys/models/currency.dart';
@@ -36,3 +39,13 @@ enum SaleStatus { all, paid, notPaid }
 User? currentUser;
 
 bool electronicNcfEnabled = false;
+
+int? currentElectronicNcfOption = 2;
+
+File? certFile;
+
+bool isValid = false;
+
+TextEditingController certPath = TextEditingController();
+
+TextEditingController certPassword = TextEditingController();

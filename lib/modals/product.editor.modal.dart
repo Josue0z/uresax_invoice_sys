@@ -63,8 +63,13 @@ class _ProductEditorModalState extends State<ProductEditorModal> {
   @override
   void initState() {
     name.value = TextEditingValue(text: widget.product.name ?? '');
-    amount.value = amountInputFormatter.formatEditUpdate(TextEditingValue.empty,
-        TextEditingValue(text: widget.product.price?.toStringAsFixed(2) ?? ''));
+
+    if (widget.editing) {
+      amount.value = amountInputFormatter.formatEditUpdate(
+          TextEditingValue.empty,
+          TextEditingValue(
+              text: widget.product.price?.toStringAsFixed(2) ?? ''));
+    }
 
     quantity.value =
         TextEditingValue(text: widget.product.quantity?.toString() ?? '');

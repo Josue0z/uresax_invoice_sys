@@ -71,6 +71,7 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         TextFormField(
                           controller: password,
+                          obscureText: true,
                           validator: (val) =>
                               val!.isEmpty ? 'CAMPO OBLIGATORIO' : null,
                           onFieldSubmitted: (_) => _onSubmit(),

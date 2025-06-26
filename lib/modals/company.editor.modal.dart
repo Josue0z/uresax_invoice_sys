@@ -152,7 +152,6 @@ class _ImagePickerWidgetState extends State<ImagePickerWidget> {
       widget.logo = base64Encode(bytes!);
       company?.logo = widget.logo;
       await company?.update();
-      print(file?.path);
       setState(() {});
     }
   }

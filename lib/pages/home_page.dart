@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:uresax_invoice_sys/modals/company.editor.modal.dart';
+import 'package:uresax_invoice_sys/modals/electronic.ncf.settings.modal.dart';
 import 'package:uresax_invoice_sys/models/credit.note.item.product.dart';
 import 'package:uresax_invoice_sys/models/credit.note.item.service.dart';
 import 'package:uresax_invoice_sys/models/credit.note.product.dart';
@@ -34,17 +35,17 @@ class _HomePageState extends State<HomePage> {
     {
       'id': 1,
       'title': 'GENERAR FACTURA DE SERVICIO',
-      'svg': 'assets/svgs/undraw_printing-invoices_osgs.svg'
+      'svg': 'assets/svgs/undraw_files-uploading_qf8u.svg'
     },
     {
       'id': 2,
       'title': 'GENERAR FACTURA DE PRODUCTO',
-      'svg': 'assets/svgs/undraw_printing-invoices_osgs.svg'
+      'svg': 'assets/svgs/undraw_product-iteration_r2wg.svg'
     },
     {
       'id': 8,
       'title': 'GENERAR NOTA DE CREDITO DE SERVICIO',
-      'svg': 'assets/svgs/undraw_printing-invoices_osgs.svg'
+      'svg': 'assets/svgs/undraw_statistic-chart_6s7z.svg'
     },
     {
       'id': 9,
@@ -131,6 +132,11 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  _showElectronicNcfSettingsPage() async {
+    await showDialog(
+        context: context, builder: (ctx) => ElectronicNcfSettingsModal());
+  }
+
   _showPage(int id) {
     switch (id) {
       case 1:
@@ -176,6 +182,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    print(electronicNcfEnabled);
     if (!currentUser!.permissions!.contains('ALLOW_VIEW_CREATE_SALE_SERVICE')) {
       options.removeWhere((e) => e['id'] == 1);
     }
@@ -239,6 +246,18 @@ class _HomePageState extends State<HomePage> {
             runAlignment: WrapAlignment.center,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
+              currentUser!.permissions!
+                      .contains('ALLOW_VIEW_ELECTRONIC_SETTINGS')
+                  ? CircleAvatar(
+                      child: IconButton(
+                          tooltip: 'CONFIGURACION DE FACTURACION ELECTRONICA',
+                          onPressed: _showElectronicNcfSettingsPage,
+                          icon: Icon(Icons.receipt_long)),
+                    )
+                  : SizedBox(),
+              SizedBox(
+                width: kDefaultPadding,
+              ),
               currentUser!.permissions!.contains('ALLOW_EDIT_COMPANY')
                   ? CircleAvatar(
                       child: IconButton(

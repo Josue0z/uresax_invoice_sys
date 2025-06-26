@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:localstorage/localstorage.dart';
 import 'package:uresax_invoice_sys/apis/sql.dart';
 import 'package:uresax_invoice_sys/models/bank.dart';
 import 'package:uresax_invoice_sys/models/company.dart';
@@ -14,22 +15,24 @@ import 'package:uresax_invoice_sys/models/taxes.dart';
 import 'package:uresax_invoice_sys/models/type.income.dart';
 import 'package:uresax_invoice_sys/pages/login_page.dart';
 import 'package:uresax_invoice_sys/settings.dart';
+import 'package:uresax_invoice_sys/utils/functions.dart';
 import 'package:uresax_invoice_sys/widgets/startup-loader.dart';
 import 'package:window_manager/window_manager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initLocalStorage();
 
   await windowManager.ensureInitialized();
 
   Size sizeWindow = Size(1024, 700);
 
   WindowOptions windowOptions = WindowOptions(
-      size: sizeWindow,
-      minimumSize: sizeWindow,
-      center: true,
-      backgroundColor: Colors.transparent,
-     );
+    size: sizeWindow,
+    minimumSize: sizeWindow,
+    center: true,
+    backgroundColor: Colors.transparent,
+  );
 
   await SqlConector.initialize();
 
@@ -72,6 +75,9 @@ class _MyAppState extends State<MyApp> {
 
     taxes = [Taxes(name: 'EXENTO'), ...await Taxes.get()];
     currencies = [Currency(name: 'MONEDA'), ...await Currency.get()];
+
+    await isValidCertFilePath();
+
     await Future.delayed(const Duration(seconds: 1));
     loading = false;
     setState(() {});
@@ -91,14 +97,14 @@ class _MyAppState extends State<MyApp> {
         child: MaterialApp(
           title: 'URESAX INVOICE SYS',
           locale: Locale('es', 'ES'),
-            localizationsDelegates: [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: [
-        Locale('es', 'ES'),
-      ],
+          localizationsDelegates: [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: [
+            Locale('es', 'ES'),
+          ],
           debugShowCheckedModeBanner: false,
           scrollBehavior: ScrollConfiguration.of(context).copyWith(
               dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse}),
@@ -114,14 +120,19 @@ class _MyAppState extends State<MyApp> {
                 toolbarHeight: kToolbarHeight * 2.4,
                 elevation: 0,
               ),
+              elevatedButtonTheme: ElevatedButtonThemeData(
+                  style: ButtonStyle(
+                      shape: WidgetStatePropertyAll(RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20))))),
               textTheme: TextTheme(
                   displayLarge: TextStyle(fontSize: 24),
                   displayMedium: TextStyle(fontSize: 20),
                   bodyLarge: TextStyle(fontSize: 20),
                   bodyMedium: TextStyle(fontSize: 18),
                   bodySmall: TextStyle(fontSize: 15)),
-              inputDecorationTheme:
-                  InputDecorationTheme(border: OutlineInputBorder())),
+              inputDecorationTheme: InputDecorationTheme(
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(20)))),
           home: loading ? StartupLoader() : LoginPage(),
         ));
   }

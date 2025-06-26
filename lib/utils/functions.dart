@@ -1,8 +1,10 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:localstorage/localstorage.dart';
 import 'package:path/path.dart' as path;
-
+import 'package:uresax_invoice_sys/apis/electronic.ncf.api.request.dart';
+import 'package:uresax_invoice_sys/settings.dart';
 
 void showTopSnackBar(BuildContext context,
     {required String message,
@@ -54,7 +56,41 @@ void showTopSnackBar(BuildContext context,
   });
 }
 
-Future<Directory> getUresaxInvoiceDir()async{
-  var dir = Directory(path.join(Platform.environment['URESAX_INVOICE_STATIC_LOCAL_SERVER_PATH'] ?? 'x', 'URESAX-INVOICE'));
+Future<Directory> getUresaxInvoiceDir() async {
+  var dir = Directory(path.join(
+      Platform.environment['URESAX_INVOICE_STATIC_LOCAL_SERVER_PATH'] ?? 'x',
+      'URESAX-INVOICE'));
   return await dir.create(recursive: true);
+}
+
+Future<bool> isValidCertFilePath() async {
+  try {
+    var filePath =
+        certFile?.path ?? localStorage.getItem('certFilePath')?.trim();
+    var password = certPassword.text;
+
+    var storePassword = localStorage.getItem('certPassword');
+
+    if (password.isNotEmpty) {
+      password = certPassword.text;
+    } else {
+      password = storePassword ?? '';
+    }
+
+    var data = await extraerInfoPfx(path: filePath ?? '', password: password);
+
+    if (data.contains('VIAFIRMA DOMINICANA')) {
+      isValid = true;
+      currentElectronicNcfOption = 1;
+      //electronicNcfEnabled = true;
+      return true;
+    } else {
+      return false;
+    }
+  } catch (e) {
+    isValid = false;
+    currentElectronicNcfOption = 2;
+    //electronicNcfEnabled = false;
+    return false;
+  }
 }

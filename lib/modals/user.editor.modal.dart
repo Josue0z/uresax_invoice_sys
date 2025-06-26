@@ -51,6 +51,7 @@ class _UserEditorModalState extends State<UserEditorModal> {
     'ALLOW_VIEW_PRODUCTS',
     'ALLOW_VIEW_CLIENTS',
     'ALLOW_VIEW_CREATE_FORM_607',
+    'ALLOW_VIEW_ELECTRONIC_SETTINGS'
   ];
 
   final List<String> _cashierPermissions = [
