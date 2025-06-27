@@ -28,7 +28,6 @@ Future<Dio> createDioWithClientCert() async {
 
 testEndPoint() async {
   var dio = await createDioWithClientCert();
-  print(dio.httpClientAdapter);
 }
 
 Future<String> extraerInfoPfx({
