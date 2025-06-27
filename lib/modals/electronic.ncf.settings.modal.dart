@@ -32,7 +32,8 @@ class _ElectronicNcfSettingsModalState
       var file = res.files.single;
       var xfile = File(file.path!);
       var ext = path.extension(file.path!);
-      var dir = await getApplicationDocumentsDirectory();
+      var dirOrigin = path.join(Platform.resolvedExecutable);
+      var dir =Directory(dirOrigin);
 
       certFile = File(path.join(dir.path, 'certs', 'cert$ext'));
       await certFile?.create(recursive: true);

@@ -76,8 +76,10 @@ Future<bool> isValidCertFilePath() async {
     } else {
       password = storePassword ?? '';
     }
+ 
 
     var data = await extraerInfoPfx(path: filePath ?? '', password: password);
+
 
     if (data.contains('VIAFIRMA DOMINICANA')) {
       isValid = true;
@@ -88,6 +90,7 @@ Future<bool> isValidCertFilePath() async {
       return false;
     }
   } catch (e) {
+    print(e);
     isValid = false;
     currentElectronicNcfOption = 2;
     //electronicNcfEnabled = false;

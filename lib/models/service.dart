@@ -64,7 +64,7 @@ class Services implements SaleElement {
                   id: e[0] as int,
                   name: e[1] as String,
                   price: double.parse(e[2] as String),
-                  taxId: e[3] as int))
+                  taxId: e[3] as int?))
               .toList() ??
           [];
     } catch (e) {
