@@ -3,10 +3,12 @@ import 'package:uresax_invoice_sys/modals/product.editor.modal.dart';
 import 'package:uresax_invoice_sys/models/product.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/utils/extensions.dart';
+import 'package:uresax_invoice_sys/widgets/invoice_item_generator_widget.dart';
 
 class ProductsPage extends StatefulWidget {
   bool selectedMode;
-  ProductsPage({super.key, this.selectedMode = false});
+   BuildContext? context;
+  ProductsPage({super.key, this.context, this.selectedMode = false});
 
   @override
   State<ProductsPage> createState() => _ProductsPageState();
@@ -64,7 +66,7 @@ class _ProductsPageState extends State<ProductsPage> {
               minVerticalPadding: kDefaultPadding,
               onTap: widget.selectedMode
                   ? () {
-                      Navigator.pop(context, product);
+                       Navigator.pop(context, product);
                     }
                   : null,
               leading: Container(

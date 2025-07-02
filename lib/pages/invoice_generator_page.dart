@@ -42,11 +42,11 @@ class InvoiceGeneratorPage extends StatefulWidget {
 }
 
 class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
-  String? currentNcfTypeId = '50';
+  String? currentNcfTypeId;
   int? currentPaymentMethodId;
   int? currentBankId;
   int? currentCurrencyId;
-  String? currentTypeIncomeId = '01';
+  String? currentTypeIncomeId;
   TaxPayer? taxPayer;
   TextEditingController description = TextEditingController();
   TextEditingController issueDateController = TextEditingController();
@@ -262,7 +262,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
       total,
       retentionIsr,
       retentionTax,
-      (total - (retentionIsr + retentionTax)).ceilToDouble()
+      double.parse(((total - (retentionIsr + retentionTax)).toStringAsFixed(2)))
     ];
   }
 
@@ -665,6 +665,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                             controller: retentionDateController,
                             readOnly: true,
                             style: Theme.of(context).textTheme.bodyMedium,
+                            validator: (val) =>(widget.items.any((e) => e.retentionTaxId != null || e.retentionIsrId != null ) && retentionDate == null) ? 'CAMPO OBLIGATORIO': null,
                             decoration: InputDecoration(
                                 labelText: 'FECHA DE RETENCION',
                                 hintText: 'DD/MM/YYYY',
@@ -941,9 +942,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                                   children: [
                                     SizedBox(height: kDefaultPadding),
                                     DropdownButtonFormField(
-                                        validator: (val) => val == null
-                                            ? 'CAMPO OBLIGATORIO'
-                                            : null,
+                                     
                                         items: List.generate(banks.length,
                                             (index) {
                                           var bank = banks[index];
@@ -957,9 +956,6 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                                     SizedBox(height: kDefaultPadding),
                                     TextFormField(
                                       controller: transfRef,
-                                      validator: (val) => val!.isEmpty
-                                          ? 'CAMPO OBLIGATORIO'
-                                          : null,
                                       decoration: InputDecoration(
                                           hintText: 'Escribir algo...',
                                           labelText:

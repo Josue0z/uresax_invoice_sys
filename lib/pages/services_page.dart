@@ -3,10 +3,12 @@ import 'package:uresax_invoice_sys/modals/service.editor.modal.dart';
 import 'package:uresax_invoice_sys/models/service.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/utils/extensions.dart';
+import 'package:uresax_invoice_sys/widgets/invoice_item_generator_widget.dart';
 
 class ServicesPage extends StatefulWidget {
   bool selectedMode;
-  ServicesPage({super.key, this.selectedMode = false});
+  BuildContext? context;
+  ServicesPage({super.key, this.context, this.selectedMode = false});
 
   @override
   State<ServicesPage> createState() => _ServicesPageState();
@@ -15,9 +17,11 @@ class ServicesPage extends StatefulWidget {
 class _ServicesPageState extends State<ServicesPage> {
   List<Services> services = [];
 
+
   _showModal({bool editing = false, required Services service}) async {
     var res = await showDialog(
         context: context,
+        useRootNavigator: true,
         builder: (ctx) => ServiceEditorModal(
               editing: editing,
               service: service,
@@ -43,12 +47,14 @@ class _ServicesPageState extends State<ServicesPage> {
 
   @override
   void initState() {
-    _initAsync();
+     if (!mounted) return;
+   _initAsync();
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       appBar: AppBar(
         title: Text('TUS SERVICIOS (${services.length})'),
@@ -62,7 +68,7 @@ class _ServicesPageState extends State<ServicesPage> {
               minVerticalPadding: kDefaultPadding,
               onTap: widget.selectedMode
                   ? () {
-                      Navigator.pop(context, service);
+                  Navigator.pop(context,service);
                     }
                   : null,
               leading: Container(

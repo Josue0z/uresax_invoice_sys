@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:uresax_invoice_sys/models/credit.note.item.product.dart';
@@ -557,40 +559,7 @@ class _CustomDropdownButtonState extends State<_CustomDropdownButton>
 
   TextEditingController search = TextEditingController();
 
-  _showElements() async {
-    if (widget.saleItem is SaleItemService) {
-      var service = await Navigator.push<Services?>(
-          context,
-          MaterialPageRoute(
-              builder: (ctx) => ServicesPage(selectedMode: true)));
 
-      if (service != null) {
-        widget.currentValue = service.id;
-        _saleElement = service;
-
-        _elements.add(service);
-
-        widget.onChanged(_saleElement!, widget.currentValue);
-        setState(() {});
-      }
-    }
-    if (widget.saleItem is SaleItemProduct) {
-      var product = await Navigator.push<Products?>(
-          context,
-          MaterialPageRoute(
-              builder: (ctx) => ProductsPage(
-                    selectedMode: true,
-                  )));
-
-      if (product != null) {
-        widget.currentValue = product.id;
-        _saleElement = product;
-        _elements.add(product);
-        widget.onChanged(_saleElement!, widget.currentValue);
-        setState(() {});
-      }
-    }
-  }
 
   _removeOverlay() async {
     Navigator.pop(context);
@@ -610,7 +579,41 @@ class _CustomDropdownButtonState extends State<_CustomDropdownButton>
 
       _overlayEntry = OverlayEntry(
         builder: (context) => StatefulBuilder(
-          builder: (context, localSetState) => Stack(
+          builder: (context, localSetState){
+
+     showElements() async {
+   
+           if (widget.saleItem is SaleItemService) {
+      var service = await showDialog(context: context,builder: (ctx) => ServicesPage(selectedMode: true));
+
+      if (service != null) {
+        widget.currentValue = service.id;
+        _saleElement = service;
+       int index =  _elements.indexWhere((e)=> e.id == service.id);
+       _elements[index] = _saleElement!;
+      }
+      widget.onChanged(_saleElement!, widget.currentValue);
+    }
+    if (widget.saleItem is SaleItemProduct) {
+      var product = await showDialog(context: context, builder: (ctx) => ProductsPage(
+                    selectedMode: true
+                  ));
+
+      if (product != null) {
+        widget.currentValue = product.id;
+        _saleElement = product;
+      
+        int index =  _elements.indexWhere((e)=> e.id == product.id);
+       _elements[index] = _saleElement!;
+     
+       
+      }
+         widget.onChanged(_saleElement!, widget.currentValue);
+    }
+  }
+            return  Stack(
+
+            
             children: [
               GestureDetector(
                 onTap: _removeOverlay,
@@ -689,7 +692,7 @@ class _CustomDropdownButtonState extends State<_CustomDropdownButton>
                                 ? 'Agregar Servicio'
                                 : 'Agregar Producto',
                             Icons.add,
-                            _showElements,
+                            showElements,
                           ),
                         ],
                       ),
@@ -698,7 +701,8 @@ class _CustomDropdownButtonState extends State<_CustomDropdownButton>
                 ),
               ),
             ],
-          ),
+          );
+          }
         ),
       );
 
@@ -812,4 +816,38 @@ class _CustomDropdownButtonState extends State<_CustomDropdownButton>
           ],
         ));
   }
+}
+
+class ServicePageWrapper<T> extends StatelessWidget {
+  final Widget child;
+  final void Function(T?) onClose;
+
+  const ServicePageWrapper({super.key, required this.child, required this.onClose});
+
+  @override
+  Widget build(BuildContext context) {
+    return InheritedModalController<T>(
+      onClose: onClose,
+      child: child,
+    );
+  }
+}
+
+
+
+class InheritedModalController<T> extends InheritedWidget {
+  final void Function(T?) onClose;
+
+  const InheritedModalController({
+    super.key,
+    required super.child,
+    required this.onClose,
+  });
+
+  static InheritedModalController<T>? of<T>(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<InheritedModalController<T>>();
+  }
+
+  @override
+  bool updateShouldNotify(covariant InheritedModalController<T> oldWidget) => false;
 }
