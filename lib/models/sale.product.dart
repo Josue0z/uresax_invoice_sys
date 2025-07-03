@@ -510,7 +510,13 @@ class SaleProduct implements Sale {
         for (int i = 0; i < items.length; i++) {
           var item = items[i];
           await conne.execute(Sql.named('''update public."SaleProduct" 
-                  set "retentionTax" = @retentionTax, 
+                  set 
+                  "productId" = @productId,
+                  quantity = @quantity,
+                  net = @net,
+                  tax = @tax,
+                  total = @total,
+                  "retentionTax" = @retentionTax, 
                   "retentionIsr" = @retentionIsr,
                   "retentionTaxId" = @retentionTaxId, 
                   "retentionIsrId" = @retentionIsrId, 
@@ -518,6 +524,11 @@ class SaleProduct implements Sale {
                   "discountId" = @discountId 
                   where id = @id'''), parameters: {
             'id': item.id,
+            'productId': item.productId,
+            'quantity':item.quantity,
+            'net': item.net,
+            'tax': item.tax,
+            'total': item.total,
             'retentionTax': item.retentionTax,
             'retentionIsr': item.retentionIsr,
             'retentionTaxId': item.retentionTaxId,
@@ -541,6 +552,29 @@ class SaleProduct implements Sale {
               });
         }
       });
+
+          var invoicesRows = await conne?.execute(
+          Sql.named('''select * from public."SalesView" where id = @id '''),
+          parameters: {'id': id});
+
+      var rows = await conne?.execute(
+          Sql.named(
+              ''' select * from public."SalesProductsView" WHERE "saleId" = @id '''),
+          parameters: {'id': id});
+
+      if (invoicesRows != null && invoicesRows.isNotEmpty) {
+        var firstRow = invoicesRows.first;
+        var sale = SaleProduct.fromMap(firstRow.toColumnMap());
+
+        var xitems = rows
+                ?.map((e) => SaleItemProduct.fromMap(e.toColumnMap()))
+                .toList() ??
+            [];
+
+        sale.items = xitems;
+
+        return sale;
+      }
       return null;
     } catch (e) {
       rethrow;

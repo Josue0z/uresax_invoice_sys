@@ -499,6 +499,7 @@ class CustomDropdownFormField extends FormField<int> {
     int? initialValue,
     FormFieldValidator<int>? validator,
     AutovalidateMode autovalidateMode = AutovalidateMode.disabled,
+    bool enabled = true
   }) : super(
           key: key,
           initialValue: initialValue,
@@ -529,6 +530,7 @@ class _CustomDropdownButton extends StatefulWidget {
   final Function(SaleElement, int? option) onChanged;
   int? currentValue;
   final String? errorText;
+  bool enabled;
 
   _CustomDropdownButton({
     required this.title,
@@ -537,6 +539,7 @@ class _CustomDropdownButton extends StatefulWidget {
     required this.onChanged,
     this.currentValue,
     this.errorText,
+    this.enabled = true
   });
 
   @override
@@ -777,12 +780,12 @@ class _CustomDropdownButtonState extends State<_CustomDropdownButton>
                 borderRadius: BorderRadius.circular(10),
                 child: InkWell(
                   borderRadius: BorderRadius.circular(10),
-                  onTap: widget.saleItem is CreditNoteService ||
+                  onTap:widget.enabled ? widget.saleItem is CreditNoteService ||
                           widget.saleItem is CreditNoteProduct
                       ? null
                       : () {
                           _showContextMenu();
-                        },
+                        } : null,
                   child: IgnorePointer(
                     child: TextFormField(
                       readOnly: true,

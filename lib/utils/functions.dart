@@ -90,7 +90,6 @@ Future<bool> isValidCertFilePath() async {
       return false;
     }
   } catch (e) {
-    print(e);
     isValid = false;
     currentElectronicNcfOption = 2;
     //electronicNcfEnabled = false;

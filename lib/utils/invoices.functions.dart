@@ -37,6 +37,45 @@ pw.Document createDefaultInvoice(Sale sale) {
     labelInvoice = 'NOTA DE CREDITO';
   }
 
+ List<pw.Widget> paymentsLabels = [];
+
+ if(sale.effective! > 0){
+     paymentsLabels.add(pw.Container(
+      margin: pw.EdgeInsets.symmetric(vertical: kDefaultPadding/3),
+      child: pw.Text(
+                'EFECTIVO',
+               style: pw.TextStyle(fontSize: 8))
+     ),);
+ }
+
+
+ if(sale.checkOrTransf! > 0){
+     paymentsLabels.add(pw.Container(
+      margin: pw.EdgeInsets.symmetric(vertical: kDefaultPadding/3),
+      child: pw.Text(
+                'CHEQUE O TRANSFERENCIA',
+               style: pw.TextStyle(fontSize: 8))
+     ),);
+ }
+
+  if(sale.creditCard! > 0){
+     paymentsLabels.add(pw.Container(
+      margin: pw.EdgeInsets.symmetric(vertical: kDefaultPadding/3),
+      child: pw.Text(
+    'TARJETA DE CREDITO O DEBITO',
+               style: pw.TextStyle(fontSize: 8))
+     ),);
+ }
+
+ 
+  if(sale.saleToCredit! > 0){
+     paymentsLabels.add(pw.Container(
+       margin: pw.EdgeInsets.symmetric(vertical: kDefaultPadding/3),
+       child: pw.Text(
+                'VENTA A CREDITO',
+               style: pw.TextStyle(fontSize: 8))
+     ),);
+ }
   document.addPage(pw.MultiPage(header: (ctx) {
     return pw.Column(children: [
       pw.Row(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
@@ -155,7 +194,9 @@ pw.Document createDefaultInvoice(Sale sale) {
                   child: pw.BarcodeWidget(data: sale.ncf ?? '', barcode: qr))
             ])),
         pw.Expanded(
-            child: pw.Column(children: [
+            child: pw.Column(
+               crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
           pw.Container(
               margin: pw.EdgeInsets.symmetric(vertical: kDefaultPadding / 2),
               decoration: pw.BoxDecoration(
@@ -269,10 +310,54 @@ pw.Document createDefaultInvoice(Sale sale) {
                         style: pw.TextStyle(fontSize: 10)),
                     pw.Text(
                         sale.currencyId == 1
-                            ? sale.amountPaid?.toDop()
-                            : sale.amountPaid?.toUS() ?? '',
+                            ? (sale.total! - (sale.retentionTax! + sale.retentionIsr!)).toDop()
+                            : (sale.total! - (sale.retentionTax! + sale.retentionIsr!)).toUS() ?? '',
                         style: pw.TextStyle(fontSize: 10))
                   ])),
+
+
+              pw.Container(
+              margin: pw.EdgeInsets.symmetric(vertical: kDefaultPadding / 2),
+              decoration: pw.BoxDecoration(
+                  border: pw.Border(
+                      bottom:
+                          pw.BorderSide(color: PdfColor.fromHex('#e6e6e6')))),
+              child: pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Text(
+                      'Total Pagado',
+                        style: pw.TextStyle(fontSize: 10)),
+                    pw.Text(
+                        sale.currencyId == 1
+                            ? sale.amountPaid!.toDop()
+                            : sale.amountPaid!.toUS() ?? '',
+                        style: pw.TextStyle(fontSize: 10))
+                  ])),
+           pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.SizedBox(
+                height: kDefaultPadding/2
+              ),
+              pw.Container(
+                      margin: pw.EdgeInsets.symmetric(vertical: kDefaultPadding / 4),
+              child:  pw.Text(
+                    'FORMA DE PAGO',
+                        style: pw.TextStyle(fontSize:8,fontWeight: pw.FontWeight.bold)),),
+
+              
+              pw.Container(
+              child: pw.Column(
+                            crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: List.generate(paymentsLabels.length, (index){
+                    return paymentsLabels[index];
+                  }))),
+            ]
+           )
+
+
         ]))
       ])
     ];

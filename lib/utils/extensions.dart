@@ -25,14 +25,14 @@ CurrencyFormat defaultSettings = CurrencyFormat(
 
 extension DopFormatterExtension on double {
   toDop() {
-    return CurrencyFormatter.format(this, dopSettings);
+    return CurrencyFormatter.format(this, dopSettings, enforceDecimals: true);
   }
 
   toUS() {
-    return CurrencyFormatter.format(this, usSettings);
+    return CurrencyFormatter.format(this, usSettings, enforceDecimals: true);
   }
 
   toCoin() {
-    return CurrencyFormatter.format(this, defaultSettings);
+    return CurrencyFormatter.format(this, defaultSettings, enforceDecimals: true);
   }
 }

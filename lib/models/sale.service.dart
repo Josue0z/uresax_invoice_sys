@@ -522,7 +522,13 @@ class SaleService implements Sale {
         for (int i = 0; i < items.length; i++) {
           var item = items[i];
           await conne.execute(Sql.named('''update public."SaleService" 
-                  set "retentionTax" = @retentionTax, 
+                  set 
+                  "serviceId" = @serviceId,
+                  quantity = @quantity,
+                  net = @net,
+                  tax = @tax,
+                  total = @total,
+                  "retentionTax" = @retentionTax, 
                   "retentionIsr" = @retentionIsr,
                   "retentionTaxId" = @retentionTaxId, 
                   "retentionIsrId" = @retentionIsrId, 
@@ -530,6 +536,11 @@ class SaleService implements Sale {
                   "discountId" = @discountId 
                   where id = @id'''), parameters: {
             'id': item.id,
+            'serviceId': item.serviceId,
+            'quantity':item.quantity,
+            'net': item.net,
+            'tax': item.tax,
+            'total': item.total,
             'retentionTax': item.retentionTax,
             'retentionIsr': item.retentionIsr,
             'retentionTaxId': item.retentionTaxId,
@@ -552,7 +563,34 @@ class SaleService implements Sale {
                 'amount': paid
               });
         }
+
+        
       });
+
+        var invoicesRows = await conne?.execute(
+          Sql.named('''select * from public."SalesView" where id = @id '''),
+          parameters: {'id': id});
+
+      var rows = await conne?.execute(
+          Sql.named(
+              ''' select  * from public."SalesServicesView" WHERE "saleId" = @id '''),
+          parameters: {'id': id});
+
+      if (invoicesRows != null && invoicesRows.isNotEmpty) {
+        var firstRow = invoicesRows.first;
+        var sale = SaleService.fromMap(firstRow.toColumnMap());
+
+        var xitems = rows
+                ?.map((e) => SaleItemService.fromMap(e.toColumnMap()))
+                .toList() ??
+            [];
+
+        sale.items = xitems;
+
+        return sale;
+      }
+
+      
       return null;
     } catch (e) {
       rethrow;
