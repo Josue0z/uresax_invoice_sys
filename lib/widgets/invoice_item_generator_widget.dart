@@ -14,7 +14,6 @@ import 'package:uresax_invoice_sys/models/taxes.dart';
 import 'package:uresax_invoice_sys/pages/products_page.dart';
 import 'package:uresax_invoice_sys/pages/services_page.dart';
 import 'package:uresax_invoice_sys/settings.dart';
-import 'package:uuid/uuid.dart';
 
 class InvoiceItemGeneratorWidget extends StatefulWidget {
   SaleItem saleItem;

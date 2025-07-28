@@ -34,10 +34,7 @@ Future<String> extraerInfoPfx({
   required String path,
   required String password,
 }) async {
-  var dirOrigin = Platform.resolvedExecutable;
-  final opensslPath = Platform.isMacOS
-      ? '/usr/bin/openssl'
-      : p.join(dirOrigin, 'openssl', 'openssl.exe');
+  final opensslPath = Platform.isMacOS ? '/usr/bin/openssl' : 'openssl';
   final process = await Process.start(
     opensslPath,
     [
