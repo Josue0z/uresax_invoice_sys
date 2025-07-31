@@ -169,8 +169,12 @@ Future<List<Sale>> getSales(
     }
 
     if (search != null) {
-      params += ' and "ncf" like @ncf';
-      parameters.addAll({'ncf': '%$search%'});
+      params +=
+          ' and lower("ncf") like @ncf or lower("clientName") like @clientName';
+      parameters.addAll({
+        'ncf': '%${search.toLowerCase()}%',
+        'clientName': '%${search.toLowerCase()}%'
+      });
     }
 
     if (saleStatus == SaleStatus.paid) {
@@ -211,9 +215,13 @@ Future<List<Sale>> getCreditNotes(
     };
 
     if (search != null) {
-      params += ' and ("ncf" like @ncf or "ncfAffected" like @ncf)';
+      params +=
+          ' and (lower("ncf") like @ncf or lower("clientName") like @clientName)';
 
-      parameters.addAll({'ncf': '%$search%'});
+      parameters.addAll({
+        'ncf': '%${search.toLowerCase()}%',
+        'clientName': '%${search.toLowerCase()}%'
+      });
     }
     var result = await conne?.execute(
         Sql.named(

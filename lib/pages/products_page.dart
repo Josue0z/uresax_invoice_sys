@@ -54,6 +54,30 @@ class _ProductsPageState extends State<ProductsPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('TUS PRODUCTOS (${products.length})'),
+        actions: [
+          Wrap(
+            runAlignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              SizedBox(
+                width: 200,
+                height: 50,
+                child: TextFormField(
+                  onChanged: (words) async {
+                    products = await Products.get(search: words);
+                    setState(() {});
+                  },
+                  decoration: InputDecoration(
+                      hintText: 'Nombre...',
+                      fillColor: Colors.white,
+                      filled: true,
+                      suffixIcon: Icon(Icons.search)),
+                ),
+              ),
+              SizedBox(width: kDefaultPadding)
+            ],
+          )
+        ],
       ),
       body: ListView.separated(
           separatorBuilder: (ctx, i) => const Divider(),

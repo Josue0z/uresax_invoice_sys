@@ -52,6 +52,30 @@ class _ServicesPageState extends State<ServicesPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('TUS SERVICIOS (${services.length})'),
+        actions: [
+          Wrap(
+            runAlignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              SizedBox(
+                width: 200,
+                height: 50,
+                child: TextFormField(
+                  onChanged: (words) async {
+                    services = await Services.get(search: words);
+                    setState(() {});
+                  },
+                  decoration: InputDecoration(
+                      hintText: 'Nombre...',
+                      fillColor: Colors.white,
+                      filled: true,
+                      suffixIcon: Icon(Icons.search)),
+                ),
+              ),
+              SizedBox(width: kDefaultPadding)
+            ],
+          )
+        ],
       ),
       body: ListView.separated(
           separatorBuilder: (ctx, i) => const Divider(),
