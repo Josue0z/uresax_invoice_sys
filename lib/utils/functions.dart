@@ -69,6 +69,8 @@ Future<bool> isValidCertFilePath() async {
         certFile?.path ?? localStorage.getItem('certFilePath')?.trim();
     var password = certPassword.text;
 
+    certFile = File(filePath ?? '');
+
     var storePassword = localStorage.getItem('certPassword');
 
     if (password.isNotEmpty) {
@@ -82,15 +84,16 @@ Future<bool> isValidCertFilePath() async {
     if (data.contains('VIAFIRMA DOMINICANA')) {
       isValid = true;
       currentElectronicNcfOption = 1;
-      //electronicNcfEnabled = true;
+      electronicNcfEnabled = true;
       return true;
     } else {
       return false;
     }
   } catch (e) {
+    print(e);
     isValid = false;
     currentElectronicNcfOption = 2;
-    //electronicNcfEnabled = false;
+    electronicNcfEnabled = false;
     return false;
   }
 }

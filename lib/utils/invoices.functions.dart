@@ -63,51 +63,126 @@ pw.Document createDefaultInvoice(Sale sale) {
                   ]),
                   pw.SizedBox(height: kDefaultPadding / 2),
                   pw.Text(company?.rncOrId ?? '',
-                      style: pw.TextStyle(fontSize: 12)),
+                      style: pw.TextStyle(fontSize: 10)),
                   pw.SizedBox(height: kDefaultPadding / 2),
-                  pw.Text(company?.address ?? ''),
+                  pw.Text(company?.address ?? '',
+                      style: pw.TextStyle(fontSize: 10)),
                   pw.SizedBox(height: kDefaultPadding / 2),
-                  pw.Text(company?.phone1 ?? ''),
+                  pw.Text(company?.phone1 ?? '',
+                      style: pw.TextStyle(fontSize: 10)),
                   pw.SizedBox(height: kDefaultPadding / 2),
-                  pw.Text(company?.email ?? '')
+                  pw.Text(company?.email ?? '',
+                      style: pw.TextStyle(fontSize: 10))
                 ])),
       ]),
       pw.SizedBox(height: kDefaultPadding),
-      pw.Align(
-          alignment: pw.Alignment.centerRight,
-          child: pw.Text(labelInvoice,
-              style:
-                  pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 17))),
-      pw.SizedBox(height: kDefaultPadding),
       pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [
-        pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
-          pw.Text('Facturado a:'),
-          pw.SizedBox(height: kDefaultPadding / 2),
-          pw.Text(sale.clientName ?? ''),
-          pw.SizedBox(height: kDefaultPadding / 2),
-          pw.Text('Rnc/Cedula:'),
-          pw.SizedBox(height: kDefaultPadding / 2),
-          pw.Text(sale.clientId ?? ''),
-        ]),
-        pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.end, children: [
-          pw.Row(children: [
-            pw.Text('Factura #'),
-            pw.SizedBox(width: kDefaultPadding),
-            pw.Text(sale.ncf ?? '')
-          ]),
-          sale.ncfAffected != null
-              ? pw.Column(children: [
-                  pw.SizedBox(height: kDefaultPadding / 2),
-                  pw.Text(sale.ncfAffected ?? '')
-                ])
-              : pw.SizedBox(),
-          pw.SizedBox(height: kDefaultPadding / 2),
-          pw.Row(children: [
-            pw.Text('Fecha'),
-            pw.SizedBox(width: kDefaultPadding),
-            pw.Text(sale.createdAt?.format(payload: 'DD/MM/YYYY') ?? '')
-          ])
-        ])
+        pw.Expanded(
+          child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Text('Facturado a:', style: pw.TextStyle(fontSize: 10)),
+                pw.SizedBox(height: kDefaultPadding / 2),
+                pw.Text(sale.clientName ?? '',
+                    style: pw.TextStyle(fontSize: 10)),
+                pw.SizedBox(height: kDefaultPadding / 2),
+                pw.Text('Rnc/Cedula:', style: pw.TextStyle(fontSize: 10)),
+                pw.SizedBox(height: kDefaultPadding / 2),
+                pw.Text(sale.clientId ?? '', style: pw.TextStyle(fontSize: 10)),
+              ]),
+        ),
+        pw.Expanded(
+            child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.end,
+                children: [
+              pw.Text(sale.ncfTypeName ?? '',
+                  textAlign: pw.TextAlign.right,
+                  style: pw.TextStyle(
+                      fontWeight: pw.FontWeight.bold, fontSize: 14)),
+              pw.SizedBox(height: kDefaultPadding),
+              pw.Container(
+                margin: pw.EdgeInsets.only(bottom: kDefaultPadding / 2),
+                child: pw.Row(
+                    mainAxisAlignment: pw.MainAxisAlignment.end,
+                    children: [
+                      pw.Text(
+                        'Factura #',
+                        style: pw.TextStyle(fontSize: 10),
+                        textAlign: pw.TextAlign.right,
+                      ),
+                      pw.SizedBox(width: kDefaultPadding),
+                      pw.Text(
+                        sale.ncf ?? '',
+                        style: pw.TextStyle(fontSize: 10),
+                        textAlign: pw.TextAlign.right,
+                      )
+                    ]),
+              ),
+              sale.ncfAffected != null
+                  ? pw.Container(
+                      margin: pw.EdgeInsets.only(
+                        bottom: kDefaultPadding / 2,
+                      ),
+                      child: pw.Text(sale.ncfAffected ?? '',
+                          style: pw.TextStyle(fontSize: 10)))
+                  : pw.SizedBox(),
+              pw.Container(
+                margin: pw.EdgeInsets.symmetric(
+                  vertical: kDefaultPadding / 2,
+                ),
+                child: pw.Row(
+                    mainAxisAlignment: pw.MainAxisAlignment.end,
+                    children: [
+                      pw.Text(
+                        'Fecha',
+                        style: pw.TextStyle(fontSize: 10),
+                        textAlign: pw.TextAlign.right,
+                      ),
+                      pw.SizedBox(width: kDefaultPadding),
+                      pw.Text(
+                        sale.createdAt?.format(payload: 'DD/MM/YYYY') ?? '',
+                        style: pw.TextStyle(fontSize: 10),
+                        textAlign: pw.TextAlign.right,
+                      )
+                    ]),
+              ),
+              sale.retentionDate != null
+                  ? pw.Container(
+                      margin: pw.EdgeInsets.only(bottom: kDefaultPadding / 2),
+                      child: pw.Row(
+                          mainAxisAlignment: pw.MainAxisAlignment.end,
+                          children: [
+                            pw.Text('Fecha de Retencion',
+                                style: pw.TextStyle(fontSize: 10),
+                                textAlign: pw.TextAlign.right),
+                            pw.SizedBox(width: kDefaultPadding),
+                            pw.Text(
+                                sale.retentionDate?.format(
+                                      payload: 'DD/MM/YYYY',
+                                    ) ??
+                                    '',
+                                textAlign: pw.TextAlign.right,
+                                style: pw.TextStyle(fontSize: 10)),
+                          ]))
+                  : pw.SizedBox(),
+              sale.expirationDate != null
+                  ? pw.Container(
+                      child: pw.Row(
+                          mainAxisAlignment: pw.MainAxisAlignment.end,
+                          children: [
+                          pw.Text('Fecha de Vencimiento',
+                              textAlign: pw.TextAlign.right,
+                              style: pw.TextStyle(fontSize: 10)),
+                          pw.SizedBox(width: kDefaultPadding),
+                          pw.Text(
+                              sale.expirationDate
+                                      ?.format(payload: 'DD/MM/YYYY') ??
+                                  '',
+                              textAlign: pw.TextAlign.right,
+                              style: pw.TextStyle(fontSize: 10))
+                        ]))
+                  : pw.SizedBox()
+            ]))
       ]),
     ]);
   }, build: (ctx) {
@@ -152,7 +227,54 @@ pw.Document createDefaultInvoice(Sale sale) {
               pw.SizedBox(
                   width: 100,
                   height: 100,
-                  child: pw.BarcodeWidget(data: sale.ncf ?? '', barcode: qr))
+                  child: pw.BarcodeWidget(
+                      data: sale.dgiiURL != null
+                          ? sale.dgiiURL ?? ''
+                          : sale.ncf ?? '',
+                      barcode: qr)),
+              pw.SizedBox(height: kDefaultPadding / 2),
+              sale.securityCode != null
+                  ? pw.Container(
+                      margin: pw.EdgeInsets.symmetric(
+                          vertical: kDefaultPadding / 4),
+                      child: pw.Row(children: [
+                        pw.Text('Codigo de seguridad:',
+                            style: pw.TextStyle(
+                                fontSize: 9, fontWeight: pw.FontWeight.bold)),
+                        pw.SizedBox(width: 5),
+                        pw.Text(sale.securityCode ?? '',
+                            style: pw.TextStyle(fontSize: 9)),
+                      ]))
+                  : pw.SizedBox(),
+              sale.signatureDate != null
+                  ? pw.Container(
+                      margin: pw.EdgeInsets.symmetric(
+                          vertical: kDefaultPadding / 4),
+                      child: pw.Row(children: [
+                        pw.Text('Fecha de Firma:',
+                            style: pw.TextStyle(
+                                fontSize: 9, fontWeight: pw.FontWeight.bold)),
+                        pw.SizedBox(width: 5),
+                        pw.Text(
+                            sale.signatureDate
+                                    ?.format(payload: 'DD-MM-YYYY HH:mm:ss') ??
+                                '',
+                            style: pw.TextStyle(fontSize: 9)),
+                      ]))
+                  : pw.SizedBox(),
+              sale.authorName != null
+                  ? pw.Container(
+                      margin: pw.EdgeInsets.symmetric(
+                          vertical: kDefaultPadding / 4),
+                      child: pw.Row(children: [
+                        pw.Text('Atendido por:',
+                            style: pw.TextStyle(
+                                fontSize: 9, fontWeight: pw.FontWeight.bold)),
+                        pw.SizedBox(width: 5),
+                        pw.Text(sale.authorName ?? '',
+                            style: pw.TextStyle(fontSize: 9)),
+                      ]))
+                  : pw.SizedBox()
             ])),
         pw.Expanded(
             child: pw.Column(children: [
@@ -165,12 +287,12 @@ pw.Document createDefaultInvoice(Sale sale) {
               child: pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
-                    pw.Text('Subtotal', style: pw.TextStyle(fontSize: 10)),
+                    pw.Text('Subtotal', style: pw.TextStyle(fontSize: 8)),
                     pw.Text(
                         sale.currencyId == 1
                             ? sale.net?.toDop()
                             : sale.net?.toUS() ?? '',
-                        style: pw.TextStyle(fontSize: 10))
+                        style: pw.TextStyle(fontSize: 8))
                   ])),
           pw.Container(
               margin: pw.EdgeInsets.symmetric(vertical: kDefaultPadding / 2),
@@ -181,12 +303,12 @@ pw.Document createDefaultInvoice(Sale sale) {
               child: pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
-                    pw.Text('Descuento', style: pw.TextStyle(fontSize: 10)),
+                    pw.Text('Descuento', style: pw.TextStyle(fontSize: 8)),
                     pw.Text(
                         sale.currencyId == 1
                             ? sale.discount?.toDop()
                             : sale.discount?.toUS() ?? '',
-                        style: pw.TextStyle(fontSize: 10))
+                        style: pw.TextStyle(fontSize: 8))
                   ])),
           pw.Container(
               margin: pw.EdgeInsets.symmetric(vertical: kDefaultPadding / 2),
@@ -197,12 +319,12 @@ pw.Document createDefaultInvoice(Sale sale) {
               child: pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
-                    pw.Text('Itbis', style: pw.TextStyle(fontSize: 10)),
+                    pw.Text('Itbis', style: pw.TextStyle(fontSize: 8)),
                     pw.Text(
                         sale.currencyId == 1
                             ? sale.tax?.toDop()
                             : sale.tax?.toUS() ?? '',
-                        style: pw.TextStyle(fontSize: 10))
+                        style: pw.TextStyle(fontSize: 8))
                   ])),
           pw.Container(
               margin: pw.EdgeInsets.symmetric(vertical: kDefaultPadding / 2),
@@ -213,12 +335,12 @@ pw.Document createDefaultInvoice(Sale sale) {
               child: pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
-                    pw.Text('Total', style: pw.TextStyle(fontSize: 10)),
+                    pw.Text('Total', style: pw.TextStyle(fontSize: 8)),
                     pw.Text(
                         sale.currencyId == 1
                             ? sale.total?.toDop()
                             : sale.total?.toUS() ?? '',
-                        style: pw.TextStyle(fontSize: 10))
+                        style: pw.TextStyle(fontSize: 8))
                   ])),
           pw.Container(
               margin: pw.EdgeInsets.symmetric(vertical: kDefaultPadding / 2),
@@ -230,12 +352,12 @@ pw.Document createDefaultInvoice(Sale sale) {
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
                     pw.Text('Retencion Itbis',
-                        style: pw.TextStyle(fontSize: 10)),
+                        style: pw.TextStyle(fontSize: 8)),
                     pw.Text(
                         sale.currencyId == 1
                             ? sale.retentionTax?.toDop()
                             : sale.retentionTax?.toUS() ?? '',
-                        style: pw.TextStyle(fontSize: 10))
+                        style: pw.TextStyle(fontSize: 8))
                   ])),
           pw.Container(
               margin: pw.EdgeInsets.symmetric(vertical: kDefaultPadding / 2),
@@ -246,12 +368,12 @@ pw.Document createDefaultInvoice(Sale sale) {
               child: pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
-                    pw.Text('Retencion Isr', style: pw.TextStyle(fontSize: 10)),
+                    pw.Text('Retencion Isr', style: pw.TextStyle(fontSize: 8)),
                     pw.Text(
                         sale.currencyId == 1
                             ? sale.retentionIsr?.toDop()
                             : sale.retentionIsr?.toUS() ?? '',
-                        style: pw.TextStyle(fontSize: 10))
+                        style: pw.TextStyle(fontSize: 8))
                   ])),
           pw.Container(
               margin: pw.EdgeInsets.symmetric(vertical: kDefaultPadding / 2),
@@ -263,15 +385,33 @@ pw.Document createDefaultInvoice(Sale sale) {
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
                     pw.Text(
-                        sale.ncfTypeId!.contains('4')
+                        sale.ncfTypeId!.contains('34')
                             ? 'Total a devolver'
                             : 'Total a pagar',
-                        style: pw.TextStyle(fontSize: 10)),
+                        style: pw.TextStyle(fontSize: 8)),
+                    pw.Text(
+                        sale.currencyId == 1
+                            ? (sale.total! -
+                                    (sale.retentionIsr! + sale.retentionTax!))
+                                .toDop()
+                            : sale.amountPaid?.toUS() ?? '',
+                        style: pw.TextStyle(fontSize: 8))
+                  ])),
+          pw.Container(
+              margin: pw.EdgeInsets.symmetric(vertical: kDefaultPadding / 2),
+              decoration: pw.BoxDecoration(
+                  border: pw.Border(
+                      bottom:
+                          pw.BorderSide(color: PdfColor.fromHex('#e6e6e6')))),
+              child: pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Text('Total Pagado', style: pw.TextStyle(fontSize: 8)),
                     pw.Text(
                         sale.currencyId == 1
                             ? sale.amountPaid?.toDop()
                             : sale.amountPaid?.toUS() ?? '',
-                        style: pw.TextStyle(fontSize: 10))
+                        style: pw.TextStyle(fontSize: 8))
                   ])),
         ]))
       ])

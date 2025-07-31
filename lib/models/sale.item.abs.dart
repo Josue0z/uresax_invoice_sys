@@ -22,11 +22,33 @@ abstract class SaleItem {
   bool? enabled;
   int? returnQuantity;
 
+  double? tax18;
+
+  double? tax16;
+
+  double? tax3;
+
+  double? net18;
+
+  double? net16;
+
+  double? net3;
+
+  double? exemptAmount;
+
+  int? indicadorFacturacion;
+
+  int? indicadorAgentePercepcion;
+
   Map<String, dynamic> toMap() {
     throw UnimplementedError();
   }
 
   Map<String, dynamic> toDisplay() {
+    throw UnimplementedError();
+  }
+
+  double get precio {
     throw UnimplementedError();
   }
 }

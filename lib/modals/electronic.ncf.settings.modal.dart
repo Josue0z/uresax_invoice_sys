@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:localstorage/localstorage.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/utils/functions.dart';
 import 'package:path/path.dart' as path;
@@ -32,7 +31,7 @@ class _ElectronicNcfSettingsModalState
       var file = res.files.single;
       var xfile = File(file.path!);
       var ext = path.extension(file.path!);
-      var dir = await getApplicationDocumentsDirectory();
+      var dir = Directory.current;
 
       certFile = File(path.join(dir.path, 'certs', 'cert$ext'));
       await certFile?.create(recursive: true);

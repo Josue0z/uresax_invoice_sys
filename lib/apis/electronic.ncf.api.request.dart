@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:uresax_invoice_sys/settings.dart';
-import 'package:path/path.dart' as p;
 
 Future<Dio> createDioWithClientCert() async {
   if (certFile != null) {
@@ -26,17 +25,12 @@ Future<Dio> createDioWithClientCert() async {
   return Dio();
 }
 
-testEndPoint() async {
-  var dio = await createDioWithClientCert();
-}
-
 Future<String> extraerInfoPfx({
   required String path,
   required String password,
 }) async {
-  final opensslPath = Platform.isMacOS ? '/usr/bin/openssl' : 'openssl';
   final process = await Process.start(
-    opensslPath,
+    'openssl',
     [
       'pkcs12',
       '-in',
@@ -45,6 +39,7 @@ Future<String> extraerInfoPfx({
       '-nokeys',
       '-passin',
       'pass:$password',
+      '-legacy'
     ],
   );
 

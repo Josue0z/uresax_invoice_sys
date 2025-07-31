@@ -46,7 +46,16 @@ class SaleItemService implements SaleItem {
       this.retentionIsrId,
       this.retentionTaxId,
       this.enabled = true,
-      this.returnQuantity});
+      this.returnQuantity,
+      this.tax18,
+      this.tax16,
+      this.tax3,
+      this.net18,
+      this.net16,
+      this.net3,
+      this.exemptAmount,
+      this.indicadorFacturacion,
+      this.indicadorAgentePercepcion});
 
   @override
   int? productId;
@@ -74,6 +83,15 @@ class SaleItemService implements SaleItem {
       'taxId': taxId,
       'retentionTaxId': retentionTaxId,
       'retentionIsrId': retentionIsrId,
+      'tax18': tax18,
+      'tax16': tax16,
+      'tax3': tax3,
+      'net18': net18,
+      'net16': net16,
+      'net3': net3,
+      'exemptAmount': exemptAmount,
+      'indicadorFacturacion': indicadorFacturacion,
+      'indicadorAgentePercepcion': indicadorAgentePercepcion
     };
   }
 
@@ -133,7 +151,18 @@ class SaleItemService implements SaleItem {
         productName: map['productName'],
         taxId: map['taxId'],
         retentionIsrId: map['retentionIsrId'],
-        retentionTaxId: map['retentionTaxId']);
+        retentionTaxId: map['retentionTaxId'],
+        tax18: map['tax18'] != null ? double.parse(map['tax18']) : null,
+        tax16: map['tax16'] != null ? double.parse(map['tax16']) : null,
+        tax3: map['tax3'] != null ? double.parse(map['tax3']) : null,
+        net18: map['net18'] != null ? double.parse(map['net18']) : null,
+        net16: map['net16'] != null ? double.parse(map['net16']) : null,
+        net3: map['net3'] != null ? double.parse(map['net3']) : null,
+        exemptAmount: map['exemptAmount'] != null
+            ? double.parse(map['exemptAmount'])
+            : null,
+        indicadorFacturacion: map['indicadorFacturacion'],
+        indicadorAgentePercepcion: map['indicadorAgentePercepcion']);
   }
 
   String toJson() => json.encode(toMap());
@@ -207,4 +236,37 @@ class SaleItemService implements SaleItem {
 
   @override
   int? returnQuantity;
+
+  @override
+  double? exemptAmount;
+
+  @override
+  int? indicadorAgentePercepcion;
+
+  @override
+  int? indicadorFacturacion;
+
+  @override
+  double? net16;
+
+  @override
+  double? net18;
+
+  @override
+  double? net3;
+
+  @override
+  double? tax16;
+
+  @override
+  double? tax18;
+
+  @override
+  double? tax3;
+
+  @override
+  double get precio {
+    if (net == null) return 0;
+    return (net! / quantity!);
+  }
 }

@@ -54,6 +54,38 @@ abstract class Sale {
 
   int? maxSequence;
 
+  double? tax18;
+
+  double? tax16;
+
+  double? tax3;
+
+  double? net18;
+
+  double? net16;
+
+  double? net3;
+
+  double? exemptAmount;
+
+  DateTime? signatureDate;
+
+  String? securityCode;
+
+  String? dgiiURL;
+
+  String? ecfXmlFirmado;
+
+  int? estadoDgii;
+
+  int? tipoPago;
+
+  DateTime? expirationDate;
+
+  String? authorId;
+
+  String? authorName;
+
   bool get isPaid {
     throw UnimplementedError();
   }
@@ -113,6 +145,8 @@ abstract class Sale {
   Map<String, dynamic> to607() {
     throw UnimplementedError();
   }
+
+  Future<void> updateEcfInfo() async {}
 }
 
 Future<List<Sale>> getSales(
@@ -353,7 +387,7 @@ Future<List<Sale>> getSalesListByIdAndNcf(
     if (ncf != null) {
       parameters.addAll({'ncf': ncf, 'rncOrId': rncOrId});
 
-      params += ' and ncf = @ncf and "clientId" = @rncOrId';
+      params += ' ncf = @ncf and "clientId" = @rncOrId';
     }
 
     if (invoiceTypeId != null) {
@@ -364,7 +398,7 @@ Future<List<Sale>> getSalesListByIdAndNcf(
     final conne = SqlConector.connection;
     var result = await conne?.execute(
         Sql.named(
-            '''select * from public."SalesView" where  ("ncfTypeId" = '01' or "ncfTypeId" = '15') $params order by "ncfTypeId" '''),
+            '''select * from public."SalesView" where   $params order by "ncfTypeId" '''),
         parameters: parameters);
     return result
             ?.map((e) => e.toColumnMap()['invoiceTypeId'] == 1

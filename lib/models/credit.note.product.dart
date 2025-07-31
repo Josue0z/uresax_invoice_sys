@@ -5,7 +5,6 @@ import 'package:flutter/foundation.dart';
 import 'package:postgres/postgres.dart';
 import 'package:uresax_invoice_sys/apis/sql.dart';
 import 'package:uresax_invoice_sys/models/credit.note.item.product.dart';
-import 'package:uresax_invoice_sys/models/credit.note.service.dart';
 
 import 'package:uresax_invoice_sys/models/sale.abs.dart';
 import 'package:uresax_invoice_sys/models/sale.item.abs.dart';
@@ -150,7 +149,23 @@ class CreditNoteAsProduct implements Sale {
       this.typeIncomeName,
       this.currencyId,
       this.rate,
-      this.maxSequence});
+      this.maxSequence,
+      this.tax18,
+      this.tax16,
+      this.tax3,
+      this.net18,
+      this.net16,
+      this.net3,
+      this.exemptAmount,
+      this.authorId,
+      this.dgiiURL,
+      this.ecfXmlFirmado,
+      this.estadoDgii,
+      this.expirationDate,
+      this.securityCode,
+      this.signatureDate,
+      this.tipoPago,
+      this.authorName});
 
   @override
   // TODO: implement color
@@ -218,7 +233,8 @@ class CreditNoteAsProduct implements Sale {
          "invoiceTypeId",
          "currencyId", 
          rate, 
-         "maxSequence")
+         "maxSequence",
+         tax18,tax16,tax3,net18,net16,net3,"exemptAmount","expirationDate","authorId")
 	       VALUES (
          @id, 
          @saleId, 
@@ -243,7 +259,8 @@ class CreditNoteAsProduct implements Sale {
          @invoiceTypeId, 
          @currencyId, 
          @rate, 
-         @maxSequence);
+         @maxSequence,
+         @tax18,@tax16,@tax3,@net18,@net16,@net3,@exemptAmount,@expirationDate,@authorId);
 
       '''), parameters: map);
 
@@ -256,8 +273,8 @@ class CreditNoteAsProduct implements Sale {
             subMap['creditNoteId'] = id;
             await conne.execute(
                 Sql.named('''INSERT INTO public."CreditNoteProduct"(
-	       id,"creditNoteId", "productId", discount, net, tax, total, "retentionTax", "retentionIsr", quantity, "taxId", "discountId", "retentionTaxId", "retentionIsrId")
-	       VALUES (@id, @creditNoteId, @productId, @discount, @net, @tax, @total, @retentionTax, @retentionIsr, @quantity, @taxId, @discountId, @retentionTaxId, @retentionIsrId); '''),
+	       id,"creditNoteId", "productId", discount, net, tax, total, "retentionTax", "retentionIsr", quantity, "taxId", "discountId", "retentionTaxId", "retentionIsrId",tax18,tax16,tax3,net18,net16,net3,"exemptAmount","indicadorFacturacion","indicadorAgentePercepcion")
+	       VALUES (@id, @creditNoteId, @productId, @discount, @net, @tax, @total, @retentionTax, @retentionIsr, @quantity, @taxId, @discountId, @retentionTaxId, @retentionIsrId,@tax18,@tax16,@tax3,@net18,@net16,@net3,@exemptAmount,@indicadorFacturacion,@indicadorAgentePercepcion); '''),
                 parameters: subMap);
 
             await conne.execute(
@@ -361,7 +378,7 @@ class CreditNoteAsProduct implements Sale {
       'effective': effective,
       'id': id,
       'invoiceTypeId': invoiceTypeId,
-      'items': items?.map((x) => x)?.toList(),
+      'items': items.map((x) => x).toList(),
       'law10': law10,
       'ncf': ncf,
       'ncfAffected': ncfAffected,
@@ -412,7 +429,16 @@ class CreditNoteAsProduct implements Sale {
       'saleId': saleId,
       'currencyId': currencyId,
       'rate': rate,
-      'maxSequence': maxSequence
+      'maxSequence': maxSequence,
+      'tax18': tax18,
+      'tax16': tax16,
+      'tax3': tax3,
+      'net18': net18,
+      'net16': net16,
+      'net3': net3,
+      'exemptAmount': exemptAmount,
+      'expirationDate': expirationDate,
+      'authorId': authorId
     };
   }
 
@@ -498,48 +524,71 @@ class CreditNoteAsProduct implements Sale {
 
   factory CreditNoteAsProduct.fromMap(Map<String, dynamic> map) {
     return CreditNoteAsProduct(
-      amountPaid: double.tryParse(map['amountPaid']?.toString() ?? '0') ?? 0,
-      checkOrTransf:
-          double.tryParse(map['checkOrTransf']?.toString() ?? '0') ?? 0,
-      clientId: map['clientId']?.toString(),
-      clientName: map['clientName']?.toString(),
-      clientType: int.tryParse(map['clientType']?.toString() ?? '0') ?? 0,
-      clientTypeName: map['clientTypeName']?.toString(),
-      createdAt: DateTime.tryParse(map['createdAt']?.toString() ?? ''),
-      creditCard: double.tryParse(map['creditCard']?.toString() ?? '0') ?? 0,
-      debt: double.tryParse(map['debt']?.toString() ?? '0') ?? 0,
-      description: map['description']?.toString(),
-      discount: double.tryParse(map['discount']?.toString() ?? '0') ?? 0,
-      effective: double.tryParse(map['effective']?.toString() ?? '0') ?? 0,
-      id: map['id']?.toString(),
-      invoiceTypeId: int.tryParse(map['invoiceTypeId']?.toString() ?? '0') ?? 0,
-      items: [],
-      law10: double.tryParse(map['law10']?.toString() ?? '0') ?? 0,
-      ncf: map['ncf']?.toString(),
-      ncfAffected: map['ncfAffected']?.toString(),
-      ncfTypeId: map['ncfTypeId']?.toString(),
-      ncfTypeName: map['ncfTypeName']?.toString(),
-      net: double.tryParse(map['net']?.toString() ?? '0') ?? 0,
-      paid: double.tryParse(map['paid']?.toString() ?? '0') ?? 0,
-      paymentMethodId:
-          int.tryParse(map['paymentMethodId']?.toString() ?? '0') ?? 0,
-      paymentMethodName: map['paymentMethodName']?.toString(),
-      prefix: map['prefix']?.toString(),
-      retentionDate: DateTime.tryParse(map['retentionDate']?.toString() ?? ''),
-      retentionIsr:
-          double.tryParse(map['retentionIsr']?.toString() ?? '0') ?? 0,
-      retentionTax:
-          double.tryParse(map['retentionTax']?.toString() ?? '0') ?? 0,
-      saleId: map['saleId']?.toString(),
-      saleToCredit:
-          double.tryParse(map['saleToCredit']?.toString() ?? '0') ?? 0,
-      tax: double.tryParse(map['tax']?.toString() ?? '0') ?? 0,
-      total: double.tryParse(map['total']?.toString() ?? '0') ?? 0,
-      typeIncomeId: map['typeIncomeId']?.toString(),
-      typeIncomeName: map['typeIncomeName']?.toString(),
-      currencyId: map['currencyId'],
-      rate: map['rate'] != null ? double.parse(map['rate']) : null,
-    );
+        amountPaid: double.tryParse(map['amountPaid']?.toString() ?? '0') ?? 0,
+        checkOrTransf:
+            double.tryParse(map['checkOrTransf']?.toString() ?? '0') ?? 0,
+        clientId: map['clientId']?.toString(),
+        clientName: map['clientName']?.toString(),
+        clientType: int.tryParse(map['clientType']?.toString() ?? '0') ?? 0,
+        clientTypeName: map['clientTypeName']?.toString(),
+        createdAt: DateTime.tryParse(map['createdAt']?.toString() ?? ''),
+        creditCard: double.tryParse(map['creditCard']?.toString() ?? '0') ?? 0,
+        debt: double.tryParse(map['debt']?.toString() ?? '0') ?? 0,
+        description: map['description']?.toString(),
+        discount: double.tryParse(map['discount']?.toString() ?? '0') ?? 0,
+        effective: double.tryParse(map['effective']?.toString() ?? '0') ?? 0,
+        id: map['id']?.toString(),
+        invoiceTypeId:
+            int.tryParse(map['invoiceTypeId']?.toString() ?? '0') ?? 0,
+        items: [],
+        law10: double.tryParse(map['law10']?.toString() ?? '0') ?? 0,
+        ncf: map['ncf']?.toString(),
+        ncfAffected: map['ncfAffected']?.toString(),
+        ncfTypeId: map['ncfTypeId']?.toString(),
+        ncfTypeName: map['ncfTypeName']?.toString(),
+        net: double.tryParse(map['net']?.toString() ?? '0') ?? 0,
+        paid: double.tryParse(map['paid']?.toString() ?? '0') ?? 0,
+        paymentMethodId:
+            int.tryParse(map['paymentMethodId']?.toString() ?? '0') ?? 0,
+        paymentMethodName: map['paymentMethodName']?.toString(),
+        prefix: map['prefix']?.toString(),
+        retentionDate:
+            DateTime.tryParse(map['retentionDate']?.toString() ?? ''),
+        retentionIsr:
+            double.tryParse(map['retentionIsr']?.toString() ?? '0') ?? 0,
+        retentionTax:
+            double.tryParse(map['retentionTax']?.toString() ?? '0') ?? 0,
+        saleId: map['saleId']?.toString(),
+        saleToCredit:
+            double.tryParse(map['saleToCredit']?.toString() ?? '0') ?? 0,
+        tax: double.tryParse(map['tax']?.toString() ?? '0') ?? 0,
+        total: double.tryParse(map['total']?.toString() ?? '0') ?? 0,
+        typeIncomeId: map['typeIncomeId']?.toString(),
+        typeIncomeName: map['typeIncomeName']?.toString(),
+        currencyId: map['currencyId'],
+        rate: map['rate'] != null
+            ? double.parse(
+                map['rate'],
+              )
+            : null,
+        expirationDate: map['expirationDate'],
+        tax18: map['tax18'] != null ? double.parse(map['tax18']) : null,
+        tax16: map['tax16'] != null ? double.parse(map['tax16']) : null,
+        tax3: map['tax3'] != null ? double.parse(map['tax3']) : null,
+        net18: map['net18'] != null ? double.parse(map['net18']) : null,
+        net16: map['net16'] != null ? double.parse(map['net16']) : null,
+        net3: map['net3'] != null ? double.parse(map['net3']) : null,
+        exemptAmount: map['exemptAmount'] != null
+            ? double.parse(map['exemptAmount'])
+            : null,
+        dgiiURL: map['dgiiURL'],
+        ecfXmlFirmado: map['ecfXmlFirmado'],
+        estadoDgii: map['estadoDgii'],
+        securityCode: map['securityCode'],
+        signatureDate: map['signatureDate'],
+        tipoPago: map['tipoPago'],
+        authorId: map['authorId'],
+        authorName: map['authorName']);
   }
 
   String toJson() => json.encode(toMap());
@@ -663,4 +712,78 @@ class CreditNoteAsProduct implements Sale {
 
   @override
   int? maxSequence;
+
+  @override
+  String? authorId;
+
+  @override
+  String? dgiiURL;
+
+  @override
+  String? ecfXmlFirmado;
+
+  @override
+  int? estadoDgii;
+
+  @override
+  double? exemptAmount;
+
+  @override
+  DateTime? expirationDate;
+
+  @override
+  double? net16;
+
+  @override
+  double? net18;
+
+  @override
+  double? net3;
+
+  @override
+  String? securityCode;
+
+  @override
+  DateTime? signatureDate;
+
+  @override
+  double? tax16;
+
+  @override
+  double? tax18;
+
+  @override
+  double? tax3;
+
+  @override
+  int? tipoPago;
+
+  @override
+  String? authorName;
+
+  @override
+  Future<void> updateEcfInfo() async {
+    try {
+      final conne = SqlConector.connection;
+      await conne?.runTx((conne) async {
+        await conne.execute(Sql.named('''update public."CreditNote" 
+                  set 
+                  "signatureDate" = @signatureDate,
+                  "securityCode" = @securityCode,
+                  "dgiiURL" = @dgiiURL,
+                  "ecfXmlFirmado" = @ecfXmlFirmado,
+                  "estadoDgii" = @estadoDgii
+                  where id = @id'''), parameters: {
+          'id': id,
+          'signatureDate': signatureDate,
+          'securityCode': securityCode,
+          'dgiiURL': dgiiURL,
+          'ecfXmlFirmado': ecfXmlFirmado,
+          'estadoDgii': estadoDgii
+        });
+      });
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

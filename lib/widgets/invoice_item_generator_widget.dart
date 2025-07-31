@@ -147,10 +147,21 @@ class _InvoiceItemGeneratorWidgetState
 
   _calc() {
     widget.saleItem.net = (el?.price ?? 0) * (widget.saleItem.quantity ?? 1);
+
+    widget.saleItem.tax18 = 0;
+    widget.saleItem.tax16 = 0;
+    widget.saleItem.tax3 = 0;
+
+    widget.saleItem.net18 = 0;
+    widget.saleItem.net16 = 0;
+    widget.saleItem.net3 = 0;
+    widget.saleItem.exemptAmount = 0;
+
     if (widget.saleItem.net != null) {
       widget.saleItem.tax =
           widget.saleItem.net! * ((currentTax?.rate ?? 0) / 100);
     }
+
     if (widget.saleItem.tax != null) {
       widget.saleItem.retentionTax =
           widget.saleItem.tax! * ((retentionTax?.rate ?? 0) / 100);
@@ -162,6 +173,23 @@ class _InvoiceItemGeneratorWidgetState
 
     if (widget.saleItem.net != null && widget.saleItem.tax != null) {
       widget.saleItem.total = widget.saleItem.net! + widget.saleItem.tax!;
+    }
+
+    if (currentTaxId == 1) {
+      widget.saleItem.indicadorFacturacion = 1;
+      widget.saleItem.tax16 = widget.saleItem.tax;
+      widget.saleItem.net16 = widget.saleItem.net;
+    }
+
+    if (currentTaxId == 2) {
+      widget.saleItem.indicadorFacturacion = 1;
+      widget.saleItem.tax18 = widget.saleItem.tax;
+      widget.saleItem.net18 = widget.saleItem.net;
+    }
+
+    if (widget.saleItem.retentionIsrId != null ||
+        widget.saleItem.retentionTaxId != null) {
+      widget.saleItem.indicadorAgentePercepcion = 1;
     }
 
     net.value =
@@ -556,41 +584,6 @@ class _CustomDropdownButtonState extends State<_CustomDropdownButton>
 
   TextEditingController search = TextEditingController();
 
-  _showElements() async {
-    if (widget.saleItem is SaleItemService) {
-      var service = await Navigator.push<Services?>(
-          context,
-          MaterialPageRoute(
-              builder: (ctx) => ServicesPage(selectedMode: true)));
-
-      if (service != null) {
-        widget.currentValue = service.id;
-        _saleElement = service;
-
-        _elements.add(service);
-
-        widget.onChanged(_saleElement!, widget.currentValue);
-        setState(() {});
-      }
-    }
-    if (widget.saleItem is SaleItemProduct) {
-      var product = await Navigator.push<Products?>(
-          context,
-          MaterialPageRoute(
-              builder: (ctx) => ProductsPage(
-                    selectedMode: true,
-                  )));
-
-      if (product != null) {
-        widget.currentValue = product.id;
-        _saleElement = product;
-        _elements.add(product);
-        widget.onChanged(_saleElement!, widget.currentValue);
-        setState(() {});
-      }
-    }
-  }
-
   _removeOverlay() async {
     Navigator.pop(context);
     search.clear();
@@ -606,6 +599,49 @@ class _CustomDropdownButtonState extends State<_CustomDropdownButton>
           _targetKey.currentContext!.findRenderObject() as RenderBox;
 
       final Size size = renderBox.size;
+
+      showElements() async {
+        if (widget.saleItem is SaleItemService) {
+          var service = await showDialog(
+              context: context,
+              builder: (ctx) => ServicesPage(selectedMode: true));
+          _saleElement = service;
+          if (service != null) {
+            if (!_elements.any((e) => e.id == service.id)) {
+              _elements.add(service);
+              int index = _elements.indexWhere((e) => e.id == service.id);
+              _elements[index] = _saleElement!;
+            } else {
+              int index = _elements.indexWhere((e) => e.id == service.id);
+              _elements[index] = _saleElement!;
+            }
+
+            widget.currentValue = _saleElement?.id;
+
+            widget.onChanged(_saleElement!, widget.currentValue);
+          }
+        }
+        if (widget.saleItem is SaleItemProduct) {
+          var product = await showDialog(
+              context: context,
+              builder: (ctx) => ProductsPage(selectedMode: true));
+
+          _saleElement = product;
+
+          if (product != null) {
+            if (!_elements.any((e) => e.id == product.id)) {
+              _elements.add(product);
+              int index = _elements.indexWhere((e) => e.id == product.id);
+              _elements[index] = _saleElement!;
+            } else {
+              int index = _elements.indexWhere((e) => e.id == product.id);
+              _elements[index] = _saleElement!;
+            }
+          }
+          widget.currentValue = _saleElement?.id;
+          widget.onChanged(_saleElement!, widget.currentValue);
+        }
+      }
 
       _overlayEntry = OverlayEntry(
         builder: (context) => StatefulBuilder(
@@ -688,7 +724,7 @@ class _CustomDropdownButtonState extends State<_CustomDropdownButton>
                                 ? 'Agregar Servicio'
                                 : 'Agregar Producto',
                             Icons.add,
-                            _showElements,
+                            showElements,
                           ),
                         ],
                       ),

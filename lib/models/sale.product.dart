@@ -91,7 +91,23 @@ class SaleProduct implements Sale {
       this.transfRef,
       this.currencyId,
       this.rate,
-      this.maxSequence});
+      this.maxSequence,
+      this.tax18,
+      this.tax16,
+      this.tax3,
+      this.net18,
+      this.net16,
+      this.net3,
+      this.exemptAmount,
+      this.authorId,
+      this.dgiiURL,
+      this.ecfXmlFirmado,
+      this.estadoDgii,
+      this.expirationDate,
+      this.securityCode,
+      this.signatureDate,
+      this.tipoPago,
+      this.authorName});
 
   SaleProduct copyWith({
     String? id,
@@ -203,7 +219,17 @@ class SaleProduct implements Sale {
       'currencyId': currencyId,
       'rate': rate,
       'maxSequence': maxSequence,
-      'createdAt': createdAt
+      'createdAt': createdAt,
+      'tax18': tax18,
+      'tax16': tax16,
+      'tax3': tax3,
+      'net18': net18,
+      'net16': net16,
+      'net3': net3,
+      'exemptAmount': exemptAmount,
+      'expirationDate': expirationDate,
+      'tipoPago': tipoPago,
+      'authorId': authorId
     };
   }
 
@@ -240,11 +266,29 @@ class SaleProduct implements Sale {
         ncfTypeName: map['ncfTypeName'],
         clientName: map['clientName'],
         invoiceTypeId: map['invoiceTypeId'],
+        expirationDate: map['expirationDate'],
         amountPaid:
             map['amountPaid'] != null ? double.parse(map['amountPaid']) : null,
         debt: map['debt'] != null ? double.parse(map['debt']) : null,
         currencyId: map['currencyId'],
-        rate: map['rate'] != null ? double.parse(map['rate']) : null);
+        rate: map['rate'] != null ? double.parse(map['rate']) : null,
+        tax18: map['tax18'] != null ? double.parse(map['tax18']) : null,
+        tax16: map['tax16'] != null ? double.parse(map['tax16']) : null,
+        tax3: map['tax3'] != null ? double.parse(map['tax3']) : null,
+        net18: map['net18'] != null ? double.parse(map['net18']) : null,
+        net16: map['net16'] != null ? double.parse(map['net16']) : null,
+        net3: map['net3'] != null ? double.parse(map['net3']) : null,
+        exemptAmount: map['exemptAmount'] != null
+            ? double.parse(map['exemptAmount'])
+            : null,
+        dgiiURL: map['dgiiURL'],
+        ecfXmlFirmado: map['ecfXmlFirmado'],
+        estadoDgii: map['estadoDgii'],
+        securityCode: map['securityCode'],
+        signatureDate: map['signatureDate'],
+        tipoPago: map['tipoPago'],
+        authorId: map['authorId'],
+        authorName: map['authorName']);
   }
 
   String toJson() => json.encode(toMap());
@@ -350,8 +394,8 @@ class SaleProduct implements Sale {
       if (ncfTypeId == '32') {
         seqParams = '''nextval('32_seq')''';
       }
-      if (ncfTypeId == '315') {
-        seqParams = '''nextval('315_seq')''';
+      if (ncfTypeId == '45') {
+        seqParams = '''nextval('45_seq')''';
       }
 
       if (ncfTypeId == '50') {
@@ -378,8 +422,8 @@ class SaleProduct implements Sale {
       await conne?.runTx((conne) async {
         await conne.execute(Sql.named('''
          INSERT INTO public."Sale"(
-	       id, "clientId", ncf, discount, net, tax, total, effective, "creditCard", "checkOrTransf", "saleToCredit", law10, "typeIncomeId", "clientType", "retentionTax", "retentionIsr", "ncfTypeId", description, "retentionDate", prefix,"invoiceTypeId", "currencyId", rate, "maxSequence","createdAt")
-	       VALUES (@id, @clientId, $seqParams, @discount, @net, @tax, @total, @effective, @creditCard, @checkOrTransf, @saleToCredit, @law10, @typeIncomeId, @clientType, @retentionTax, @retentionIsr, @ncfTypeId, @description, @retentionDate, @prefix,@invoiceTypeId, @currencyId, @rate, @maxSequence, @createdAt);
+	       id, "clientId", ncf, discount, net, tax, total, effective, "creditCard", "checkOrTransf", "saleToCredit", law10, "typeIncomeId", "clientType", "retentionTax", "retentionIsr", "ncfTypeId", description, "retentionDate", prefix,"invoiceTypeId", "currencyId", rate, "maxSequence","createdAt",tax18,tax16,tax3,net18,net16,net3,"exemptAmount","expirationDate","authorId","tipoPago")
+	       VALUES (@id, @clientId, $seqParams, @discount, @net, @tax, @total, @effective, @creditCard, @checkOrTransf, @saleToCredit, @law10, @typeIncomeId, @clientType, @retentionTax, @retentionIsr, @ncfTypeId, @description, @retentionDate, @prefix,@invoiceTypeId, @currencyId, @rate, @maxSequence, @createdAt,@tax18,@tax16,@tax3,@net18,@net16,@net3,@exemptAmount,@expirationDate,@authorId,@tipoPago);
        
       '''), parameters: map);
 
@@ -391,8 +435,8 @@ class SaleProduct implements Sale {
           subMap['id'] = xid;
           subMap['saleId'] = id;
           await conne.execute(Sql.named('''INSERT INTO public."SaleProduct"(
-	       id, "productId", discount, net, tax, total, "retentionTax", "retentionIsr", "saleId", quantity, "taxId", "discountId", "retentionTaxId", "retentionIsrId")
-	       VALUES (@id, @productId, @discount, @net, @tax, @total, @retentionTax, @retentionIsr, @saleId, @quantity, @taxId, @discountId, @retentionTaxId, @retentionIsrId); '''),
+	       id, "productId", discount, net, tax, total, "retentionTax", "retentionIsr", "saleId", quantity, "taxId", "discountId", "retentionTaxId", "retentionIsrId",tax18,tax16,tax3,net18,net16,net3,"exemptAmount","indicadorFacturacion","indicadorAgentePercepcion")
+	       VALUES (@id, @productId, @discount, @net, @tax, @total, @retentionTax, @retentionIsr, @saleId, @quantity, @taxId, @discountId, @retentionTaxId, @retentionIsrId,@tax18,@tax16,@tax3,@net18,@net16,@net3,@exemptAmount,@indicadorFacturacion,@indicadorAgentePercepcion); '''),
               parameters: subMap);
 
           if (ncfTypeId != '50') {
@@ -490,7 +534,14 @@ class SaleProduct implements Sale {
                   "saleToCredit" = @saleToCredit,
                    "retentionDate" = @retentionDate,
                    "currencyId" = @currencyId,
-                   rate = @rate
+                   rate = @rate,
+                  tax18 = @tax18,
+                  tax16 = @tax16,
+                  tax3 = @tax3,
+                  net18 = @net18,
+                  net16 = @net16,
+                  net3 = @net3,
+                  "exemptAmount" = @exemptAmount
                    where id = @id'''), parameters: {
           'id': id,
           'net': net,
@@ -504,7 +555,14 @@ class SaleProduct implements Sale {
           'saleToCredit': saleToCredit,
           'retentionDate': retentionDate,
           'currencyId': currencyId,
-          'rate': rate
+          'rate': rate,
+          'tax18': tax18,
+          'tax16': tax16,
+          'tax3': tax3,
+          'net18': net18,
+          'net16': net16,
+          'net3': net3,
+          'exemptAmount': exemptAmount
         });
 
         for (int i = 0; i < items.length; i++) {
@@ -515,7 +573,14 @@ class SaleProduct implements Sale {
                   "retentionTaxId" = @retentionTaxId, 
                   "retentionIsrId" = @retentionIsrId, 
                   discount = @discount, 
-                  "discountId" = @discountId 
+                  "discountId" = @discountId,
+                  tax18 = @tax18,
+                  tax16 = @tax16,
+                  tax3 = @tax3,
+                  net18 = @net18,
+                  net16 = @net16,
+                  net3 = @net3,
+                  "exemptAmount" = @exemptAmount
                   where id = @id'''), parameters: {
             'id': item.id,
             'retentionTax': item.retentionTax,
@@ -523,7 +588,14 @@ class SaleProduct implements Sale {
             'retentionTaxId': item.retentionTaxId,
             'retentionIsrId': item.retentionIsrId,
             'discount': item.discount,
-            'discountId': item.discountId
+            'discountId': item.discountId,
+            'tax18': tax18,
+            'tax16': tax16,
+            'tax3': tax3,
+            'net18': net18,
+            'net16': net16,
+            'net3': net3,
+            'exemptAmount': exemptAmount
           });
         }
 
@@ -753,4 +825,78 @@ class SaleProduct implements Sale {
 
   @override
   int? maxSequence;
+
+  @override
+  String? authorId;
+
+  @override
+  String? dgiiURL;
+
+  @override
+  String? ecfXmlFirmado;
+
+  @override
+  int? estadoDgii;
+
+  @override
+  double? exemptAmount;
+
+  @override
+  DateTime? expirationDate;
+
+  @override
+  double? net16;
+
+  @override
+  double? net18;
+
+  @override
+  double? net3;
+
+  @override
+  String? securityCode;
+
+  @override
+  DateTime? signatureDate;
+
+  @override
+  double? tax16;
+
+  @override
+  double? tax18;
+
+  @override
+  double? tax3;
+
+  @override
+  int? tipoPago;
+
+  @override
+  String? authorName;
+
+  @override
+  Future<void> updateEcfInfo() async {
+    try {
+      final conne = SqlConector.connection;
+      await conne?.runTx((conne) async {
+        await conne.execute(Sql.named('''update public."Sale" 
+                  set 
+                  "signatureDate" = @signatureDate,
+                  "securityCode" = @securityCode,
+                  "dgiiURL" = @dgiiURL,
+                  "ecfXmlFirmado" = @ecfXmlFirmado,
+                  "estadoDgii" = @estadoDgii
+                  where id = @id'''), parameters: {
+          'id': id,
+          'signatureDate': signatureDate,
+          'securityCode': securityCode,
+          'dgiiURL': dgiiURL,
+          'ecfXmlFirmado': ecfXmlFirmado,
+          'estadoDgii': estadoDgii
+        });
+      });
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

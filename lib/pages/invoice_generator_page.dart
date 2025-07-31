@@ -1,6 +1,11 @@
+import 'dart:ffi';
+
 import 'package:amount_input_formatter/amount_input_formatter.dart';
+import 'package:ecf_dgii/ecf_dgii.dart';
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:localstorage/localstorage.dart';
 import 'package:moment_dart/moment_dart.dart';
 import 'package:printing/printing.dart';
 import 'package:uresax_invoice_sys/modals/ncfs.selector.modal.dart';
@@ -42,17 +47,21 @@ class InvoiceGeneratorPage extends StatefulWidget {
 }
 
 class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
-  String? currentNcfTypeId = '50';
+  String? currentNcfTypeId;
   int? currentPaymentMethodId;
   int? currentBankId;
   int? currentCurrencyId;
-  String? currentTypeIncomeId = '01';
+  String? currentTypeIncomeId;
+  int? currentOverrideCode;
+  int? currentPaymentType;
   TaxPayer? taxPayer;
   TextEditingController description = TextEditingController();
   TextEditingController issueDateController = TextEditingController();
   TextEditingController retentionDateController = TextEditingController();
+  TextEditingController fechaVencimientoController = TextEditingController();
   DateTime issueDate = DateTime.now();
   DateTime? retentionDate;
+  DateTime fechaVencimiento = DateTime.now().endOfYear();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   AmountInputFormatter amountInputFormatter =
       AmountInputFormatter(fractionalDigits: 2);
@@ -64,6 +73,8 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
 
   bool isValid = false;
   List<NcfType> _ncfs = [];
+
+  List<FormaDePago> formasDePagos = [];
 
   Sale? _currentSale;
 
@@ -86,8 +97,17 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
         widget.sale.retentionDate = retentionDate;
         widget.sale.currencyId = currentCurrencyId;
         widget.sale.createdAt = issueDate;
-
+        widget.sale.tipoPago = currentPaymentType;
+        widget.sale.expirationDate = fechaVencimiento;
         widget.sale.rate = 1;
+        widget.sale.net18 = totalGravado18;
+        widget.sale.net16 = totalGravado16;
+        widget.sale.net3 = totalGravado3;
+        widget.sale.tax18 = itbisGravado18;
+        widget.sale.tax16 = itbisGravado16;
+        widget.sale.tax3 = itbisGravado3;
+        widget.sale.exemptAmount = montoExento;
+        widget.sale.authorId = currentUser?.id;
 
         if (rate.text.isNotEmpty) {
           widget.sale.rate = double.tryParse(rate.text);
@@ -118,7 +138,9 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
 
         widget.sale.bankId = currentBankId;
         widget.sale.transfRef = transfRef.text;
-        if (currentNcfTypeId != null && currentNcfTypeId!.startsWith('3')) {
+        if (currentNcfTypeId != null &&
+            (currentNcfTypeId!.startsWith('3') ||
+                currentNcfTypeId!.startsWith('4'))) {
           widget.sale.prefix = 'E';
           widget.sale.maxSequence = 10;
         } else if (currentNcfTypeId != null && currentNcfTypeId == '50') {
@@ -175,6 +197,10 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
           sale = await widget.sale.create();
         } else {
           sale = await widget.sale.update();
+        }
+
+        if (electronicNcfEnabled && widget.sale.prefix == 'E' && sale != null) {
+          await _enviarDgii(sale);
         }
 
         var doc = createDefaultInvoice(sale!);
@@ -242,6 +268,14 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
     double total = 0;
     double retentionTax = 0;
     double retentionIsr = 0;
+    double tax18 = 0;
+    double tax16 = 0;
+    double tax3 = 0;
+    double net18 = 0;
+    double net16 = 0;
+    double net3 = 0;
+    double exemptAmount = 0;
+
     for (int i = 0; i < widget.items.length; i++) {
       var item = widget.items[i];
 
@@ -253,6 +287,21 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
           item.enabled == true ? widget.items[i].retentionIsr ?? 0 : 0;
       retentionTax +=
           item.enabled == true ? widget.items[i].retentionTax ?? 0 : 0;
+
+      tax18 += item.enabled == true ? widget.items[i].tax18 ?? 0 : 0;
+
+      tax16 += item.enabled == true ? widget.items[i].tax16 ?? 0 : 0;
+
+      tax3 += item.enabled == true ? widget.items[i].tax3 ?? 0 : 0;
+
+      net18 += item.enabled == true ? widget.items[i].net18 ?? 0 : 0;
+
+      net16 += item.enabled == true ? widget.items[i].net16 ?? 0 : 0;
+
+      net3 += item.enabled == true ? widget.items[i].net3 ?? 0 : 0;
+
+      exemptAmount +=
+          item.enabled == true ? widget.items[i].exemptAmount ?? 0 : 0;
     }
 
     return [
@@ -262,7 +311,14 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
       total,
       retentionIsr,
       retentionTax,
-      (total - (retentionIsr + retentionTax)).ceilToDouble()
+      (total - (retentionIsr + retentionTax)).ceilToDouble(),
+      tax18,
+      tax16,
+      tax3,
+      net18,
+      net16,
+      net3,
+      exemptAmount
     ];
   }
 
@@ -280,7 +336,14 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
       calcs[3] * xrate,
       calcs[4] * xrate,
       calcs[5] * xrate,
-      calcs[6] * xrate
+      calcs[6] * xrate,
+      calcs[7] * xrate,
+      calcs[8] * xrate,
+      calcs[9] * xrate,
+      calcs[10] * xrate,
+      calcs[11] * xrate,
+      calcs[12] * xrate,
+      calcs[13] * xrate
     ];
   }
 
@@ -335,6 +398,98 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
     return calcs[6].toDop();
   }
 
+  double get montoAPagar {
+    if (currentCurrencyId == 2) {
+      return calcsDollarsToDop[6];
+    }
+    return calcs[6];
+  }
+
+  double get totalFacturado {
+    if (currentCurrencyId == 2) {
+      return calcsDollarsToDop[3];
+    }
+    return calcs[3];
+  }
+
+  double get itbisGravado {
+    if (currentCurrencyId == 2) {
+      return calcsDollarsToDop[2];
+    }
+    return calcs[2];
+  }
+
+  double get itbisGravado18 {
+    if (currentCurrencyId == 2) {
+      return calcsDollarsToDop[7];
+    }
+    return calcs[7];
+  }
+
+  double get itbisGravado16 {
+    if (currentCurrencyId == 2) {
+      return calcsDollarsToDop[8];
+    }
+    return calcs[8];
+  }
+
+  double get itbisGravado3 {
+    if (currentCurrencyId == 2) {
+      return calcsDollarsToDop[9];
+    }
+    return calcs[9];
+  }
+
+  double get totalGravado {
+    if (currentCurrencyId == 2) {
+      return calcsDollarsToDop[0];
+    }
+
+    return calcs[0];
+  }
+
+  double get totalGravado18 {
+    if (currentCurrencyId == 2) {
+      return calcsDollarsToDop[10];
+    }
+    return calcs[10];
+  }
+
+  double get totalGravado16 {
+    if (currentCurrencyId == 2) {
+      return calcsDollarsToDop[11];
+    }
+    return calcs[11];
+  }
+
+  double get totalGravado3 {
+    if (currentCurrencyId == 2) {
+      return calcsDollarsToDop[12];
+    }
+    return calcs[12];
+  }
+
+  double get totalRetencionIsr {
+    if (currentCurrencyId == 2) {
+      return calcsDollarsToDop[4];
+    }
+    return calcs[4];
+  }
+
+  double get totalRetencionItbis {
+    if (currentCurrencyId == 2) {
+      return calcsDollarsToDop[5];
+    }
+    return calcs[5];
+  }
+
+  double get montoExento {
+    if (currentCurrencyId == 2) {
+      return calcsDollarsToDop[13];
+    }
+    return calcs[13];
+  }
+
   _showDatePicker() async {
     var result = await showDatePicker(
         context: context,
@@ -359,6 +514,19 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
     }
   }
 
+  _showDatePicker3() async {
+    var result = await showDatePicker(
+        context: context,
+        firstDate: DateTime.now().subtract(const Duration(days: 365)),
+        lastDate: DateTime.now().add(const Duration(days: 365 * 25)));
+
+    if (result != null) {
+      fechaVencimiento = result;
+      fechaVencimientoController.value = TextEditingValue(
+          text: fechaVencimiento.format(payload: 'DD/MM/YYYY'));
+    }
+  }
+
   bool get isSale {
     return widget.sale is SaleService || widget.sale is SaleProduct;
   }
@@ -371,39 +539,265 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
     return (calcs[6] - (amountInputFormatter.doubleValue));
   }
 
+  String calcularCodigoModificacion(
+      DateTime fechaNcfModificado, DateTime fechaEmisionActual) {
+    final diferencia = fechaEmisionActual.difference(fechaNcfModificado).inDays;
+    return diferencia > 30 ? '1' : '0';
+  }
+
   NcfType? currentNcfType;
   String currentPrefix = 'P';
   int maxSequence = 8;
 
   String ncfLabel = '';
 
-  _getNcfLabel() async {
-    currentNcfType = _ncfs.firstWhere((e) => e.id == currentNcfTypeId);
+  Future<void> _enviarDgii(Sale sale) async {
+    try {
+      //GeneratorEndPoint.envEcfType = EnvEcfType.cert;
+      final cert = certFile;
 
-    var lastSeq = await currentNcfType?.getLastSeq();
+      String password = localStorage.getItem('certPassword') ?? '';
 
-    ncfLabel =
-        '$currentPrefix$currentNcfTypeId${lastSeq?.padLeft(maxSequence, '0')}';
+      EcfType ecfType = EcfType.e31;
 
-    setState(() {});
+      if (currentNcfTypeId == '31') {
+        ecfType = EcfType.e31;
+      }
+      if (currentNcfTypeId == '32') {
+        ecfType = EcfType.e32;
+      }
 
-    return ncfLabel;
+      if (currentNcfTypeId == '33') {
+        ecfType = EcfType.e33;
+      }
+
+      if (currentNcfTypeId == '34') {
+        ecfType = EcfType.e34;
+      }
+
+      if (currentNcfTypeId == '41') {
+        ecfType = EcfType.e41;
+      }
+
+      if (currentNcfTypeId == '45') {
+        ecfType = EcfType.e45;
+      }
+
+      if (currentNcfTypeId == '46') {
+        ecfType = EcfType.e46;
+      }
+      if (currentNcfTypeId == '47') {
+        ecfType = EcfType.e47;
+      }
+
+      bool esNotaCredito = ecfType == EcfType.e34;
+
+      bool esConsumo = ecfType == EcfType.e32;
+
+      bool esEcf45 = ecfType == EcfType.e45;
+
+      bool esEspecial = esConsumo || esEcf45;
+
+      AuthCertModel authModel =
+          await getAuthP12(cert: cert!, password: password);
+
+      final now = DateTime.now().toLocal();
+      final dateFormat = DateFormat('dd-MM-yyyy');
+
+      final fechaEmision = dateFormat.format(now);
+      List<EcfDetailsModel> items = [];
+
+      items = sale.items.map((item) {
+        return EcfDetailsModel(
+            cantidad: item.quantity?.toStringAsFixed(2) ?? '',
+            unidadMedida: '',
+            indicadorFacturacion: item.indicadorFacturacion.toString(),
+            indicadorBienOServ:
+                item is SaleItemService || item is CreditNoteService
+                    ? '2'
+                    : '1',
+            nombreItem: item.serviceName != null && item.serviceName!.isNotEmpty
+                ? item.serviceName ?? ''
+                : item.productName ?? '',
+            descripcionItem: '',
+            precioUnitario: item.precio.toStringAsFixed(2),
+            descuentoMonto: '',
+            subDescuentos: [],
+            impuestosAdicionales: [],
+            retencion: esEspecial
+                ? null
+                : item.retentionTax != 0 || item.retentionIsr != 0
+                    ? Retencion(
+                        indicadorAgenteRetencionoPercepcion:
+                            item.indicadorAgentePercepcion.toString(),
+                        montoITBISRetenido: item.retentionTax != null
+                            ? item.retentionTax?.toStringAsFixed(2) ?? ''
+                            : '',
+                        montoISRRetenido: item.retentionIsr != null
+                            ? item.retentionIsr?.toStringAsFixed(2) ?? ''
+                            : '')
+                    : null,
+            otraMonedaDetalles: [],
+            montoItem: item.net?.toStringAsFixed(2) ?? '');
+      }).toList();
+
+      EcfModel ecf = EcfModel(
+          tipoEcf: ecfType,
+          tempDirName: 'temp_7',
+          indicadorMontoGravado: '0',
+          indicadorNotaCredito: esNotaCredito
+              ? calcularCodigoModificacion(widget.sale.createdAt!, now)
+              : '',
+          numeroComprobante: sale.ncf ?? '',
+          numeroComprobanteModificado: sale.ncfAffected ?? '',
+          rncOtroContribuyente:
+              esNotaCredito ? company?.rncOrId?.replaceAll('-', '') ?? '' : '',
+          codigoModificacion:
+              esNotaCredito ? currentOverrideCode.toString() : '',
+          fechaEmision: fechaEmision,
+          fechaVencimiento: esNotaCredito || esConsumo
+              ? ''
+              : fechaVencimiento.format(payload: 'DD-MM-YYYY'),
+          fechaEmisionNcfModificado: esNotaCredito
+              ? widget.sale.createdAt?.format(payload: 'DD-MM-YYYY') ?? ''
+              : '',
+          razonModificacion: '',
+          tipoIngreso: currentTypeIncomeId.toString(),
+          tipoPago: currentPaymentType.toString(),
+          formasDePagos: esNotaCredito ? [] : formasDePagos,
+          sucursal: '',
+          direccionEmisor: company?.address ?? '',
+          municipio: '',
+          provincia: '',
+          telefonoEmisor1: company?.phone1 ?? '',
+          telefonoEmisor2: company?.phone2 ?? '',
+          telefonoEmisor3: '',
+          totalPaginas: '',
+          rncEmisor: company?.rncOrId?.replaceAll('-', '') ?? '',
+          razonSocialEmisor: company?.name ?? '',
+          nombreComercial: '',
+          correoEmisor: company?.email ?? '',
+          website: '',
+          actividadEconomica: '',
+          codigoVendedor: '',
+          informacionAdicionalEmisor: '',
+          rncComprador: rncOrId.text.replaceAll('-', ''),
+          identificadorExtranjero: '',
+          razonSocialComprador: clientName.text.trim(),
+          nombreComprador: '',
+          contactoComprador: '',
+          correoComprador: '',
+          telefonoAdicional: '',
+          direccionComprador: '',
+          municipioComprador: '',
+          provinciaComprador: '',
+          codigoInternoComprador: '',
+          fechaEntrega: '',
+          fechaOrdenCompra: '',
+          numeroOrdenCompra: '',
+          numeroFacturaInterna: '',
+          numeroPedidoInterno: '',
+          zonaVenta: '',
+          rutaVenta: '',
+          paisDestino: '',
+          conductor: '',
+          documentoTransporte: '',
+          ficha: '',
+          placa: '',
+          rutaTransporte: '',
+          zonaTransporte: '',
+          numeroAlbaran: '',
+          totalGravado: totalGravado > 0 ? totalGravado.toStringAsFixed(2) : '',
+          totalGravado18:
+              totalGravado18 > 0 ? totalGravado18.toStringAsFixed(2) : '',
+          totalGravado16:
+              totalGravado16 > 0 ? totalGravado16.toStringAsFixed(2) : '',
+          totalGravadoTasa0: '',
+          montoExento: montoExento > 0 ? montoExento.toStringAsFixed(2) : '',
+          totalItbis: itbisGravado > 0 ? itbisGravado.toStringAsFixed(2) : '',
+          totalItbis18:
+              itbisGravado18 > 0 ? itbisGravado18.toStringAsFixed(2) : '',
+          totalItbis16:
+              itbisGravado16 > 0 ? itbisGravado16.toStringAsFixed(2) : '',
+          totalItbisTasa0: '',
+          itbis1: totalGravado18 > 0 ? '18' : '',
+          itbis2: totalGravado16 > 0 ? '16' : '',
+          itbis3: '',
+          montoTotal:
+              totalFacturado > 0 ? totalFacturado.toStringAsFixed(2) : '',
+          montoPeriodo: '',
+          montoAvancePago: '',
+          valorPagar: esEcf45 ? totalFacturado.toStringAsFixed(2) : '',
+          tipoMoneda: '',
+          tipoCambio: '',
+          montoGravadoTotalOtraMoneda: '',
+          montoGravadoTotalOtraMoneda1: '',
+          montoGravadoTotalOtraMoneda2: '',
+          montoGravadoTotalOtraMoneda3: '',
+          totalItbisOtraMoneda: '',
+          totalItbis1OtraMoneda: '',
+          totalItbis2OtraMoneda: '',
+          totalItbis3OtraMoneda: '',
+          montoExentoOtraMoneda: '',
+          montoTotalOtraMoneda: '',
+          totalItbisRetencion: esEspecial
+              ? ''
+              : totalRetencionItbis > 0
+                  ? totalRetencionItbis.toStringAsFixed(2)
+                  : '',
+          totalIsrRetencion: esEspecial
+              ? ''
+              : totalRetencionIsr > 0
+                  ? totalRetencionIsr.toStringAsFixed(2)
+                  : '',
+          montoImpuestoAdicional: '',
+          impuestosAdicionales: [],
+          terminoPago: '',
+          bancoPago: '',
+          paginas: [],
+          items: items,
+          privateKey: authModel.privateKey,
+          certBase64: authModel.certBase64);
+
+      await ecf.descargarSemilla();
+      await ecf.validarSemilla();
+      await ecf.firmar();
+      await ecf.enviarEcf();
+
+      print(ecf.trackId);
+      print(ecf.token);
+
+      DateFormat xdateFormat = DateFormat('dd-MM-yyyy HH:mm:ss');
+      var fechaFirma = xdateFormat.parse(ecf.fechaHoraFirma);
+      sale.dgiiURL = ecf.uriEcf.toString();
+      sale.signatureDate = fechaFirma;
+      sale.securityCode = ecf.codigoSeguridad;
+      sale.ecfXmlFirmado = ecf.ecfSignXml;
+
+      await sale.updateEcfInfo();
+    } catch (e) {
+      print(e);
+      rethrow;
+    }
   }
 
   @override
   void initState() {
     _ncfs = [...ncfs];
 
-    if (!electronicNcfEnabled) {
-      _ncfs.removeWhere(
-          (e) => e.id == '31' || e.id == '32' || e.id == '34' || e.id == '315');
-    } else {
-      _ncfs.removeWhere(
-          (e) => e.id == '01' || e.id == '02' || e.id == '04' || e.id == '15');
+    if (!isSale) {
+      _ncfs.removeWhere((e) =>
+          e.id == '01' ||
+          e.id == '02' ||
+          e.id == '15' ||
+          e.id == '31' ||
+          e.id == '32' ||
+          e.id == '45' ||
+          e.id == '50');
     }
 
     if (isSale) {
-      _ncfs.removeWhere((e) => e.id?.contains('4') == true);
+      _ncfs.removeWhere((e) => e.id == '34' || e.id == '04');
     } else {
       if (!electronicNcfEnabled) {
         currentNcfTypeId = '04';
@@ -420,6 +814,9 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
 
     issueDateController.value =
         TextEditingValue(text: issueDate.format(payload: 'DD/MM/YYYY'));
+
+    fechaVencimientoController.value =
+        TextEditingValue(text: fechaVencimiento.format(payload: 'DD/MM/YYYY'));
 
     if (widget.editing) {
       clientName.value = TextEditingValue(text: widget.sale.clientName ?? '');
@@ -502,10 +899,14 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                             widget.sale.description = res.description;
                             widget.sale.amountPaid = res.amountPaid;
                             widget.sale.ncf = res.ncf;
+                            widget.sale.createdAt = res.createdAt;
+                            widget.sale.expirationDate = res.expirationDate;
 
                             currentCurrencyId = res.currencyId;
 
                             widget.sale.currencyId = currentCurrencyId;
+
+                            currentPaymentType = res.tipoPago;
 
                             widget.sale.rate = res.rate;
 
@@ -541,7 +942,18 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                                         licensePlate: e.licensePlate,
                                         creditNoteId: e.creditNoteId,
                                         quantity: e.quantity,
-                                        returnQuantity: e.returnQuantity)
+                                        returnQuantity: e.returnQuantity,
+                                        tax18: e.tax18,
+                                        tax16: e.tax16,
+                                        tax3: e.tax3,
+                                        net18: e.net18,
+                                        net16: e.net16,
+                                        net3: e.net3,
+                                        exemptAmount: e.exemptAmount,
+                                        indicadorFacturacion:
+                                            e.indicadorFacturacion,
+                                        indicadorAgentePercepcion:
+                                            e.indicadorAgentePercepcion)
                                     : CreditNoteProduct(
                                         serviceId: e.serviceId,
                                         saleId: e.saleId,
@@ -562,7 +974,18 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                                         licensePlate: e.licensePlate,
                                         creditNoteId: e.creditNoteId,
                                         quantity: e.quantity,
-                                        returnQuantity: e.returnQuantity))
+                                        returnQuantity: e.returnQuantity,
+                                        tax18: e.tax18,
+                                        tax16: e.tax16,
+                                        tax3: e.tax3,
+                                        net18: e.net18,
+                                        net16: e.net16,
+                                        net3: e.net3,
+                                        exemptAmount: e.exemptAmount,
+                                        indicadorFacturacion:
+                                            e.indicadorFacturacion,
+                                        indicadorAgentePercepcion:
+                                            e.indicadorAgentePercepcion))
                                 .toList();
 
                             for (int i = 0; i < items.length; i++) {
@@ -609,9 +1032,8 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                                   .map((e) => DropdownMenuItem(
                                       value: e.id, child: Text(e.name ?? '')))
                                   .toList(),
-                              onChanged: !isSale || widget.editing
-                                  ? null
-                                  : _onSelectedNcf),
+                              onChanged:
+                                  widget.editing ? null : _onSelectedNcf),
                           SizedBox(
                             height: kDefaultPadding,
                           ),
@@ -630,23 +1052,45 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                       Expanded(
                           child: Column(
                         children: [
-                          DropdownButtonFormField(
-                              value: currentTypeIncomeId,
-                              isExpanded: true,
-                              validator: (val) =>
-                                  val == null ? 'CAMPO OBLIGATORIO' : null,
-                              decoration:
-                                  InputDecoration(labelText: 'TIPO DE INGRESO'),
-                              items: typesIncomes
-                                  .map((e) => DropdownMenuItem(
-                                      value: e.id, child: Text(e.name ?? '')))
-                                  .toList(),
-                              onChanged: (option) {
-                                currentTypeIncomeId = option;
-                              }),
-                          SizedBox(
-                            height: kDefaultPadding,
+                          Container(
+                            margin: EdgeInsets.only(bottom: kDefaultPadding),
+                            child: DropdownButtonFormField(
+                                value: currentTypeIncomeId,
+                                isExpanded: true,
+                                validator: (val) =>
+                                    val == null ? 'CAMPO OBLIGATORIO' : null,
+                                decoration: InputDecoration(
+                                    labelText: 'TIPO DE INGRESO'),
+                                items: typesIncomes
+                                    .map((e) => DropdownMenuItem(
+                                        value: e.id, child: Text(e.name ?? '')))
+                                    .toList(),
+                                onChanged: (option) {
+                                  currentTypeIncomeId = option;
+                                }),
                           ),
+                          !isSale
+                              ? Container(
+                                  margin:
+                                      EdgeInsets.only(bottom: kDefaultPadding),
+                                  child: DropdownButtonFormField(
+                                      value: currentOverrideCode,
+                                      isExpanded: true,
+                                      validator: (val) => val == null
+                                          ? 'CAMPO OBLIGATORIO'
+                                          : null,
+                                      decoration: InputDecoration(
+                                          labelText: 'CODIGO MODIFICACION'),
+                                      items: overrideCodes
+                                          .map((e) => DropdownMenuItem(
+                                              value: e.id,
+                                              child: Text(e.name ?? '')))
+                                          .toList(),
+                                      onChanged: (option) {
+                                        currentOverrideCode = option;
+                                      }),
+                                )
+                              : SizedBox(),
                           TextFormField(
                             controller: issueDateController,
                             readOnly: true,
@@ -670,6 +1114,20 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                                 hintText: 'DD/MM/YYYY',
                                 suffixIcon: IconButton(
                                     onPressed: _showDatePicker,
+                                    icon: Icon(Icons.calendar_month))),
+                          ),
+                          SizedBox(
+                            height: kDefaultPadding,
+                          ),
+                          TextFormField(
+                            controller: fechaVencimientoController,
+                            readOnly: true,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                            decoration: InputDecoration(
+                                labelText: 'FECHA DE VENCIMIENTO',
+                                hintText: 'DD/MM/YYYY',
+                                suffixIcon: IconButton(
+                                    onPressed: _showDatePicker3,
                                     icon: Icon(Icons.calendar_month))),
                           )
                         ],
@@ -919,23 +1377,51 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                                 ),
                           widget.sale.debt == 0
                               ? SizedBox()
-                              : DropdownButtonFormField(
-                                  value: currentPaymentMethodId,
-                                  validator: (val) =>
-                                      val == null ? 'CAMPO OBLIGATORIO' : null,
-                                  decoration: InputDecoration(
-                                      labelText: isSale
-                                          ? 'METODO DE PAGO'
-                                          : 'FORMA DE PAGO'),
-                                  items: paymentsMethods
-                                      .map((e) => DropdownMenuItem(
-                                          value: e.id,
-                                          child: Text(e.name ?? '')))
-                                      .toList(),
-                                  onChanged: (option) {
-                                    currentPaymentMethodId = option;
-                                    setState(() {});
-                                  }),
+                              : Container(
+                                  margin: EdgeInsets.symmetric(
+                                      vertical: kDefaultPadding / 2),
+                                  child: DropdownButtonFormField(
+                                      value: currentPaymentMethodId,
+                                      validator: (val) => val == null
+                                          ? 'CAMPO OBLIGATORIO'
+                                          : null,
+                                      decoration: InputDecoration(
+                                          labelText: isSale
+                                              ? 'METODO DE PAGO'
+                                              : 'FORMA DE PAGO'),
+                                      items: paymentsMethods
+                                          .map((e) => DropdownMenuItem(
+                                              value: e.id,
+                                              child: Text(e.name ?? '')))
+                                          .toList(),
+                                      onChanged: (option) {
+                                        currentPaymentMethodId = option;
+                                        formasDePagos = [
+                                          FormaDePago(
+                                              currentPaymentMethodId.toString(),
+                                              montoAPagar.toStringAsFixed(2))
+                                        ];
+                                        setState(() {});
+                                      }),
+                                ),
+                          Container(
+                            margin: EdgeInsets.symmetric(
+                                vertical: kDefaultPadding / 2),
+                            child: DropdownButtonFormField(
+                                value: currentPaymentType,
+                                isExpanded: true,
+                                validator: (val) =>
+                                    val == null ? 'CAMPO OBLIGATORIO' : null,
+                                decoration:
+                                    InputDecoration(labelText: 'TIPO DE PAGO'),
+                                items: paymentsTypes
+                                    .map((e) => DropdownMenuItem(
+                                        value: e.id, child: Text(e.name ?? '')))
+                                    .toList(),
+                                onChanged: (option) {
+                                  currentPaymentType = option;
+                                }),
+                          ),
                           currentPaymentMethodId == 3
                               ? Column(
                                   children: [

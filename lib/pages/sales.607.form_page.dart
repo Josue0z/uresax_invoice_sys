@@ -4,7 +4,6 @@ import 'package:csv/csv.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:open_file/open_file.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:uresax_invoice_sys/models/sale.abs.dart';
 import 'package:uresax_invoice_sys/models/sale.service.dart';
 import 'package:uresax_invoice_sys/settings.dart';
@@ -47,10 +46,7 @@ class _Sales607FormPageState extends State<Sales607FormPage> {
     ], fieldDelimiter: '|');
 
     var dir = await getUresaxInvoiceDir();
-    var file = File(path.join(
-        dir.path,
-        '607',
-        period.text,
+    var file = File(path.join(dir.path, '607', period.text,
         'DGII_F_${company?.rncOrId?.replaceAll('-', '')}_${period.text}.TEXT'));
     await file.create(recursive: true);
     await file.writeAsString(res);

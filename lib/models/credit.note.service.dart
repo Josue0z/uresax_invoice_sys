@@ -124,7 +124,23 @@ class CreditNoteAsService implements Sale {
       this.amountPaid,
       this.currencyId,
       this.rate,
-      this.maxSequence});
+      this.maxSequence,
+      this.tax18,
+      this.tax16,
+      this.tax3,
+      this.net18,
+      this.net16,
+      this.net3,
+      this.exemptAmount,
+      this.authorId,
+      this.dgiiURL,
+      this.ecfXmlFirmado,
+      this.estadoDgii,
+      this.expirationDate,
+      this.securityCode,
+      this.signatureDate,
+      this.tipoPago,
+      this.authorName});
 
   @override
   Future<CreditNoteAsService?> create() async {
@@ -163,8 +179,8 @@ class CreditNoteAsService implements Sale {
             });
         await conne.execute(Sql.named('''
          INSERT INTO public."CreditNote"(
-	       id,"saleId", "clientId", ncf, discount, net, tax, total, effective, "creditCard", "checkOrTransf", "saleToCredit", law10, "typeIncomeId", "clientType", "retentionTax", "retentionIsr", "ncfTypeId", description, prefix,"invoiceTypeId","currencyId", rate, "maxSequence")
-	       VALUES (@id, @saleId, @clientId, $seqParams, @discount, @net, @tax, @total, @effective, @creditCard, @checkOrTransf, @saleToCredit, @law10, @typeIncomeId, @clientType, @retentionTax, @retentionIsr, @ncfTypeId, @description, @prefix,@invoiceTypeId, @currencyId, @rate, @maxSequence);
+	       id,"saleId", "clientId", ncf, discount, net, tax, total, effective, "creditCard", "checkOrTransf", "saleToCredit", law10, "typeIncomeId", "clientType", "retentionTax", "retentionIsr", "ncfTypeId", description, prefix,"invoiceTypeId","currencyId", rate, "maxSequence",tax18,tax16,tax3,net18,net16,net3,"exemptAmount","expirationDate","authorId")
+	       VALUES (@id, @saleId, @clientId, $seqParams, @discount, @net, @tax, @total, @effective, @creditCard, @checkOrTransf, @saleToCredit, @law10, @typeIncomeId, @clientType, @retentionTax, @retentionIsr, @ncfTypeId, @description, @prefix,@invoiceTypeId, @currencyId, @rate, @maxSequence,@tax18,@tax16,@tax3,@net18,@net16,@net3,@exemptAmount,@expirationDate,@authorId);
 
       '''), parameters: map);
 
@@ -177,8 +193,8 @@ class CreditNoteAsService implements Sale {
             subMap['creditNoteId'] = id;
             await conne.execute(
                 Sql.named('''INSERT INTO public."CreditNoteService"(
-	       id,"creditNoteId", "serviceId", discount, net, tax, total, "retentionTax", "retentionIsr", quantity, "taxId", "discountId", "retentionTaxId", "retentionIsrId")
-	       VALUES (@id, @creditNoteId, @serviceId, @discount, @net, @tax, @total, @retentionTax, @retentionIsr, @quantity, @taxId, @discountId, @retentionTaxId, @retentionIsrId); '''),
+	       id,"creditNoteId", "serviceId", discount, net, tax, total, "retentionTax", "retentionIsr", quantity, "taxId", "discountId", "retentionTaxId", "retentionIsrId",tax18,tax16,tax3,net18,net16,net3,"exemptAmount","indicadorFacturacion","indicadorAgentePercepcion")
+	       VALUES (@id, @creditNoteId, @serviceId, @discount, @net, @tax, @total, @retentionTax, @retentionIsr, @quantity, @taxId, @discountId, @retentionTaxId, @retentionIsrId,@tax18,@tax16,@tax3,@net18,@net16,@net3,@exemptAmount,@indicadorFacturacion,@indicadorAgentePercepcion); '''),
                 parameters: subMap);
           }
         }
@@ -297,7 +313,16 @@ class CreditNoteAsService implements Sale {
       'saleId': saleId,
       'currencyId': currencyId,
       'rate': rate,
-      'maxSequence': maxSequence
+      'maxSequence': maxSequence,
+      'tax18': tax18,
+      'tax16': tax16,
+      'tax3': tax3,
+      'net18': net18,
+      'net16': net16,
+      'net3': net3,
+      'exemptAmount': exemptAmount,
+      'expirationDate': expirationDate,
+      'authorId': authorId
     };
   }
 
@@ -401,7 +426,29 @@ class CreditNoteAsService implements Sale {
         createdAt: map['createdAt'],
         invoiceTypeId: map['invoiceTypeId'],
         currencyId: map['currencyId'],
-        rate: map['rate'] != null ? double.parse(map['rate']) : null);
+        rate: map['rate'] != null
+            ? double.parse(
+                map['rate'],
+              )
+            : null,
+        expirationDate: map['expirationDate'],
+        tax18: map['tax18'] != null ? double.parse(map['tax18']) : null,
+        tax16: map['tax16'] != null ? double.parse(map['tax16']) : null,
+        tax3: map['tax3'] != null ? double.parse(map['tax3']) : null,
+        net18: map['net18'] != null ? double.parse(map['net18']) : null,
+        net16: map['net16'] != null ? double.parse(map['net16']) : null,
+        net3: map['net3'] != null ? double.parse(map['net3']) : null,
+        exemptAmount: map['exemptAmount'] != null
+            ? double.parse(map['exemptAmount'])
+            : null,
+        dgiiURL: map['dgiiURL'],
+        ecfXmlFirmado: map['ecfXmlFirmado'],
+        estadoDgii: map['estadoDgii'],
+        securityCode: map['securityCode'],
+        signatureDate: map['signatureDate'],
+        tipoPago: map['tipoPago'],
+        authorId: map['authorId'],
+        authorName: map['authorName']);
   }
 
   String toJson() => json.encode(toMap());
@@ -568,4 +615,78 @@ class CreditNoteAsService implements Sale {
 
   @override
   int? maxSequence;
+
+  @override
+  String? authorId;
+
+  @override
+  String? dgiiURL;
+
+  @override
+  String? ecfXmlFirmado;
+
+  @override
+  int? estadoDgii;
+
+  @override
+  double? exemptAmount;
+
+  @override
+  DateTime? expirationDate;
+
+  @override
+  double? net16;
+
+  @override
+  double? net18;
+
+  @override
+  double? net3;
+
+  @override
+  String? securityCode;
+
+  @override
+  DateTime? signatureDate;
+
+  @override
+  double? tax16;
+
+  @override
+  double? tax18;
+
+  @override
+  double? tax3;
+
+  @override
+  int? tipoPago;
+
+  @override
+  String? authorName;
+
+  @override
+  Future<void> updateEcfInfo() async {
+    try {
+      final conne = SqlConector.connection;
+      await conne?.runTx((conne) async {
+        await conne.execute(Sql.named('''update public."CreditNote" 
+                  set 
+                  "signatureDate" = @signatureDate,
+                  "securityCode" = @securityCode,
+                  "dgiiURL" = @dgiiURL,
+                  "ecfXmlFirmado" = @ecfXmlFirmado,
+                  "estadoDgii" = @estadoDgii
+                  where id = @id'''), parameters: {
+          'id': id,
+          'signatureDate': signatureDate,
+          'securityCode': securityCode,
+          'dgiiURL': dgiiURL,
+          'ecfXmlFirmado': ecfXmlFirmado,
+          'estadoDgii': estadoDgii
+        });
+      });
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

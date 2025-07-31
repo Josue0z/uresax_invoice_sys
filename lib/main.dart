@@ -8,7 +8,9 @@ import 'package:uresax_invoice_sys/models/bank.dart';
 import 'package:uresax_invoice_sys/models/company.dart';
 import 'package:uresax_invoice_sys/models/currency.dart';
 import 'package:uresax_invoice_sys/models/ncftype.dart';
+import 'package:uresax_invoice_sys/models/override.codes.dart';
 import 'package:uresax_invoice_sys/models/payment.method.dart';
+import 'package:uresax_invoice_sys/models/payment.type.dart';
 import 'package:uresax_invoice_sys/models/permission.dart';
 import 'package:uresax_invoice_sys/models/role.dart';
 import 'package:uresax_invoice_sys/models/taxes.dart';
@@ -75,6 +77,15 @@ class _MyAppState extends State<MyApp> {
 
     taxes = [Taxes(name: 'EXENTO'), ...await Taxes.get()];
     currencies = [Currency(name: 'MONEDA'), ...await Currency.get()];
+    paymentsTypes = [
+      PaymentType(name: 'TIPO DE PAGO'),
+      ...await PaymentType.get()
+    ];
+
+    overrideCodes = [
+      OverrideCode(name: 'TIPO DE PAGO'),
+      ...await OverrideCode.get()
+    ];
 
     await isValidCertFilePath();
 
