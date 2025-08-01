@@ -311,7 +311,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
       total,
       retentionIsr,
       retentionTax,
-      (total - (retentionIsr + retentionTax)).ceilToDouble(),
+      (total - (retentionIsr + retentionTax)),
       tax18,
       tax16,
       tax3,
