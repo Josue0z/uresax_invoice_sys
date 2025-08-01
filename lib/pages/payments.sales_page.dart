@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:moment_dart/moment_dart.dart';
 import 'package:open_file/open_file.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:uresax_invoice_sys/models/payment.dart';
 import 'package:uresax_invoice_sys/models/sale.abs.dart';
 import 'package:uresax_invoice_sys/settings.dart';
@@ -36,7 +35,10 @@ class _PaymentSalesPageState extends State<PaymentSalesPage> {
     var dir = await getUresaxInvoiceDir();
     var bytes = await doc.save();
 
-    var file = File(path.join(dir.path,'PAGOS', payment.createdAt?.format(payload: 'YYYYMM'),
+    var file = File(path.join(
+        dir.path,
+        'PAGOS',
+        payment.createdAt?.format(payload: 'YYYYMM'),
         'PDFS',
         'PAGO-${payment.id}-${payment.ncf}-${company?.name}.PDF'));
     await file.create(recursive: true);

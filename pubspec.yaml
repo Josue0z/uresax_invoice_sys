@@ -63,7 +63,7 @@ dependencies:
   dio: any
   file_picker: ^10.2.0
   localstorage: ^5.0.0
-  ecf_dgii: ^1.0.16
+  ecf_dgii: ^1.0.17
 
 
 dependency_overrides:

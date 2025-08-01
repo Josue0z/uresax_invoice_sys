@@ -24,11 +24,14 @@ class InvoiceItemGeneratorWidget extends StatefulWidget {
 
   bool editing;
 
+  bool esGubernamental;
+
   Function(SaleItem) onChanged;
 
   InvoiceItemGeneratorWidget(
       {super.key,
       this.editing = false,
+      this.esGubernamental = false,
       required this.saleItem,
       required this.saleItems,
       required this.enableds,
@@ -263,14 +266,13 @@ class _InvoiceItemGeneratorWidgetState
   void initState() {
     if (!mounted) return;
 
+    _initAsync();
+
     currenId = widget.saleItem.serviceId ?? widget.saleItem.productId;
 
     currentTaxId = widget.saleItem.retentionTaxId;
     currentRetentionIsrId = widget.saleItem.retentionIsrId;
     currentRetentionTaxId = widget.saleItem.retentionTaxId;
-
-    _initAsync();
-
     net.value =
         TextEditingValue(text: widget.saleItem.net?.toStringAsFixed(2) ?? '');
 
@@ -293,8 +295,6 @@ class _InvoiceItemGeneratorWidgetState
     currentRetentionIsrId = widget.saleItem.retentionIsrId;
 
     totalToPay.value = TextEditingValue(text: amountPaid.toStringAsFixed(2));
-
-    setState(() {});
 
     super.initState();
   }
@@ -340,6 +340,58 @@ class _InvoiceItemGeneratorWidgetState
                   ],
                 )
               : SizedBox(),
+          SizedBox(
+            width: 150,
+            child: TextFormField(
+              controller: quantity,
+              readOnly: widget.saleItem is CreditNoteProduct ||
+                  widget.saleItem is CreditNoteService ||
+                  widget.editing,
+              onChanged: _onChangedQuantity,
+              decoration: InputDecoration(
+                  labelText: 'CANTIDAD',
+                  hintText: '0',
+                  suffixIcon: widget.saleItem is CreditNoteProduct
+                      ? Wrap(
+                          children: [
+                            IconButton(
+                                onPressed: () {
+                                  if (widget.saleItem.quantity == 1) return;
+                                  widget.saleItem.quantity =
+                                      widget.saleItem.quantity! - 1;
+                                  widget.saleItem.returnQuantity =
+                                      widget.saleItem.returnQuantity! - 1;
+                                  _calc();
+                                },
+                                icon: Icon(Icons.remove)),
+                            SizedBox(
+                              width: kDefaultPadding / 2,
+                            ),
+                            IconButton(
+                                onPressed: () {
+                                  if (widget.saleItem.quantity! >=
+                                      startQuantity) {
+                                    return;
+                                  }
+                                  widget.saleItem.quantity =
+                                      widget.saleItem.quantity! + 1;
+                                  widget.saleItem.returnQuantity =
+                                      widget.saleItem.returnQuantity! + 1;
+
+                                  _calc();
+                                },
+                                icon: Icon(Icons.add)),
+                            SizedBox(
+                              width: kDefaultPadding / 2,
+                            )
+                          ],
+                        )
+                      : SizedBox()),
+            ),
+          ),
+          SizedBox(
+            width: kDefaultPadding,
+          ),
           CustomDropdownFormField(
               title: title,
               initialValue: currenId,
@@ -404,103 +456,49 @@ class _InvoiceItemGeneratorWidgetState
               decoration: InputDecoration(labelText: 'TOTAL', hintText: '0.00'),
             ),
           ),
-          SizedBox(
-            width: kDefaultPadding,
-          ),
-          SizedBox(
+          widget.esGubernamental
+              ? SizedBox()
+              : Container(
+                  width: 200,
+                  margin: EdgeInsets.only(left: kDefaultPadding),
+                  child: DropdownButtonFormField(
+                      isExpanded: true,
+                      value: currentRetentionTaxId,
+                      decoration: InputDecoration(labelText: 'RETENCION ITBIS'),
+                      items: retentionsTaxes
+                          .map((e) => DropdownMenuItem(
+                              value: e.id, child: Text(e.name ?? '')))
+                          .toList(),
+                      onChanged: widget.saleItem is CreditNoteProduct ||
+                              widget.saleItem is CreditNoteService ||
+                              (widget.editing &&
+                                  widget.saleItem.retentionTaxId != null)
+                          ? null
+                          : _onSelectedRetentionTax),
+                ),
+          widget.esGubernamental
+              ? SizedBox()
+              : Container(
+                  width: 200,
+                  margin: EdgeInsets.only(left: kDefaultPadding),
+                  child: DropdownButtonFormField(
+                      value: currentRetentionIsrId,
+                      isExpanded: true,
+                      decoration: InputDecoration(labelText: 'RETENCION ISR'),
+                      items: retentionsIsrs
+                          .map((e) => DropdownMenuItem(
+                              value: e.id, child: Text(e.name ?? '')))
+                          .toList(),
+                      onChanged: widget.saleItem is CreditNoteProduct ||
+                              widget.saleItem is CreditNoteService ||
+                              (widget.editing &&
+                                  widget.saleItem.retentionIsrId != null)
+                          ? null
+                          : _onSelectedRetentionIsr),
+                ),
+          Container(
             width: 150,
-            child: TextFormField(
-              controller: quantity,
-              readOnly: widget.saleItem is CreditNoteProduct ||
-                  widget.saleItem is CreditNoteService ||
-                  widget.editing,
-              onChanged: _onChangedQuantity,
-              decoration: InputDecoration(
-                  labelText: 'CANTIDAD',
-                  hintText: '0',
-                  suffixIcon: widget.saleItem is CreditNoteProduct
-                      ? Wrap(
-                          children: [
-                            IconButton(
-                                onPressed: () {
-                                  if (widget.saleItem.quantity == 1) return;
-                                  widget.saleItem.quantity =
-                                      widget.saleItem.quantity! - 1;
-                                  widget.saleItem.returnQuantity =
-                                      widget.saleItem.returnQuantity! - 1;
-                                  _calc();
-                                },
-                                icon: Icon(Icons.remove)),
-                            SizedBox(
-                              width: kDefaultPadding / 2,
-                            ),
-                            IconButton(
-                                onPressed: () {
-                                  if (widget.saleItem.quantity! >=
-                                      startQuantity) {
-                                    return;
-                                  }
-                                  widget.saleItem.quantity =
-                                      widget.saleItem.quantity! + 1;
-                                  widget.saleItem.returnQuantity =
-                                      widget.saleItem.returnQuantity! + 1;
-
-                                  _calc();
-                                },
-                                icon: Icon(Icons.add)),
-                            SizedBox(
-                              width: kDefaultPadding / 2,
-                            )
-                          ],
-                        )
-                      : SizedBox()),
-            ),
-          ),
-          SizedBox(
-            width: kDefaultPadding,
-          ),
-          SizedBox(
-            width: 150,
-            child: DropdownButtonFormField(
-                isExpanded: true,
-                value: currentRetentionTaxId,
-                decoration: InputDecoration(labelText: 'RETENCION ITBIS'),
-                items: retentionsTaxes
-                    .map((e) => DropdownMenuItem(
-                        value: e.id, child: Text(e.name ?? '')))
-                    .toList(),
-                onChanged: widget.saleItem is CreditNoteProduct ||
-                        widget.saleItem is CreditNoteService ||
-                        (widget.editing &&
-                            widget.saleItem.retentionTaxId != null)
-                    ? null
-                    : _onSelectedRetentionTax),
-          ),
-          SizedBox(
-            width: kDefaultPadding,
-          ),
-          SizedBox(
-            width: 150,
-            child: DropdownButtonFormField(
-                value: currentRetentionIsrId,
-                isExpanded: true,
-                decoration: InputDecoration(labelText: 'RETENCION ISR'),
-                items: retentionsIsrs
-                    .map((e) => DropdownMenuItem(
-                        value: e.id, child: Text(e.name ?? '')))
-                    .toList(),
-                onChanged: widget.saleItem is CreditNoteProduct ||
-                        widget.saleItem is CreditNoteService ||
-                        (widget.editing &&
-                            widget.saleItem.retentionIsrId != null)
-                    ? null
-                    : _onSelectedRetentionIsr),
-          ),
-          SizedBox(
-            width: kDefaultPadding,
-          ),
-          SizedBox(
-            width: 150,
+            margin: EdgeInsets.only(left: kDefaultPadding),
             child: TextFormField(
               controller: totalToPay,
               readOnly: true,

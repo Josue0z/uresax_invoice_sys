@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:amount_input_formatter/amount_input_formatter.dart';
 import 'package:ecf_dgii/ecf_dgii.dart';
 
@@ -72,11 +70,16 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
   TextEditingController rate = TextEditingController();
 
   bool isValid = false;
+
   List<NcfType> _ncfs = [];
 
   List<FormaDePago> formasDePagos = [];
 
   Sale? _currentSale;
+
+  bool get esGubernamental {
+    return currentNcfTypeId == '45' || currentNcfTypeId == '15';
+  }
 
   _onSubmit() async {
     if (_formKey.currentState!.validate()) {
@@ -232,6 +235,22 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
       } else {
         currentPrefix = 'E';
         maxSequence = 10;
+      }
+
+      if (esGubernamental) {
+        retentionDate = null;
+        retentionDateController.value = TextEditingValue.empty;
+
+        for (int i = 0; i < widget.items.length; i++) {
+          var item = widget.items[i];
+          item.retentionIsrId = null;
+          item.retentionIsr = 0;
+          item.retentionTaxId = null;
+          item.retentionTax = 0;
+        }
+        setState(() {});
+      } else {
+        setState(() {});
       }
     }
     /*if (option != null) {
@@ -661,6 +680,9 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
           fechaEmisionNcfModificado: esNotaCredito
               ? widget.sale.createdAt?.format(payload: 'DD-MM-YYYY') ?? ''
               : '',
+          fechaLimitePago: currentPaymentType == 1
+              ? ''
+              : fechaVencimiento.format(payload: 'DD-MM-YYYY'),
           razonModificacion: '',
           tipoIngreso: currentTypeIncomeId.toString(),
           tipoPago: currentPaymentType.toString(),
@@ -1105,17 +1127,19 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                           SizedBox(
                             height: kDefaultPadding,
                           ),
-                          TextFormField(
-                            controller: retentionDateController,
-                            readOnly: true,
-                            style: Theme.of(context).textTheme.bodyMedium,
-                            decoration: InputDecoration(
-                                labelText: 'FECHA DE RETENCION',
-                                hintText: 'DD/MM/YYYY',
-                                suffixIcon: IconButton(
-                                    onPressed: _showDatePicker,
-                                    icon: Icon(Icons.calendar_month))),
-                          ),
+                          esGubernamental
+                              ? SizedBox()
+                              : TextFormField(
+                                  controller: retentionDateController,
+                                  readOnly: true,
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                  decoration: InputDecoration(
+                                      labelText: 'FECHA DE RETENCION',
+                                      hintText: 'DD/MM/YYYY',
+                                      suffixIcon: IconButton(
+                                          onPressed: _showDatePicker,
+                                          icon: Icon(Icons.calendar_month))),
+                                ),
                           SizedBox(
                             height: kDefaultPadding,
                           ),
@@ -1150,6 +1174,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                               saleItem: item,
                               saleItems: widget.items,
                               editing: widget.editing,
+                              esGubernamental: esGubernamental,
                               enableds: widget.items
                                   .where((e) => e.enabled == true)
                                   .toList(),

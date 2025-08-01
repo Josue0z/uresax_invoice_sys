@@ -163,10 +163,12 @@ class _HomePageState extends State<HomePage> {
         _showProductsPage();
         break;
       case 8:
-        _showInvoiceGenerator(SaleMode.service, [], CreditNoteAsService());
+        _showInvoiceGenerator(
+            SaleMode.service, List.of([]), CreditNoteAsService());
         break;
       case 9:
-        _showInvoiceGenerator(SaleMode.product, [], CreditNoteAsProduct());
+        _showInvoiceGenerator(
+            SaleMode.product, List.of([]), CreditNoteAsProduct());
         break;
       case 10:
         _showCreditNotes();

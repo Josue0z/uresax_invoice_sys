@@ -237,10 +237,10 @@ packages:
     dependency: "direct main"
     description:
       name: ecf_dgii
-      sha256: f30d40f435b732afa14eb8cc502ee6f10e36ffe652461ebb6d355883b085ccc6
+      sha256: "365e59a484bad1fa336673dcd91b792facab8a9d5d7f69f55f067b517204f78c"
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.16"
+    version: "1.0.17"
   expressions:
     dependency: transitive
     description:
