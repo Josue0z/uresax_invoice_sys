@@ -27,9 +27,10 @@ class SalesPage extends StatefulWidget {
 
 class _SalesPageState extends State<SalesPage> {
   List<Sale> sales = [];
-  List<DateTime?> dates = [
-    DateTime.now().startOfMonth(),
-    DateTime.now().endOfMonth()
+  DateTime startDate = DateTime.now();
+  late List<DateTime?> dates = [
+    startDate,
+    DateTime(startDate.year, startDate.month, startDate.day, 23, 59, 59)
   ];
 
   List<Map<String, dynamic>> options = [
@@ -152,6 +153,20 @@ class _SalesPageState extends State<SalesPage> {
     }
   }
 
+  _generateXmlFile(Sale sale) async {
+    try {
+      var dir = await getUresaxInvoiceDir();
+      var file = File(path.join(dir.path, 'VENTAS',
+          sale.createdAt?.format(payload: 'YYYYMM'), 'XML', '${sale.ncf}.xml'));
+      await file.create(recursive: true);
+      await file.writeAsString(sale.ecfXmlFirmado ?? '');
+
+      await OpenFile.open(file.path);
+    } catch (e) {
+      showTopSnackBar(context, message: e.toString(), color: Colors.red);
+    }
+  }
+
   _onSelectedSaleOption(int? option, Sale sale) async {
     switch (option) {
       case 1:
@@ -164,6 +179,9 @@ class _SalesPageState extends State<SalesPage> {
         _showPaymentModal(sale);
       case 4:
         _showInvoicePage(sale);
+        break;
+      case 5:
+        _generateXmlFile(sale);
         break;
       default:
     }
@@ -182,9 +200,14 @@ class _SalesPageState extends State<SalesPage> {
             {'id': 3, 'name': 'Abonar pago'},
           ];
 
-          if (sale.retentionDate == null && sale.debt! > 0) {
+          if (sale.retentionDate == null || sale.debt! > 0) {
             salesOptions.add({'id': 4, 'name': 'Editar Factura'});
-          } else {}
+          }
+
+          if (sale.ecfXmlFirmado != null) {
+            salesOptions
+                .add({'id': 5, 'name': 'Generar Archivo XML del ${sale.ncf}'});
+          }
 
           return ListTile(
             minVerticalPadding: kDefaultPadding,
@@ -310,6 +333,14 @@ class _SalesPageState extends State<SalesPage> {
                       dates: dates,
                       onChanged: (xdates) async {
                         dates = xdates;
+                        dates = [
+                          xdates.first,
+                          xdates.last!.copyWith(
+                            hour: 23,
+                            minute: 59,
+                            second: 59,
+                          )
+                        ];
                         _renderInvoices();
                       }),
                 ),

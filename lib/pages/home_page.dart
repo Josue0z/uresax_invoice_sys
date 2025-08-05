@@ -16,6 +16,8 @@ import 'package:uresax_invoice_sys/pages/clients_page.dart';
 import 'package:uresax_invoice_sys/pages/credit.notes_page.dart';
 import 'package:uresax_invoice_sys/pages/invoice_generator_page.dart';
 import 'package:uresax_invoice_sys/pages/login_page.dart';
+import 'package:uresax_invoice_sys/pages/ncf.list_page.dart';
+import 'package:uresax_invoice_sys/pages/ncfs.sequences_page.dart';
 import 'package:uresax_invoice_sys/pages/products_page.dart';
 import 'package:uresax_invoice_sys/pages/sales.607.form_page.dart';
 import 'package:uresax_invoice_sys/pages/sales_page.dart';
@@ -81,6 +83,16 @@ class _HomePageState extends State<HomePage> {
       'id': 7,
       'title': 'GENERADOR DE FORMULARIO 607',
       'svg': 'assets/svgs/undraw_complete-form_aarh.svg'
+    },
+    {
+      'id': 11,
+      'title': 'VER TUS COMPROBANTES',
+      'svg': 'assets/svgs/undraw_complete-form_aarh.svg'
+    },
+    {
+      'id': 12,
+      'title': 'LISTA NCFS AGREGADOS',
+      'svg': 'assets/svgs/undraw_complete-form_aarh.svg'
     }
   ];
 
@@ -137,6 +149,16 @@ class _HomePageState extends State<HomePage> {
         context: context, builder: (ctx) => ElectronicNcfSettingsModal());
   }
 
+  _showNcfs() async {
+    await Navigator.push(
+        context, MaterialPageRoute(builder: (ctx) => NcfsSequencesPage()));
+  }
+
+  _showNcfsList() async {
+    await Navigator.push(
+        context, MaterialPageRoute(builder: (ctx) => NcfListPage()));
+  }
+
   _showPage(int id) {
     switch (id) {
       case 1:
@@ -172,6 +194,12 @@ class _HomePageState extends State<HomePage> {
         break;
       case 10:
         _showCreditNotes();
+        break;
+      case 11:
+        _showNcfs();
+        break;
+      case 12:
+        _showNcfsList();
         break;
       default:
     }
@@ -220,6 +248,10 @@ class _HomePageState extends State<HomePage> {
 
     if (!currentUser!.permissions!.contains('ALLOW_VIEW_CREATE_FORM_607')) {
       options.removeWhere((e) => e['id'] == 7);
+    }
+
+    if (!currentUser!.permissions!.contains('ALLOW_VIEW_NCFS_EDITOR')) {
+      options.removeWhere((e) => e['id'] == 11);
     }
 
     return Scaffold(

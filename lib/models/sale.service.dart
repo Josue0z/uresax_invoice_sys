@@ -516,7 +516,7 @@ class SaleService implements Sale {
       final conne = SqlConector.connection;
       var result = await conne?.execute(
           Sql.named(
-              '''select * from public."Sales607Form" where to_char("createdAt",'YYYYMM') = @period and not ("ncfTypeId" = '02' or "ncfTypeId" = '50' or "ncfTypeId" = '31' or "ncfTypeId" = '32' or "ncfTypeId" = '34') '''),
+              '''select * from public."Sales607Form" where to_char("createdAt",'YYYYMM') = @period and not ("ncfTypeId" = '02' or "ncfTypeId" = '50' or "ncfTypeId" = '31' or "ncfTypeId" = '32' or "ncfTypeId" = '34' or "ncfTypeId" = '45') '''),
           parameters: {'period': period});
       return result
               ?.map((e) => SaleService.fromMap(e.toColumnMap()))

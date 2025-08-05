@@ -1,4 +1,5 @@
 import 'package:amount_input_formatter/amount_input_formatter.dart';
+import 'package:dio/dio.dart';
 import 'package:ecf_dgii/ecf_dgii.dart';
 
 import 'package:flutter/material.dart';
@@ -11,6 +12,7 @@ import 'package:uresax_invoice_sys/models/credit.note.item.product.dart';
 import 'package:uresax_invoice_sys/models/credit.note.item.service.dart';
 import 'package:uresax_invoice_sys/models/credit.note.product.dart';
 import 'package:uresax_invoice_sys/models/credit.note.service.dart';
+import 'package:uresax_invoice_sys/models/ncf.secuencia.dart';
 import 'package:uresax_invoice_sys/models/ncftype.dart';
 import 'package:uresax_invoice_sys/models/sale.abs.dart';
 import 'package:uresax_invoice_sys/models/sale.item.abs.dart';
@@ -154,6 +156,13 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
           widget.sale.maxSequence = 8;
         }
 
+        if (widget.sale.prefix == 'E') {
+          var xhas = await hasInternet();
+          if (!xhas) {
+            throw 'NO PUEDE GENERAR FACTURAS ELECTRONICAS SIN INTERNET';
+          }
+        }
+
         widget.sale.paid = amountInputFormatter.doubleValue;
 
         if (!widget.editing &&
@@ -253,11 +262,19 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
         setState(() {});
       }
     }
-    /*if (option != null) {
-       await _getNcfLabel();
-    } else {
-    ncfLabel = '';
-    }*/
+    try {
+      int umbral = 12;
+      var checkObj =
+          await NcfSecuencia(id: currentNcfTypeId).checkNcfs(umbral: umbral);
+
+      if (checkObj != null) {
+        int dif = checkObj['dif'];
+        String name = checkObj['name'];
+        throw 'QUEDAN $dif $name';
+      }
+    } catch (e) {
+      showTopSnackBar(context, message: e.toString(), color: Colors.red);
+    }
   }
 
   _addSaleItemService() async {
@@ -798,7 +815,6 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
 
       await sale.updateEcfInfo();
     } catch (e) {
-      print(e);
       rethrow;
     }
   }

@@ -214,6 +214,8 @@ Future<List<Sale>> getCreditNotes(
       'date2': endDate.toIso8601String()
     };
 
+    print(parameters);
+
     if (search != null) {
       params +=
           ' and (lower("ncf") like @ncf or lower("clientName") like @clientName)';

@@ -24,9 +24,10 @@ class _CreditNotesPageState extends State<CreditNotesPage> {
   String? search;
 
   List<Sale> creditNotes = [];
-  List<DateTime?> dates = [
-    DateTime.now().startOfMonth(),
-    DateTime.now().endOfMonth()
+  DateTime startDate = DateTime.now();
+  late List<DateTime?> dates = [
+    startDate,
+    DateTime(startDate.year, startDate.month, startDate.day, 23, 59, 59)
   ];
 
   List<Map<String, dynamic>> salesOptions = [
@@ -195,7 +196,14 @@ class _CreditNotesPageState extends State<CreditNotesPage> {
                 child: DateRangeWidget(
                     dates: dates,
                     onChanged: (xdates) async {
-                      dates = xdates;
+                      dates = [
+                        xdates.first,
+                        xdates.last!.copyWith(
+                          hour: 23,
+                          minute: 59,
+                          second: 59,
+                        )
+                      ];
                       _initAsync();
                     }),
               ),

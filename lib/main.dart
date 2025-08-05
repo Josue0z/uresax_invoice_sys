@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_platform_alert/flutter_platform_alert.dart';
 import 'package:localstorage/localstorage.dart';
 import 'package:uresax_invoice_sys/apis/sql.dart';
 import 'package:uresax_invoice_sys/models/bank.dart';
@@ -22,30 +24,56 @@ import 'package:uresax_invoice_sys/widgets/startup-loader.dart';
 import 'package:window_manager/window_manager.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await initLocalStorage();
+  try {
+    WidgetsFlutterBinding.ensureInitialized();
 
-  await windowManager.ensureInitialized();
+    var hostname = Platform.environment['URESAX_INVOICE_DATABASE_HOSTNAME'];
+    var databaseName = Platform.environment['URESAX_INVOICE_DATABASE_NAME'];
+    var dbUsername = Platform.environment['URESAX_INVOICE_DATABASE_USERNAME'];
+    var dbPassword = Platform.environment['URESAX_INVOICE_DATABASE_PASSWORD'];
 
-  Size sizeWindow = Size(1024, 700);
+    await initLocalStorage();
 
-  WindowOptions windowOptions = WindowOptions(
-    size: sizeWindow,
-    minimumSize: sizeWindow,
-    center: true,
-    backgroundColor: Colors.transparent,
-  );
+    await windowManager.ensureInitialized();
 
-  await SqlConector.initialize();
+    Size sizeWindow = Size(1024, 700);
 
-  runApp(MyApp());
+    WindowOptions windowOptions = WindowOptions(
+      size: sizeWindow,
+      minimumSize: sizeWindow,
+      center: true,
+      backgroundColor: Colors.transparent,
+    );
 
-  windowManager.waitUntilReadyToShow(windowOptions, () async {
-    await windowManager.show();
-    await windowManager.focus();
-    await windowManager.setMinimizable(true);
-    await windowManager.setMaximizable(true);
-  });
+    if (hostname == null ||
+        databaseName == null ||
+        dbUsername == null ||
+        dbPassword == null) {
+      throw 'NO ESTA CONFIGURADO LOS DATOS DEL SERVIDOR';
+    }
+
+    await SqlConector.initialize();
+
+    runApp(MyApp());
+
+    windowManager.waitUntilReadyToShow(windowOptions, () async {
+      await windowManager.show();
+      await windowManager.focus();
+      await windowManager.setMinimizable(true);
+      await windowManager.setMaximizable(true);
+    });
+  } catch (e) {
+    await FlutterPlatformAlert.playAlertSound();
+
+    await FlutterPlatformAlert.showAlert(
+      windowTitle: 'ALERTA',
+      text: e.toString(),
+      alertStyle: AlertButtonStyle.yesNoCancel,
+      iconStyle: IconStyle.information,
+    );
+
+    await windowManager.close();
+  }
 }
 
 class MyApp extends StatefulWidget {

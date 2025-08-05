@@ -5,6 +5,7 @@ import 'package:localstorage/localstorage.dart';
 import 'package:path/path.dart' as path;
 import 'package:uresax_invoice_sys/apis/electronic.ncf.api.request.dart';
 import 'package:uresax_invoice_sys/settings.dart';
+import 'package:http/http.dart' as http;
 
 void showTopSnackBar(BuildContext context,
     {required String message,
@@ -96,4 +97,32 @@ Future<bool> isValidCertFilePath() async {
     electronicNcfEnabled = false;
     return false;
   }
+}
+
+Future<bool> hasInternet() async {
+  try {
+    final result = await http
+        .get(Uri.parse('https://www.google.com'))
+        .timeout(Duration(seconds: 5));
+    return result.statusCode == 200;
+  } catch (_) {
+    return false;
+  }
+}
+
+showLoader(BuildContext context) async {
+  return showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(),
+          content: SizedBox(
+            width: 250,
+            height: 250,
+            child: Center(
+              child: CircularProgressIndicator(),
+            ),
+          ),
+        );
+      });
 }
