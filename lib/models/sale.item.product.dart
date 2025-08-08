@@ -58,7 +58,8 @@ class SaleItemProduct implements SaleItem {
       this.net3,
       this.exemptAmount,
       this.indicadorFacturacion,
-      this.indicadorAgentePercepcion});
+      this.indicadorAgentePercepcion,
+      this.price});
 
   @override
   int? productId;
@@ -108,7 +109,8 @@ class SaleItemProduct implements SaleItem {
   Map<String, dynamic> toDisplay() {
     String description = productName ?? '';
 
-    if (chassis != null) {
+    if ((chassis != null && chassis != '') ||
+        (licensePlate != null && licensePlate != '')) {
       description = '$productName\nCHASIS: $chassis\nPLACA: $licensePlate';
     }
     return {
@@ -184,7 +186,8 @@ class SaleItemProduct implements SaleItem {
             ? double.parse(map['exemptAmount'])
             : null,
         indicadorFacturacion: map['indicadorFacturacion'],
-        indicadorAgentePercepcion: map['indicadorAgentePercepcion']);
+        indicadorAgentePercepcion: map['indicadorAgentePercepcion'],
+        price: double.parse(map['price']));
   }
 
   String toJson() => json.encode(toMap());
@@ -274,7 +277,9 @@ class SaleItemProduct implements SaleItem {
 
   @override
   double get precio {
-    if (net == null) return 0;
-    return (net! / quantity!);
+    return price ?? 0;
   }
+
+  @override
+  double? price;
 }

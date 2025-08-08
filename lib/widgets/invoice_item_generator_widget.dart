@@ -44,10 +44,6 @@ class InvoiceItemGeneratorWidget extends StatefulWidget {
 
 class _InvoiceItemGeneratorWidgetState
     extends State<InvoiceItemGeneratorWidget> {
-  List<SaleElement> elements = [];
-  List<Taxes> taxes = [];
-  List<RetentionTax> retentionsTaxes = [];
-  List<RetentionIsr> retentionsIsrs = [];
   TextEditingController net = TextEditingController();
   TextEditingController tax = TextEditingController();
   TextEditingController total = TextEditingController();
@@ -119,8 +115,6 @@ class _InvoiceItemGeneratorWidgetState
 
   _onSelectedTax(int? option) {
     currentTaxId = option;
-    currentTax = taxes.firstWhere((e) => e.id == option);
-    widget.saleItem.taxId = option;
 
     _calc();
   }
@@ -144,7 +138,7 @@ class _InvoiceItemGeneratorWidgetState
   }
 
   _onChangedQuantity(String value) {
-    widget.saleItem.quantity = int.tryParse(value) ?? 1;
+    widget.saleItem.quantity = int.tryParse(value);
     _calc();
   }
 
@@ -159,6 +153,11 @@ class _InvoiceItemGeneratorWidgetState
     widget.saleItem.net16 = 0;
     widget.saleItem.net3 = 0;
     widget.saleItem.exemptAmount = 0;
+
+    if (currentTaxId != null) {
+      currentTax = taxes.firstWhere((e) => e.id == currentTaxId);
+      widget.saleItem.taxId = currentTaxId;
+    }
 
     if (widget.saleItem.net != null) {
       widget.saleItem.tax =
@@ -195,61 +194,11 @@ class _InvoiceItemGeneratorWidgetState
       widget.saleItem.indicadorAgentePercepcion = 1;
     }
 
-    net.value =
-        TextEditingValue(text: widget.saleItem.net?.toStringAsFixed(2) ?? '');
-
-    total.value =
-        TextEditingValue(text: widget.saleItem.total?.toStringAsFixed(2) ?? '');
-
     var netToPaid = widget.saleItem.total! -
         (widget.saleItem.retentionTax ?? 0) -
         (widget.saleItem.retentionIsr ?? 0);
 
-    quantity.value =
-        TextEditingValue(text: widget.saleItem.quantity?.toString() ?? '');
-
-    totalToPay.value = TextEditingValue(
-        text:
-            widget.saleItem.total == null ? '' : netToPaid.toStringAsFixed(2));
-    setState(() {});
-
     widget.onChanged(widget.saleItem);
-  }
-
-  _initAsync() async {
-    try {
-      if (widget.saleItem is SaleItemService ||
-          widget.saleItem is CreditNoteService) {
-        elements = [Services(name: 'SERVICIO'), ...await Services.get()];
-      }
-
-      if (widget.saleItem is SaleItemProduct ||
-          widget.saleItem is CreditNoteProduct) {
-        elements = [Products(name: 'PRODUCTO'), ...await Products.get()];
-      }
-
-      el = elements.firstWhere((e) => e.id == currenId);
-
-      taxes = [Taxes(name: 'ITBIS'), ...await Taxes.get()];
-      retentionsTaxes = [
-        RetentionTax(name: 'RETENCION ITBIS'),
-        ...await RetentionTax.get()
-      ];
-      retentionsIsrs = [
-        RetentionIsr(name: 'RETENCION ISR'),
-        ...await RetentionIsr.get()
-      ];
-      currentTax = taxes.firstWhere((e) => e.id == currentTaxId);
-      retentionTax =
-          retentionsTaxes.firstWhere((e) => e.id == currentRetentionTaxId);
-
-      retentionIsr =
-          retentionsIsrs.firstWhere((e) => e.id == currentRetentionIsrId);
-
-      setState(() {});
-    } catch (e) {
-      print(e);
-    }
   }
 
   double get amountPaid {
@@ -264,39 +213,47 @@ class _InvoiceItemGeneratorWidgetState
 
   @override
   void initState() {
-    if (!mounted) return;
-
-    _initAsync();
-
-    currenId = widget.saleItem.serviceId ?? widget.saleItem.productId;
-
-    currentTaxId = widget.saleItem.retentionTaxId;
-    currentRetentionIsrId = widget.saleItem.retentionIsrId;
-    currentRetentionTaxId = widget.saleItem.retentionTaxId;
-    net.value =
-        TextEditingValue(text: widget.saleItem.net?.toStringAsFixed(2) ?? '');
-
-    tax.value =
-        TextEditingValue(text: widget.saleItem.tax?.toStringAsFixed(2) ?? '');
-    total.value =
-        TextEditingValue(text: widget.saleItem.total?.toStringAsFixed(2) ?? '');
-
-    startQuantity = widget.saleItem.quantity ?? 1;
-
-    widget.saleItem.returnQuantity = startQuantity;
-
-    quantity.value =
-        TextEditingValue(text: (widget.saleItem.quantity ?? 1).toString());
-
-    currentTaxId = widget.saleItem.taxId;
-
-    currentRetentionTaxId = widget.saleItem.retentionTaxId;
-
-    currentRetentionIsrId = widget.saleItem.retentionIsrId;
-
-    totalToPay.value = TextEditingValue(text: amountPaid.toStringAsFixed(2));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _syncControllersWithSaleItem();
+        print('update');
+      }
+    });
 
     super.initState();
+  }
+
+  void _syncControllersWithSaleItem() {
+    currenId = widget.saleItem.serviceId ?? widget.saleItem.productId;
+    currentTaxId = widget.saleItem.taxId;
+    currentRetentionIsrId = widget.saleItem.retentionIsrId;
+    currentRetentionTaxId = widget.saleItem.retentionTaxId;
+
+    startQuantity = widget.saleItem.quantity ?? 1;
+    widget.saleItem.returnQuantity = startQuantity;
+    quantity.text = startQuantity.toString();
+
+    _calc();
+
+    net.text = widget.saleItem.net?.toStringAsFixed(2) ?? '';
+    tax.text = widget.saleItem.tax?.toStringAsFixed(2) ?? '';
+    total.text = widget.saleItem.total?.toStringAsFixed(2) ?? '';
+
+    totalToPay.text = amountPaid.toStringAsFixed(2);
+  }
+
+  @override
+  void didUpdateWidget(covariant InvoiceItemGeneratorWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.saleItem != widget.saleItem) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _syncControllersWithSaleItem();
+          print('update');
+        }
+      });
+    }
   }
 
   @override
@@ -318,10 +275,6 @@ class _InvoiceItemGeneratorWidgetState
                         } else {
                           widget.saleItem.enabled = true;
                         }
-
-                        setState(() {});
-
-                        widget.onChanged(widget.saleItem);
                       },
                       child: Container(
                         width: 50,
@@ -347,6 +300,7 @@ class _InvoiceItemGeneratorWidgetState
               readOnly: widget.saleItem is CreditNoteProduct ||
                   widget.saleItem is CreditNoteService ||
                   widget.editing,
+              validator: (val) => val!.isEmpty ? 'CAMPO OBLIGATORIO' : null,
               onChanged: _onChangedQuantity,
               decoration: InputDecoration(
                   labelText: 'CANTIDAD',
@@ -514,21 +468,18 @@ class _InvoiceItemGeneratorWidgetState
 
 class CustomDropdownFormField extends FormField<int> {
   CustomDropdownFormField({
-    Key? key,
+    super.key,
     required String title,
     required SaleItem saleItem,
     required List<SaleElement> elements,
     required void Function(SaleElement, int? option) onChanged,
-    int? initialValue,
-    FormFieldValidator<int>? validator,
-    AutovalidateMode autovalidateMode = AutovalidateMode.disabled,
+    super.initialValue,
+    super.validator,
+    super.autovalidateMode = AutovalidateMode.disabled,
   }) : super(
-          key: key,
-          initialValue: initialValue,
-          validator: validator,
-          autovalidateMode: autovalidateMode,
           builder: (FormFieldState<int> state) {
             var value = initialValue ?? state.value;
+
             return _CustomDropdownButton(
               title: title,
               saleItem: saleItem,
@@ -537,6 +488,7 @@ class CustomDropdownFormField extends FormField<int> {
               errorText: state.errorText,
               onChanged: (element, id) {
                 state.didChange(element.id);
+                state.save();
                 state.validate();
                 onChanged(element, id);
               },
@@ -791,6 +743,16 @@ class _CustomDropdownButtonState extends State<_CustomDropdownButton>
     if (widget.elements.isNotEmpty) {
       _saleElement =
           widget.elements.firstWhere((e) => e.id == widget.currentValue);
+    }
+
+    if (widget.currentValue != null) {
+      _saleElement =
+          widget.elements.firstWhere((e) => e.id == widget.currentValue);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          widget.onChanged(_saleElement!, widget.currentValue);
+        }
+      });
     }
     return CompositedTransformTarget(
         link: _layerLink,

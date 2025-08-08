@@ -141,4 +141,28 @@ class Services implements SaleElement {
 
   @override
   int? taxId;
+
+  @override
+  double? factor;
+
+  @override
+  int? providerId;
+
+  @override
+  String? providerName;
+
+  @override
+  double? quantityResultFactor;
+
+  @override
+  double? total;
+
+  @override
+  int? wareHouseId;
+
+  @override
+  String? wareHouseName;
+
+  @override
+  String? code;
 }

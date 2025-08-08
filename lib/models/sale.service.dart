@@ -108,7 +108,8 @@ class SaleService implements Sale {
       this.securityCode,
       this.signatureDate,
       this.tipoPago,
-      this.authorName});
+      this.authorName,
+      this.ncfSeq});
 
   SaleService copyWith({
     String? id,
@@ -321,7 +322,8 @@ class SaleService implements Sale {
         signatureDate: map['signatureDate'],
         tipoPago: map['tipoPago'],
         authorId: map['authorId'],
-        authorName: map['authorName']);
+        authorName: map['authorName'],
+        ncfSeq: map['ncfSeq']);
   }
 
   String toJson() => json.encode(toMap());
@@ -881,4 +883,7 @@ class SaleService implements Sale {
       rethrow;
     }
   }
+
+  @override
+  int? ncfSeq;
 }

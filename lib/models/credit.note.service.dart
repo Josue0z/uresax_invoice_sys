@@ -140,7 +140,8 @@ class CreditNoteAsService implements Sale {
       this.securityCode,
       this.signatureDate,
       this.tipoPago,
-      this.authorName});
+      this.authorName,
+      this.ncfSeq});
 
   @override
   Future<CreditNoteAsService?> create() async {
@@ -448,7 +449,8 @@ class CreditNoteAsService implements Sale {
         signatureDate: map['signatureDate'],
         tipoPago: map['tipoPago'],
         authorId: map['authorId'],
-        authorName: map['authorName']);
+        authorName: map['authorName'],
+        ncfSeq: map['ncfSeq']);
   }
 
   String toJson() => json.encode(toMap());
@@ -689,4 +691,7 @@ class CreditNoteAsService implements Sale {
       rethrow;
     }
   }
+
+  @override
+  int? ncfSeq;
 }

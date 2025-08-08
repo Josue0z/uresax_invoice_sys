@@ -13,19 +13,26 @@ import 'package:uresax_invoice_sys/models/credit.note.item.service.dart';
 import 'package:uresax_invoice_sys/models/credit.note.product.dart';
 import 'package:uresax_invoice_sys/models/credit.note.service.dart';
 import 'package:uresax_invoice_sys/models/ncf.secuencia.dart';
+import 'package:uresax_invoice_sys/models/ncfList.dart';
 import 'package:uresax_invoice_sys/models/ncftype.dart';
+import 'package:uresax_invoice_sys/models/product.dart';
+import 'package:uresax_invoice_sys/models/retention.isr.dart';
+import 'package:uresax_invoice_sys/models/retention.tax.dart';
 import 'package:uresax_invoice_sys/models/sale.abs.dart';
 import 'package:uresax_invoice_sys/models/sale.item.abs.dart';
 import 'package:uresax_invoice_sys/models/sale.item.product.dart';
 import 'package:uresax_invoice_sys/models/sale.item.service.dart';
 import 'package:uresax_invoice_sys/models/sale.product.dart';
 import 'package:uresax_invoice_sys/models/sale.service.dart';
+import 'package:uresax_invoice_sys/models/service.dart';
+import 'package:uresax_invoice_sys/models/taxes.dart';
 import 'package:uresax_invoice_sys/models/taxpayer.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/utils/extensions.dart';
 import 'package:uresax_invoice_sys/utils/functions.dart';
 import 'package:uresax_invoice_sys/utils/invoices.functions.dart';
 import 'package:uresax_invoice_sys/widgets/invoice_item_generator_widget.dart';
+import 'package:uresax_invoice_sys/widgets/listen.code.widget.dart';
 import 'package:uresax_invoice_sys/widgets/rnc.query.widget.dart';
 
 class InvoiceGeneratorPage extends StatefulWidget {
@@ -72,6 +79,8 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
   TextEditingController rate = TextEditingController();
 
   bool isValid = false;
+
+  bool loading = true;
 
   List<NcfType> _ncfs = [];
 
@@ -216,9 +225,13 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
         }
 
         var doc = createDefaultInvoice(sale!);
+
         await Printing.layoutPdf(
           onLayout: (format) async => await doc.save(),
         );
+
+        await NcfsList(ncfTypeId: currentNcfTypeId)
+            .updateFinish(currentNcf: sale.ncfSeq!);
 
         Navigator.pop(context, widget.editing ? 'UPDATE' : null);
 
@@ -819,6 +832,30 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
     }
   }
 
+  _initAsync() async {
+    if (widget.sale is SaleService) {
+      elements = [Services(name: 'SERVICIO'), ...await Services.get()];
+    }
+
+    if (widget.sale is SaleProduct) {
+      elements = [Products(name: 'PRODUCTO'), ...await Products.get()];
+    }
+
+    taxes = [Taxes(name: 'ITBIS'), ...await Taxes.get()];
+    retentionsTaxes = [
+      RetentionTax(name: 'RETENCION ITBIS'),
+      ...await RetentionTax.get()
+    ];
+    retentionsIsrs = [
+      RetentionIsr(name: 'RETENCION ISR'),
+      ...await RetentionIsr.get()
+    ];
+
+    loading = false;
+
+    setState(() {});
+  }
+
   @override
   void initState() {
     _ncfs = [...ncfs];
@@ -868,7 +905,8 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
       currentCurrencyId = widget.sale.currencyId;
     }
 
-    setState(() {});
+    _initAsync();
+
     super.initState();
   }
 
@@ -898,6 +936,9 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (loading) {
+      return Container();
+    }
     return Scaffold(
         appBar: AppBar(
           title: Text(title),
@@ -1177,6 +1218,55 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                   SizedBox(
                     height: kDefaultPadding,
                   ),
+                  ListenCodeWidget(
+                      child: Container(),
+                      onScan: (code) async {
+                        if (widget.sale is SaleProduct) {
+                          var product = await Products.findByCode(code: code);
+
+                          var selectedItem = widget.items.firstWhere(
+                              (e) => e.productId == product?.id,
+                              orElse: () => SaleItemProduct());
+
+                          if (selectedItem.productId == null) {
+                            if (product != null) {
+                              if (widget.items.length == 1 &&
+                                  widget.items[0].productId == null) {
+                                setState(() {
+                                  widget.items = [];
+                                });
+                              }
+
+                              widget.items.add(SaleItemProduct(
+                                  quantity: 1,
+                                  productId: product.id,
+                                  productName: product.name,
+                                  taxId: product.taxId,
+                                  net: product.price));
+                            }
+                          } else {
+                            int index = widget.items.indexWhere(
+                                (e) => e.productId == selectedItem.productId);
+                            var item = widget.items[index];
+                            item.quantity = item.quantity! + 1;
+
+                            widget.items[index] = SaleItemProduct(
+                              id: item.id,
+                              quantity: item.quantity!,
+                              productId: item.productId,
+                              productName: item.productName,
+                              taxId: item.taxId,
+                              net: item.net,
+                            );
+
+                            widget.items = List.from(widget.items);
+
+                            print(widget.items);
+                          }
+
+                          setState(() {});
+                        }
+                      }),
                   SizedBox(
                     width: MediaQuery.of(context).size.width,
                     height: 100.00 * (widget.items.length),

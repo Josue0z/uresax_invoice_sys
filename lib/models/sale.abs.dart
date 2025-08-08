@@ -86,6 +86,8 @@ abstract class Sale {
 
   String? authorName;
 
+  int? ncfSeq;
+
   bool get isPaid {
     throw UnimplementedError();
   }

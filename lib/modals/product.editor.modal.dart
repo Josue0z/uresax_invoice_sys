@@ -1,9 +1,11 @@
 import 'package:amount_input_formatter/amount_input_formatter.dart';
-import 'package:currency_text_input_formatter/currency_text_input_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:uresax_invoice_sys/models/product.dart';
+import 'package:uresax_invoice_sys/models/provider.dart';
+import 'package:uresax_invoice_sys/pages/providers_page.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/utils/functions.dart';
+import 'package:uresax_invoice_sys/widgets/selector.item.widget.dart';
 
 class ProductEditorModal extends StatefulWidget {
   bool editing;
@@ -19,23 +21,45 @@ class _ProductEditorModalState extends State<ProductEditorModal> {
   TextEditingController name = TextEditingController();
   TextEditingController amount = TextEditingController();
   TextEditingController quantity = TextEditingController();
+  TextEditingController factor = TextEditingController();
+  TextEditingController quantityResult = TextEditingController();
   TextEditingController chassis = TextEditingController();
+  TextEditingController code = TextEditingController();
   TextEditingController licensePlate = TextEditingController();
   AmountInputFormatter amountInputFormatter =
       AmountInputFormatter(fractionalDigits: 2);
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   int? currentTaxId;
+  int? currentWareHouseId;
+  Providers? currentProvider;
+  int? currentProviderId;
+  int? xxquantity = 1;
+
+  _calcUnits() {
+    int xquantity = widget.product.quantity ?? 0;
+    double xfactor = widget.product.factor ?? 0.0;
+
+    if (factor.text.isNotEmpty && xfactor >= 1) {
+      xxquantity = (xquantity * xfactor).toInt();
+      quantityResult.value = TextEditingValue(text: xxquantity.toString());
+    } else {
+      quantityResult.value = TextEditingValue.empty;
+    }
+  }
 
   _onSubmit() async {
     if (_formKey.currentState!.validate()) {
       try {
         widget.product.name = name.text;
         widget.product.price = amountInputFormatter.doubleValue;
-        widget.product.quantity = int.parse(quantity.text);
+        widget.product.quantity = xxquantity;
         widget.product.chassis = chassis.text;
         widget.product.licensePlate = licensePlate.text;
         widget.product.taxId = currentTaxId;
+        widget.product.wareHouseId = currentWareHouseId;
+        widget.product.providerId = currentProviderId;
+        widget.product.code = code.text;
         if (!widget.editing) {
           await widget.product.create();
           Navigator.pop(context, 'CREATE');
@@ -62,7 +86,16 @@ class _ProductEditorModalState extends State<ProductEditorModal> {
 
   @override
   void initState() {
+    if (!eCommerceMode) {
+      widget.product.quantity = 1;
+    }
     name.value = TextEditingValue(text: widget.product.name ?? '');
+
+    currentWareHouseId = widget.product.wareHouseId;
+
+    currentProviderId = widget.product.providerId;
+    currentProvider =
+        Providers(id: currentProviderId, name: widget.product.providerName);
 
     if (widget.editing) {
       amount.value = amountInputFormatter.formatEditUpdate(
@@ -70,6 +103,9 @@ class _ProductEditorModalState extends State<ProductEditorModal> {
           TextEditingValue(
               text: widget.product.price?.toStringAsFixed(2) ?? ''));
     }
+    code.value = TextEditingValue(text: widget.product.code ?? '');
+
+    xxquantity = widget.product.quantity;
 
     quantity.value =
         TextEditingValue(text: widget.product.quantity?.toString() ?? '');
@@ -78,6 +114,7 @@ class _ProductEditorModalState extends State<ProductEditorModal> {
         TextEditingValue(text: widget.product.licensePlate ?? '');
 
     currentTaxId = widget.product.taxId;
+
     setState(() {});
     super.initState();
   }
@@ -87,11 +124,11 @@ class _ProductEditorModalState extends State<ProductEditorModal> {
     return Dialog(
       child: Form(
           key: _formKey,
-          child: SizedBox(
+          child: Container(
               width: 350,
-              child: ListView(
-                shrinkWrap: true,
-                padding: EdgeInsets.all(kDefaultPadding),
+              height: 550,
+              padding: EdgeInsets.all(kDefaultPadding),
+              child: Column(
                 children: [
                   Row(
                     children: [
@@ -109,81 +146,173 @@ class _ProductEditorModalState extends State<ProductEditorModal> {
                           icon: Icon(Icons.close))
                     ],
                   ),
-                  SizedBox(
-                    height: kDefaultPadding,
-                  ),
-                  TextFormField(
-                    controller: name,
-                    validator: (val) =>
-                        val!.isEmpty ? 'CAMPO OBLIGATORIO' : null,
-                    decoration: InputDecoration(
-                        labelText: 'NOMBRE', hintText: 'Escribir nombre...'),
-                  ),
-                  SizedBox(
-                    height: kDefaultPadding,
-                  ),
-                  TextFormField(
-                    controller: amount,
-                    validator: (val) =>
-                        val!.isEmpty ? 'CAMPO OBLIGATORIO' : null,
-                    inputFormatters: [amountInputFormatter],
-                    decoration:
-                        InputDecoration(labelText: 'PRECIO', hintText: '0.00'),
-                  ),
-                  SizedBox(
-                    height: kDefaultPadding,
-                  ),
-                  TextFormField(
-                    controller: chassis,
-                    validator: (val) =>
-                        val!.isEmpty ? 'CAMPO OBLIGATORIO' : null,
-                    decoration: InputDecoration(
-                        labelText: 'CHASIS', hintText: 'Escribir...'),
-                  ),
-                  SizedBox(
-                    height: kDefaultPadding,
-                  ),
-                  TextFormField(
-                    controller: licensePlate,
-                    validator: (val) =>
-                        val!.isEmpty ? 'CAMPO OBLIGATORIO' : null,
-                    decoration: InputDecoration(
-                        labelText: 'PLACA', hintText: 'Escribir...'),
-                  ),
-                  SizedBox(
-                    height: kDefaultPadding,
-                  ),
-                  DropdownButtonFormField<int>(
-                      value: currentTaxId,
-                      items: List.generate(taxes.length, (index) {
-                        var tax = taxes[index];
-                        return DropdownMenuItem(
-                            value: tax.id, child: Text(tax.name ?? ''));
-                      }),
-                      onChanged: (option) {
-                        currentTaxId = option;
-                      }),
-                  SizedBox(
-                    height: kDefaultPadding,
-                  ),
-                  !widget.editing
-                      ? Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            TextFormField(
-                              controller: quantity,
-                              validator: (val) =>
-                                  val!.isEmpty ? 'CAMPO OBLIGATORIO' : null,
-                              keyboardType: TextInputType.number,
-                              decoration: InputDecoration(
-                                  labelText: 'CANTIDAD', hintText: '0'),
-                            ),
-                            SizedBox(
-                              height: kDefaultPadding,
-                            ),
-                          ],
-                        )
-                      : SizedBox(),
+                  Expanded(
+                      child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        eCommerceMode
+                            ? Container(
+                                margin: EdgeInsets.symmetric(
+                                    vertical: kDefaultPadding),
+                                child: DropdownButtonFormField(
+                                    value: currentWareHouseId,
+                                    validator: (val) => val == null
+                                        ? 'CAMPO OBLIGATORIO'
+                                        : null,
+                                    items: List.generate(wareHouses.length,
+                                        (index) {
+                                      var wareHouse = wareHouses[index];
+                                      return DropdownMenuItem(
+                                          value: wareHouse.id,
+                                          child: Text(wareHouse.name ?? ''));
+                                    }),
+                                    onChanged: (id) {
+                                      currentWareHouseId = id;
+                                    }),
+                              )
+                            : SizedBox(),
+                        eCommerceMode
+                            ? SelectorItemWidget<Providers>(
+                                context: context,
+                                initialValue: currentProvider,
+                                validator: (val) => val?.id == null
+                                    ? 'CAMPO OBLIGATORIO'
+                                    : null,
+                                onChanged: (xprovider) {
+                                  currentProvider = xprovider;
+                                  currentProviderId = xprovider?.id;
+                                },
+                                screen: ProvidersPage(selectorMode: true),
+                                title: 'SELECCIONA PROVEEDOR',
+                              )
+                            : SizedBox(),
+                        TextFormField(
+                          controller: name,
+                          validator: (val) =>
+                              val!.isEmpty ? 'CAMPO OBLIGATORIO' : null,
+                          decoration: InputDecoration(
+                              labelText: 'NOMBRE',
+                              hintText: 'Escribir nombre...'),
+                        ),
+                        SizedBox(
+                          height: kDefaultPadding,
+                        ),
+                        TextFormField(
+                          controller: amount,
+                          validator: (val) =>
+                              val!.isEmpty ? 'CAMPO OBLIGATORIO' : null,
+                          inputFormatters: [amountInputFormatter],
+                          decoration: InputDecoration(
+                              labelText: 'PRECIO', hintText: '0.00'),
+                        ),
+                        eCommerceMode
+                            ? Container(
+                                margin: EdgeInsets.symmetric(
+                                    vertical: kDefaultPadding),
+                                child: TextFormField(
+                                  controller: code,
+                                  validator: (val) =>
+                                      val!.isEmpty ? 'CAMPO OBLIGATORIO' : null,
+                                  decoration: InputDecoration(
+                                      labelText: 'CODIGO PRODUCTO',
+                                      hintText: 'Escribir...'),
+                                ),
+                              )
+                            : Container(
+                                margin: EdgeInsets.symmetric(
+                                    vertical: kDefaultPadding),
+                                child: TextFormField(
+                                  controller: chassis,
+                                  validator: (val) =>
+                                      val!.isEmpty ? 'CAMPO OBLIGATORIO' : null,
+                                  decoration: InputDecoration(
+                                      labelText: 'CHASIS',
+                                      hintText: 'Escribir...'),
+                                ),
+                              ),
+                        !eCommerceMode
+                            ? Container(
+                                margin: EdgeInsets.symmetric(
+                                    vertical: kDefaultPadding),
+                                child: TextFormField(
+                                  controller: licensePlate,
+                                  validator: (val) =>
+                                      val!.isEmpty ? 'CAMPO OBLIGATORIO' : null,
+                                  decoration: InputDecoration(
+                                      labelText: 'PLACA',
+                                      hintText: 'Escribir...'),
+                                ),
+                              )
+                            : SizedBox(),
+                        Container(
+                          margin: EdgeInsets.only(bottom: kDefaultPadding),
+                          child: DropdownButtonFormField<int>(
+                              value: currentTaxId,
+                              items: List.generate(taxes.length, (index) {
+                                var tax = taxes[index];
+                                return DropdownMenuItem(
+                                    value: tax.id, child: Text(tax.name ?? ''));
+                              }),
+                              onChanged: (option) {
+                                currentTaxId = option;
+                              }),
+                        ),
+                        !widget.editing
+                            ? Container(
+                                margin:
+                                    EdgeInsets.only(bottom: kDefaultPadding),
+                                child: TextFormField(
+                                  controller: quantity,
+                                  onChanged: (val) {
+                                    widget.product.quantity =
+                                        int.tryParse(quantity.text) ?? 0;
+                                    _calcUnits();
+                                  },
+                                  validator: (val) =>
+                                      val!.isEmpty ? 'CAMPO OBLIGATORIO' : null,
+                                  keyboardType: TextInputType.number,
+                                  decoration: InputDecoration(
+                                      labelText: 'CANTIDAD', hintText: '0'),
+                                ),
+                              )
+                            : SizedBox(),
+                        eCommerceMode && !widget.editing
+                            ? Container(
+                                margin:
+                                    EdgeInsets.only(bottom: kDefaultPadding),
+                                child: TextFormField(
+                                  controller: factor,
+                                  onChanged: (_) {
+                                    widget.product.factor =
+                                        double.tryParse(factor.text) ?? 1;
+                                    _calcUnits();
+                                  },
+                                  validator: (val) =>
+                                      val!.isEmpty ? 'CAMPO OBLIGATORIO' : null,
+                                  keyboardType: TextInputType.number,
+                                  decoration: InputDecoration(
+                                      labelText: 'FACTOR', hintText: '0.00'),
+                                ),
+                              )
+                            : SizedBox(),
+                        eCommerceMode && !widget.editing
+                            ? Container(
+                                margin:
+                                    EdgeInsets.only(bottom: kDefaultPadding),
+                                child: TextFormField(
+                                  controller: quantityResult,
+                                  onChanged: (_) {},
+                                  validator: (val) =>
+                                      val!.isEmpty ? 'CAMPO OBLIGATORIO' : null,
+                                  keyboardType: TextInputType.number,
+                                  decoration: InputDecoration(
+                                      labelText: 'UNIDADES', hintText: '0'),
+                                ),
+                              )
+                            : SizedBox()
+                      ],
+                    ),
+                  )),
                   SizedBox(
                     width: double.infinity,
                     height: 50,

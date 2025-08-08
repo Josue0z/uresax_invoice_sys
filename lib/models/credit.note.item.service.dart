@@ -58,7 +58,8 @@ class CreditNoteService implements SaleItem {
       this.net3,
       this.exemptAmount,
       this.indicadorFacturacion,
-      this.indicadorAgentePercepcion});
+      this.indicadorAgentePercepcion,
+      this.price});
 
   @override
   int? productId;
@@ -134,39 +135,40 @@ class CreditNoteService implements SaleItem {
 
   factory CreditNoteService.fromMap(Map<String, dynamic> map) {
     return CreditNoteService(
-        id: map['id'],
-        serviceId: map['serviceId'],
-        serviceName: map['serviceName'],
-        productId: map['productId'],
-        productName: map['productName'],
-        discount:
-            map['discount'] != null ? double.parse(map['discount']) : null,
-        net: double.parse(map['net']),
-        tax: double.parse(map['tax']),
-        total: double.parse(map['total']),
-        retentionTax: double.parse(map['retentionTax']),
-        retentionIsr: double.parse(map['retentionIsr']),
-        saleId: map['saleId'],
-        creditNoteId: map['creditNoteId'],
-        quantity: map['quantity'],
-        licensePlate: map['licensePlate'],
-        taxId: map['taxId'],
-        discountId: map['discountId'],
-        retentionTaxId: map['retentionTaxId'],
-        retentionIsrId: map['retentionIsrId'],
-        chassis: map['chassis'],
-        enabled: true,
-        tax18: map['tax18'] != null ? double.parse(map['tax18']) : null,
-        tax16: map['tax16'] != null ? double.parse(map['tax16']) : null,
-        tax3: map['tax3'] != null ? double.parse(map['tax3']) : null,
-        net18: map['net18'] != null ? double.parse(map['net18']) : null,
-        net16: map['net16'] != null ? double.parse(map['net16']) : null,
-        net3: map['net3'] != null ? double.parse(map['net3']) : null,
-        exemptAmount: map['exemptAmount'] != null
-            ? double.parse(map['exemptAmount'])
-            : null,
-        indicadorFacturacion: map['indicadorFacturacion'],
-        indicadorAgentePercepcion: map['indicadorAgentePercepcion']);
+      id: map['id'],
+      serviceId: map['serviceId'],
+      serviceName: map['serviceName'],
+      productId: map['productId'],
+      productName: map['productName'],
+      discount: map['discount'] != null ? double.parse(map['discount']) : null,
+      net: double.parse(map['net']),
+      tax: double.parse(map['tax']),
+      total: double.parse(map['total']),
+      retentionTax: double.parse(map['retentionTax']),
+      retentionIsr: double.parse(map['retentionIsr']),
+      saleId: map['saleId'],
+      creditNoteId: map['creditNoteId'],
+      quantity: map['quantity'],
+      licensePlate: map['licensePlate'],
+      taxId: map['taxId'],
+      discountId: map['discountId'],
+      retentionTaxId: map['retentionTaxId'],
+      retentionIsrId: map['retentionIsrId'],
+      chassis: map['chassis'],
+      enabled: true,
+      tax18: map['tax18'] != null ? double.parse(map['tax18']) : null,
+      tax16: map['tax16'] != null ? double.parse(map['tax16']) : null,
+      tax3: map['tax3'] != null ? double.parse(map['tax3']) : null,
+      net18: map['net18'] != null ? double.parse(map['net18']) : null,
+      net16: map['net16'] != null ? double.parse(map['net16']) : null,
+      net3: map['net3'] != null ? double.parse(map['net3']) : null,
+      exemptAmount: map['exemptAmount'] != null
+          ? double.parse(map['exemptAmount'])
+          : null,
+      indicadorFacturacion: map['indicadorFacturacion'],
+      indicadorAgentePercepcion: map['indicadorAgentePercepcion'],
+      price: double.parse(map['price']),
+    );
   }
 
   String toJson() => json.encode(toMap());
@@ -270,7 +272,9 @@ class CreditNoteService implements SaleItem {
 
   @override
   double get precio {
-    if (net == null) return 0;
-    return (net! / quantity!);
+    return price ?? 0;
   }
+
+  @override
+  double? price;
 }

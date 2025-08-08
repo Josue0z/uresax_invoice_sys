@@ -18,28 +18,40 @@ class Products implements SaleElement {
   String? chassis;
   @override
   String? licensePlate;
+
   Products(
       {this.id,
       this.name,
-      this.price,
       this.quantity,
+      this.factor,
+      this.quantityResultFactor,
+      this.price,
+      this.total,
       this.createdAt,
       this.chassis,
       this.licensePlate,
-      this.taxId});
+      this.taxId,
+      this.providerId,
+      this.providerName,
+      this.wareHouseId,
+      this.wareHouseName,
+      this.code});
   Future<Products> create() async {
     try {
       final conne = SqlConector.connection;
       var result = await conne?.execute(
           Sql.named(
-              '''insert into public."Products"(name, price, quantity,chassis,"licensePlate","taxId") values(@name,@price,@quantity,@chassis,@licensePlate,@taxId) RETURNING *'''),
+              '''insert into public."Products"(name, price, quantity,chassis,"licensePlate","taxId","providerId","wareHouseId","code") values(@name,@price,@quantity,@chassis,@licensePlate,@taxId,@providerId,@wareHouseId,@code) RETURNING *'''),
           parameters: {
             'name': name,
             'price': price,
             'quantity': quantity,
             'chassis': chassis,
             'licensePlate': licensePlate,
-            'taxId': taxId
+            'taxId': taxId,
+            'providerId': providerId,
+            'wareHouseId': wareHouseId,
+            'code': code
           });
 
       return Products.fromMap(result!.first.toColumnMap());
@@ -53,7 +65,7 @@ class Products implements SaleElement {
       final conne = SqlConector.connection;
       var result = await conne?.execute(
           Sql.named(
-              '''update public."Products" set name = @name, price = @price, quantity = @quantity, chassis = @chassis, "licensePlate" = @licensePlate, "taxId" = @taxId where id = @id RETURNING *'''),
+              '''update public."Products" set name = @name, price = @price, quantity = @quantity, chassis = @chassis, "licensePlate" = @licensePlate, "taxId" = @taxId, "providerId" = @providerId, "wareHouseId" = @wareHouseId, "code" = @code where id = @id RETURNING *'''),
           parameters: {
             'id': id,
             'name': name,
@@ -61,7 +73,10 @@ class Products implements SaleElement {
             'quantity': quantity,
             'chassis': chassis,
             'licensePlate': licensePlate,
-            'taxId': taxId
+            'taxId': taxId,
+            'providerId': providerId,
+            'wareHouseId': wareHouseId,
+            'code': code,
           });
 
       return Products.fromMap(result!.first.toColumnMap());
@@ -83,23 +98,39 @@ class Products implements SaleElement {
 
       var result = await conne?.execute(
           Sql.named(
-              'select id, name, price, quantity, chassis, "licensePlate", "taxId" from public."Products" $params order by "createdAt"'),
+              'select * from public."ProductsView" $params order by "createdAt"'),
           parameters: parameters);
       return result
               ?.map(
-                (e) => Products(
-                    id: e[0] as int,
-                    name: e[1] as String,
-                    price: double.parse(e[2] as String),
-                    quantity: e[3] as int,
-                    chassis: e[4] as String,
-                    licensePlate: e[5] as String,
-                    taxId: e[6] as int?),
+                (e) => Products.fromMap(e.toColumnMap()),
               )
               .toList() ??
           [];
     } catch (e) {
       rethrow;
+    }
+  }
+
+  static Future<Products?> findByCode({required String code}) async {
+    try {
+      final conne = SqlConector.connection;
+      var parameters = {'code': code.trim()};
+
+      var result = await conne?.execute(
+          Sql.named('select * from public."ProductsView" where code = @code'),
+          parameters: parameters);
+
+      print(result);
+      return result
+              ?.map(
+                (e) => Products.fromMap(e.toColumnMap()),
+              )
+              .toList()
+              .first ??
+          [].first;
+    } catch (e) {
+      print(e);
+      return null;
     }
   }
 
@@ -120,7 +151,7 @@ class Products implements SaleElement {
   }
 
   Map<String, dynamic> toMap() {
-    return {
+    var map = {
       'id': id,
       'name': name,
       'price': price,
@@ -128,18 +159,39 @@ class Products implements SaleElement {
       'createdAt': createdAt,
       'taxId': taxId
     };
+    if (providerId != null) {
+      map.addAll({'provideId': providerId});
+    }
+    if (wareHouseId != null) {
+      map.addAll({'wareHouseId': wareHouseId});
+    }
+
+    if (code != null) {
+      map.addAll({'code': code});
+    }
+    return map;
   }
 
   factory Products.fromMap(Map<String, dynamic> map) {
     return Products(
         id: map['id'],
         name: map['name'],
-        price: double.parse(map['price']),
         quantity: map['quantity'],
+        factor: map['factor'] != null ? double.parse(map['factor']) : null,
+        price: map['price'] != null ? double.parse(map['price']) : null,
+        quantityResultFactor: map['quantityResultFactor'] != null
+            ? double.parse(map['quantityResultFactor'])
+            : null,
+        total: map['total'] != null ? double.parse(map['total']) : null,
         createdAt: map['createdAt'],
         chassis: map['chassis'],
         licensePlate: map['licensePlate'],
-        taxId: map['taxId']);
+        taxId: map['taxId'],
+        providerId: map['providerId'],
+        providerName: map['providerName'],
+        wareHouseId: map['wareHouseId'],
+        wareHouseName: map['wareHouseName'],
+        code: map['code']);
   }
 
   String toJson() => json.encode(toMap());
@@ -175,4 +227,28 @@ class Products implements SaleElement {
 
   @override
   int? taxId;
+
+  @override
+  double? factor;
+
+  @override
+  int? providerId;
+
+  @override
+  String? providerName;
+
+  @override
+  double? quantityResultFactor;
+
+  @override
+  double? total;
+
+  @override
+  int? wareHouseId;
+
+  @override
+  String? wareHouseName;
+
+  @override
+  String? code;
 }

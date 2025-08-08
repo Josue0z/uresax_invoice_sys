@@ -9,10 +9,15 @@ import 'package:uresax_invoice_sys/models/override.codes.dart';
 import 'package:uresax_invoice_sys/models/payment.method.dart';
 import 'package:uresax_invoice_sys/models/payment.type.dart';
 import 'package:uresax_invoice_sys/models/permission.dart';
+import 'package:uresax_invoice_sys/models/provider.dart';
+import 'package:uresax_invoice_sys/models/retention.isr.dart';
+import 'package:uresax_invoice_sys/models/retention.tax.dart';
 import 'package:uresax_invoice_sys/models/role.dart';
+import 'package:uresax_invoice_sys/models/sale.element.abs.dart';
 import 'package:uresax_invoice_sys/models/taxes.dart';
 import 'package:uresax_invoice_sys/models/type.income.dart';
 import 'package:uresax_invoice_sys/models/user.dart';
+import 'package:uresax_invoice_sys/models/warehouse.dart';
 
 Company? company;
 
@@ -36,6 +41,10 @@ List<PaymentType> paymentsTypes = [];
 
 List<OverrideCode> overrideCodes = [];
 
+List<Providers> providers = [];
+
+List<WareHouses> wareHouses = [];
+
 const double kDefaultPadding = 20;
 
 enum SaleMode { service, product }
@@ -55,3 +64,11 @@ bool isValid = false;
 TextEditingController certPath = TextEditingController();
 
 TextEditingController certPassword = TextEditingController();
+
+bool eCommerceMode = false;
+
+List<SaleElement> elements = [];
+
+List<RetentionTax> retentionsTaxes = [];
+
+List<RetentionIsr> retentionsIsrs = [];

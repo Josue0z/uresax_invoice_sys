@@ -40,6 +40,8 @@ abstract class SaleItem {
 
   int? indicadorAgentePercepcion;
 
+  double? price;
+
   Map<String, dynamic> toMap() {
     throw UnimplementedError();
   }

@@ -47,3 +47,10 @@ https://ecf.dgii.gov.do/TesteCF/ConsultaTimbre?RncEmisor=101675489&RncComprador=
 https://fc.dgii.gov.do/TesteCF/ConsultaTimbreFC?RncEmisor=101675489&ENCF=E320000001040&MontoTotal=10620.00&CodigoSeguridad=I4hGC9
 https://ecf.dgii.gov.do/TesteCF/ConsultaTimbre?RncEmisor=101675489&RncComprador=00000000004&ENCF=E340000001027&FechaEmision=03-08-2025&MontoTotal=10620.00&FechaFirma=03-08-2025%2018:04:04&CodigoSeguridad=NevYoX
 https://ecf.dgii.gov.do/TesteCF/ConsultaTimbre?RncEmisor=101675489&RncComprador=130579962&ENCF=E310000001060&FechaEmision=04-08-2025&MontoTotal=7788.00&FechaFirma=04-08-2025%2009:29:46&CodigoSeguridad=F4TeX0
+https://ecf.dgii.gov.do/TesteCF/ConsultaTimbre?RncEmisor=101675489&RncComprador=131123848&ENCF=E310000001061&FechaEmision=07-08-2025&MontoTotal=41300.00&FechaFirma=07-08-2025%2020:06:40&CodigoSeguridad=aGiw+R
+https://ecf.dgii.gov.do/TesteCF/ConsultaTimbre?RncEmisor=101675489&RncComprador=131123848&ENCF=E310000001062&FechaEmision=07-08-2025&MontoTotal=590.00&FechaFirma=07-08-2025%2020:21:14&CodigoSeguridad=Jai2ez
+https://ecf.dgii.gov.do/TesteCF/ConsultaTimbre?RncEmisor=101675489&RncComprador=122012737&ENCF=E310000001063&FechaEmision=07-08-2025&MontoTotal=1239.00&FechaFirma=07-08-2025%2020:25:08&CodigoSeguridad=auD0n0
+https://ecf.dgii.gov.do/TesteCF/ConsultaTimbre?RncEmisor=101675489&RncComprador=101821248&ENCF=E310000001064&FechaEmision=07-08-2025&MontoTotal=2625.50&FechaFirma=07-08-2025%2020:26:55&CodigoSeguridad=fcVgCn
+https://ecf.dgii.gov.do/TesteCF/ConsultaTimbre?RncEmisor=101675489&RncComprador=130579962&ENCF=E310000001065&FechaEmision=07-08-2025&MontoTotal=4130.00&FechaFirma=07-08-2025%2022:21:40&CodigoSeguridad=fkfk4Q
+https://ecf.dgii.gov.do/TesteCF/ConsultaTimbre?RncEmisor=101675489&RncComprador=101648602&ENCF=E310000001066&FechaEmision=07-08-2025&MontoTotal=6195.00&FechaFirma=07-08-2025%2022:23:30&CodigoSeguridad=irtviz
+https://ecf.dgii.gov.do/TesteCF/ConsultaTimbre?RncEmisor=101675489&RncComprador=130274363&ENCF=E310000001067&FechaEmision=08-08-2025&MontoTotal=1162.30&FechaFirma=08-08-2025%2014:42:24&CodigoSeguridad=fzPkhj

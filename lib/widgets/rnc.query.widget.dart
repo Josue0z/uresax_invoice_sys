@@ -103,10 +103,8 @@ class _RncQueryWidgetState extends State<RncQueryWidget> {
           decoration: InputDecoration(
               labelText: 'RNC/CEDULA',
               hintText: 'IDENTIFICACION',
-              suffixIcon: notFound
-                  ? IconButton(
-                      onPressed: _showClientsPage, icon: Icon(Icons.add))
-                  : SizedBox()),
+              suffixIcon: IconButton(
+                  onPressed: _showClientsPage, icon: Icon(Icons.add))),
         )
       ],
     );

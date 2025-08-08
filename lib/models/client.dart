@@ -20,11 +20,21 @@ class Client {
     this.createdAt,
   });
 
-  static Future<List<Client>> get() async {
+  static Future<List<Client>> get({String? search}) async {
     try {
       final conne = SqlConector.connection;
-      var res = await conne
-          ?.execute(Sql.named('select * from public."Clients" order by name'));
+
+      var parameters = {};
+      String params = '';
+
+      if (search != null) {
+        params += 'where lower(name) like lower(@search)';
+        parameters.addAll({'search': '%$search%'});
+      }
+
+      var res = await conne?.execute(
+          Sql.named('select * from public."Clients" $params order by name'),
+          parameters: parameters);
       return res?.map((e) => Client.fromMap(e.toColumnMap())).toList() ?? [];
     } catch (e) {
       rethrow;

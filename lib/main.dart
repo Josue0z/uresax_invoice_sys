@@ -14,9 +14,11 @@ import 'package:uresax_invoice_sys/models/override.codes.dart';
 import 'package:uresax_invoice_sys/models/payment.method.dart';
 import 'package:uresax_invoice_sys/models/payment.type.dart';
 import 'package:uresax_invoice_sys/models/permission.dart';
+import 'package:uresax_invoice_sys/models/provider.dart';
 import 'package:uresax_invoice_sys/models/role.dart';
 import 'package:uresax_invoice_sys/models/taxes.dart';
 import 'package:uresax_invoice_sys/models/type.income.dart';
+import 'package:uresax_invoice_sys/models/warehouse.dart';
 import 'package:uresax_invoice_sys/pages/login_page.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/utils/functions.dart';
@@ -31,6 +33,10 @@ void main() async {
     var databaseName = Platform.environment['URESAX_INVOICE_DATABASE_NAME'];
     var dbUsername = Platform.environment['URESAX_INVOICE_DATABASE_USERNAME'];
     var dbPassword = Platform.environment['URESAX_INVOICE_DATABASE_PASSWORD'];
+
+    eCommerceMode = bool.tryParse(
+            Platform.environment['URESAX_INVOICE_ECOMMERCE_MODE'] ?? 'false') ??
+        false;
 
     await initLocalStorage();
 
@@ -113,6 +119,11 @@ class _MyAppState extends State<MyApp> {
     overrideCodes = [
       OverrideCode(name: 'TIPO DE PAGO'),
       ...await OverrideCode.get()
+    ];
+
+    wareHouses = [
+      WareHouses(name: 'ELEGIR ALMACEN'),
+      ...await WareHouses.get()
     ];
 
     await isValidCertFilePath();

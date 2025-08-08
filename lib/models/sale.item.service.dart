@@ -55,7 +55,8 @@ class SaleItemService implements SaleItem {
       this.net3,
       this.exemptAmount,
       this.indicadorFacturacion,
-      this.indicadorAgentePercepcion});
+      this.indicadorAgentePercepcion,
+      this.price});
 
   @override
   int? productId;
@@ -162,7 +163,8 @@ class SaleItemService implements SaleItem {
             ? double.parse(map['exemptAmount'])
             : null,
         indicadorFacturacion: map['indicadorFacturacion'],
-        indicadorAgentePercepcion: map['indicadorAgentePercepcion']);
+        indicadorAgentePercepcion: map['indicadorAgentePercepcion'],
+        price: double.parse(map['price']));
   }
 
   String toJson() => json.encode(toMap());
@@ -266,7 +268,9 @@ class SaleItemService implements SaleItem {
 
   @override
   double get precio {
-    if (net == null) return 0;
-    return (net! / quantity!);
+    return price ?? 0;
   }
+
+  @override
+  double? price;
 }

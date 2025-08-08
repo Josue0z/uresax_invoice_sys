@@ -104,11 +104,11 @@ WHERE "ncfTypeId" = @ncfTypeId
   Future<void> updateFinish({int currentNcf = 1}) async {
     try {
       final conne = SqlConector.connection;
-      await conne?.execute('''
+      await conne?.execute(Sql.named('''
 UPDATE public."NcfsList"
 	SET   finish = true
-	WHERE "ncfTypeId" = @ncfTypeId and end = $currentNcf
-        ''', parameters: {'ncfTypeId': ncfTypeId});
+	WHERE "ncfTypeId" = @ncfTypeId and "end" = $currentNcf
+        '''), parameters: {'ncfTypeId': ncfTypeId});
     } catch (e) {
       rethrow;
     }

@@ -58,7 +58,8 @@ class CreditNoteProduct implements SaleItem {
       this.net3,
       this.exemptAmount,
       this.indicadorFacturacion,
-      this.indicadorAgentePercepcion});
+      this.indicadorAgentePercepcion,
+      this.price});
 
   @override
   int? productId;
@@ -196,7 +197,8 @@ class CreditNoteProduct implements SaleItem {
             ? double.parse(map['exemptAmount'])
             : null,
         indicadorFacturacion: map['indicadorFacturacion'],
-        indicadorAgentePercepcion: map['indicadorAgentePercepcion']);
+        indicadorAgentePercepcion: map['indicadorAgentePercepcion'],
+        price: double.parse(map['price']));
   }
 
   String toJson() => json.encode(toMap());
@@ -277,7 +279,9 @@ class CreditNoteProduct implements SaleItem {
 
   @override
   double get precio {
-    if (net == null) return 0;
-    return (net! / quantity!);
+    return price ?? 0;
   }
+
+  @override
+  double? price;
 }
