@@ -96,6 +96,8 @@ class _HomePageState extends State<HomePage> {
     }
   ];
 
+  late List<Map<String, dynamic>> defaultOptions = [];
+
   _showInvoiceGenerator(SaleMode mode, List<SaleItem> items, Sale sale) {
     Navigator.push(context, MaterialPageRoute(builder: (ctx) {
       return InvoiceGeneratorPage(mode: mode, items: items, sale: sale);
@@ -207,12 +209,12 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void initState() {
+    defaultOptions = [...options];
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    print(electronicNcfEnabled);
     if (!currentUser!.permissions!.contains('ALLOW_VIEW_CREATE_SALE_SERVICE')) {
       options.removeWhere((e) => e['id'] == 1);
     }
@@ -255,142 +257,176 @@ class _HomePageState extends State<HomePage> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('TABLERO -  BIENVENIDO ${company?.name}!'),
-            SizedBox(height: kDefaultPadding / 2),
-            Container(
-              padding: EdgeInsets.all(kDefaultPadding / 2),
-              decoration: BoxDecoration(
-                  color: Colors.white24,
-                  borderRadius: BorderRadius.circular(10)),
-              child: Text(currentUser?.username ?? '',
-                  textAlign: TextAlign.right,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodySmall
-                      ?.copyWith(color: Colors.white)),
+        appBar: AppBar(
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('TABLERO -  BIENVENIDO ${company?.name}!'),
+              SizedBox(height: kDefaultPadding / 2),
+              Container(
+                padding: EdgeInsets.all(kDefaultPadding / 2),
+                decoration: BoxDecoration(
+                    color: Colors.white24,
+                    borderRadius: BorderRadius.circular(10)),
+                child: Text(currentUser?.username ?? '',
+                    textAlign: TextAlign.right,
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodySmall
+                        ?.copyWith(color: Colors.white)),
+              )
+            ],
+          ),
+          actions: [
+            Wrap(
+              runAlignment: WrapAlignment.center,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                currentUser!.permissions!
+                        .contains('ALLOW_VIEW_ELECTRONIC_SETTINGS')
+                    ? CircleAvatar(
+                        child: IconButton(
+                            tooltip: 'CONFIGURACION DE FACTURACION ELECTRONICA',
+                            onPressed: _showElectronicNcfSettingsPage,
+                            icon: Icon(Icons.receipt_long)),
+                      )
+                    : SizedBox(),
+                SizedBox(
+                  width: kDefaultPadding,
+                ),
+                currentUser!.permissions!.contains('ALLOW_EDIT_COMPANY')
+                    ? CircleAvatar(
+                        child: IconButton(
+                            tooltip: 'EDITAR DATOS DE EMPRESA',
+                            onPressed: _showCompanyDetailsPage,
+                            icon: Icon(Icons.store_outlined)),
+                      )
+                    : SizedBox(),
+                SizedBox(
+                  width: kDefaultPadding,
+                ),
+                currentUser!.permissions!.contains('ALLOW_VIEW_USERS')
+                    ? CircleAvatar(
+                        child: IconButton(
+                            tooltip: 'VER USUARIOS',
+                            onPressed: _showUsersPage,
+                            icon: Icon(Icons.people_alt_outlined)),
+                      )
+                    : SizedBox(),
+                SizedBox(
+                  width: kDefaultPadding,
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(currentUser?.name ?? '',
+                        style: Theme.of(context)
+                            .textTheme
+                            .displayMedium
+                            ?.copyWith(color: Colors.white),
+                        textAlign: TextAlign.right),
+                    SizedBox(height: kDefaultPadding / 2),
+                    Container(
+                      padding: EdgeInsets.all(kDefaultPadding / 2),
+                      decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10)),
+                      child: Text(currentUser?.roleName ?? '',
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall
+                              ?.copyWith(
+                                  color: Theme.of(context).primaryColor)),
+                    ),
+                    SizedBox(height: kDefaultPadding / 2),
+                  ],
+                ),
+                SizedBox(
+                  width: kDefaultPadding,
+                ),
+                CircleAvatar(
+                  child: IconButton(
+                      tooltip: 'CERRAR CUENTA',
+                      onPressed: () {
+                        currentUser = null;
+                        Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(builder: (ctx) => LoginPage()),
+                            (_) => false);
+                      },
+                      icon: Icon(Icons.power_settings_new_outlined)),
+                ),
+                SizedBox(
+                  width: kDefaultPadding * 2,
+                )
+              ],
             )
           ],
         ),
-        actions: [
-          Wrap(
-            runAlignment: WrapAlignment.center,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              currentUser!.permissions!
-                      .contains('ALLOW_VIEW_ELECTRONIC_SETTINGS')
-                  ? CircleAvatar(
-                      child: IconButton(
-                          tooltip: 'CONFIGURACION DE FACTURACION ELECTRONICA',
-                          onPressed: _showElectronicNcfSettingsPage,
-                          icon: Icon(Icons.receipt_long)),
-                    )
-                  : SizedBox(),
-              SizedBox(
-                width: kDefaultPadding,
+        body: Column(
+          children: [
+            Container(
+              width: double.infinity,
+              height: 50,
+              margin: EdgeInsets.symmetric(
+                  vertical: kDefaultPadding, horizontal: kDefaultPadding / 2),
+              child: TextFormField(
+                onChanged: (words) {
+                  var xoptions = options
+                      .where((e) => (e['title'] as String)
+                          .toLowerCase()
+                          .contains(words.toLowerCase()))
+                      .toList();
+
+                  if (words.isNotEmpty) {
+                    options = xoptions;
+                  } else {
+                    options = defaultOptions;
+                  }
+                  setState(() {});
+                },
+                decoration: InputDecoration(
+                    labelText: 'BUSCAR',
+                    hintText: 'Escribir algo...',
+                    suffixIcon: Icon(Icons.search)),
               ),
-              currentUser!.permissions!.contains('ALLOW_EDIT_COMPANY')
-                  ? CircleAvatar(
-                      child: IconButton(
-                          tooltip: 'EDITAR DATOS DE EMPRESA',
-                          onPressed: _showCompanyDetailsPage,
-                          icon: Icon(Icons.store_outlined)),
-                    )
-                  : SizedBox(),
-              SizedBox(
-                width: kDefaultPadding,
-              ),
-              currentUser!.permissions!.contains('ALLOW_VIEW_USERS')
-                  ? CircleAvatar(
-                      child: IconButton(
-                          tooltip: 'VER USUARIOS',
-                          onPressed: _showUsersPage,
-                          icon: Icon(Icons.people_alt_outlined)),
-                    )
-                  : SizedBox(),
-              SizedBox(
-                width: kDefaultPadding,
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(currentUser?.name ?? '',
-                      style: Theme.of(context)
-                          .textTheme
-                          .displayMedium
-                          ?.copyWith(color: Colors.white),
-                      textAlign: TextAlign.right),
-                  SizedBox(height: kDefaultPadding / 2),
-                  Container(
-                    padding: EdgeInsets.all(kDefaultPadding / 2),
-                    decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(10)),
-                    child: Text(currentUser?.roleName ?? '',
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodySmall
-                            ?.copyWith(color: Theme.of(context).primaryColor)),
-                  ),
-                  SizedBox(height: kDefaultPadding / 2),
-                ],
-              ),
-              SizedBox(
-                width: kDefaultPadding,
-              ),
-              CircleAvatar(
-                child: IconButton(
-                    tooltip: 'CERRAR CUENTA',
-                    onPressed: () {
-                      currentUser = null;
-                      Navigator.pushAndRemoveUntil(
-                          context,
-                          MaterialPageRoute(builder: (ctx) => LoginPage()),
-                          (_) => false);
-                    },
-                    icon: Icon(Icons.power_settings_new_outlined)),
-              ),
-              SizedBox(
-                width: kDefaultPadding * 2,
-              )
-            ],
-          )
-        ],
-      ),
-      body: GridView.builder(
-          itemCount: options.length,
-          gridDelegate:
-              SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 4),
-          itemBuilder: (ctx, i) {
-            var option = options[i];
-            return GestureDetector(
-              onTap: () {
-                _showPage(option['id']);
-              },
-              child: Card(
-                shape: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30),
-                    borderSide: BorderSide(style: BorderStyle.none)),
-                child: Center(
-                    child: Padding(
-                        padding: EdgeInsets.all(kDefaultPadding),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            SvgPicture.asset(option['svg'], width: 100),
-                            SizedBox(height: kDefaultPadding),
-                            Text(option['title'],
-                                style: Theme.of(context).textTheme.bodySmall,
-                                textAlign: TextAlign.center)
-                          ],
-                        ))),
-              ),
-            );
-          }),
-    );
+            ),
+            Expanded(
+              child: GridView.builder(
+                  itemCount: options.length,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 4),
+                  itemBuilder: (ctx, i) {
+                    var option = options[i];
+                    return GestureDetector(
+                      onTap: () {
+                        _showPage(option['id']);
+                      },
+                      child: Card(
+                        shape: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(30),
+                            borderSide: BorderSide(style: BorderStyle.none)),
+                        child: Center(
+                            child: Padding(
+                                padding: EdgeInsets.all(kDefaultPadding),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    SvgPicture.asset(option['svg'], width: 100),
+                                    SizedBox(height: kDefaultPadding),
+                                    Text(option['title'],
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall,
+                                        textAlign: TextAlign.center)
+                                  ],
+                                ))),
+                      ),
+                    );
+                  }),
+            )
+          ],
+        ));
   }
 }

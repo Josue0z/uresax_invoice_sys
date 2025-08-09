@@ -120,7 +120,10 @@ class Products implements SaleElement {
           Sql.named('select * from public."ProductsView" where code = @code'),
           parameters: parameters);
 
-      print(result);
+      if (result != null && result.isEmpty) {
+        return null;
+      }
+
       return result
               ?.map(
                 (e) => Products.fromMap(e.toColumnMap()),

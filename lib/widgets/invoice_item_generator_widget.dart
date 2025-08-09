@@ -9,6 +9,7 @@ import 'package:uresax_invoice_sys/models/sale.element.abs.dart';
 import 'package:uresax_invoice_sys/models/sale.item.abs.dart';
 import 'package:uresax_invoice_sys/models/sale.item.product.dart';
 import 'package:uresax_invoice_sys/models/sale.item.service.dart';
+import 'package:uresax_invoice_sys/models/sale.product.dart';
 import 'package:uresax_invoice_sys/models/service.dart';
 import 'package:uresax_invoice_sys/models/taxes.dart';
 import 'package:uresax_invoice_sys/pages/products_page.dart';
@@ -143,7 +144,8 @@ class _InvoiceItemGeneratorWidgetState
   }
 
   _calc() {
-    widget.saleItem.net = (el?.price ?? 0) * (widget.saleItem.quantity ?? 1);
+    widget.saleItem.net =
+        (el?.price ?? widget.saleItem.net!) * (widget.saleItem.quantity ?? 1);
 
     widget.saleItem.tax18 = 0;
     widget.saleItem.tax16 = 0;
@@ -194,9 +196,24 @@ class _InvoiceItemGeneratorWidgetState
       widget.saleItem.indicadorAgentePercepcion = 1;
     }
 
-    var netToPaid = widget.saleItem.total! -
+    /*var netToPaid = widget.saleItem.total! -
         (widget.saleItem.retentionTax ?? 0) -
-        (widget.saleItem.retentionIsr ?? 0);
+        (widget.saleItem.retentionIsr ?? 0);*/
+
+    startQuantity = widget.saleItem.quantity ?? 1;
+    widget.saleItem.returnQuantity = startQuantity;
+    quantity.value = TextEditingValue(
+      text: widget.saleItem.quantity?.toString() ?? '',
+      selection: TextSelection.collapsed(
+        offset: (widget.saleItem.quantity?.toString() ?? '').length,
+      ),
+    );
+
+    net.text = widget.saleItem.net?.toStringAsFixed(2) ?? '';
+    tax.text = widget.saleItem.tax?.toStringAsFixed(2) ?? '';
+    total.text = widget.saleItem.total?.toStringAsFixed(2) ?? '';
+
+    totalToPay.text = amountPaid.toStringAsFixed(2);
 
     widget.onChanged(widget.saleItem);
   }
@@ -211,12 +228,17 @@ class _InvoiceItemGeneratorWidgetState
         (widget.saleItem.retentionIsr ?? 0);
   }
 
+  bool get enabledOnlyEcommerce {
+    return (eCommerceMode &&
+        (widget.saleItem is SaleItemProduct ||
+            widget.saleItem is CreditNoteProduct));
+  }
+
   @override
   void initState() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _syncControllersWithSaleItem();
-        print('update');
       }
     });
 
@@ -229,17 +251,7 @@ class _InvoiceItemGeneratorWidgetState
     currentRetentionIsrId = widget.saleItem.retentionIsrId;
     currentRetentionTaxId = widget.saleItem.retentionTaxId;
 
-    startQuantity = widget.saleItem.quantity ?? 1;
-    widget.saleItem.returnQuantity = startQuantity;
-    quantity.text = startQuantity.toString();
-
     _calc();
-
-    net.text = widget.saleItem.net?.toStringAsFixed(2) ?? '';
-    tax.text = widget.saleItem.tax?.toStringAsFixed(2) ?? '';
-    total.text = widget.saleItem.total?.toStringAsFixed(2) ?? '';
-
-    totalToPay.text = amountPaid.toStringAsFixed(2);
   }
 
   @override
@@ -250,7 +262,6 @@ class _InvoiceItemGeneratorWidgetState
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           _syncControllersWithSaleItem();
-          print('update');
         }
       });
     }
@@ -299,7 +310,8 @@ class _InvoiceItemGeneratorWidgetState
               controller: quantity,
               readOnly: widget.saleItem is CreditNoteProduct ||
                   widget.saleItem is CreditNoteService ||
-                  widget.editing,
+                  widget.editing ||
+                  enabledOnlyEcommerce,
               validator: (val) => val!.isEmpty ? 'CAMPO OBLIGATORIO' : null,
               onChanged: _onChangedQuantity,
               decoration: InputDecoration(
@@ -351,6 +363,7 @@ class _InvoiceItemGeneratorWidgetState
               initialValue: currenId,
               saleItem: widget.saleItem,
               elements: elements,
+              enabled: !enabledOnlyEcommerce,
               validator: (val) {
                 return val == null ? 'CAMPO OBLIGATORIO' : null;
               },
@@ -395,7 +408,8 @@ class _InvoiceItemGeneratorWidgetState
                     .toList(),
                 onChanged: widget.saleItem is CreditNoteProduct ||
                         widget.saleItem is CreditNoteService ||
-                        widget.editing
+                        widget.editing ||
+                        enabledOnlyEcommerce
                     ? null
                     : _onSelectedTax),
           ),
@@ -426,7 +440,8 @@ class _InvoiceItemGeneratorWidgetState
                       onChanged: widget.saleItem is CreditNoteProduct ||
                               widget.saleItem is CreditNoteService ||
                               (widget.editing &&
-                                  widget.saleItem.retentionTaxId != null)
+                                  widget.saleItem.retentionTaxId != null) ||
+                              enabledOnlyEcommerce
                           ? null
                           : _onSelectedRetentionTax),
                 ),
@@ -446,7 +461,8 @@ class _InvoiceItemGeneratorWidgetState
                       onChanged: widget.saleItem is CreditNoteProduct ||
                               widget.saleItem is CreditNoteService ||
                               (widget.editing &&
-                                  widget.saleItem.retentionIsrId != null)
+                                  widget.saleItem.retentionIsrId != null) ||
+                              enabledOnlyEcommerce
                           ? null
                           : _onSelectedRetentionIsr),
                 ),
@@ -473,6 +489,7 @@ class CustomDropdownFormField extends FormField<int> {
     required SaleItem saleItem,
     required List<SaleElement> elements,
     required void Function(SaleElement, int? option) onChanged,
+    super.enabled,
     super.initialValue,
     super.validator,
     super.autovalidateMode = AutovalidateMode.disabled,
@@ -485,6 +502,7 @@ class CustomDropdownFormField extends FormField<int> {
               saleItem: saleItem,
               elements: elements,
               currentValue: value,
+              enabled: enabled,
               errorText: state.errorText,
               onChanged: (element, id) {
                 state.didChange(element.id);
@@ -503,6 +521,7 @@ class _CustomDropdownButton extends StatefulWidget {
   List<SaleElement> elements;
   final Function(SaleElement, int? option) onChanged;
   int? currentValue;
+  bool enabled;
   final String? errorText;
 
   _CustomDropdownButton({
@@ -511,6 +530,7 @@ class _CustomDropdownButton extends StatefulWidget {
     required this.elements,
     required this.onChanged,
     this.currentValue,
+    this.enabled = false,
     this.errorText,
   });
 
@@ -543,6 +563,8 @@ class _CustomDropdownButtonState extends State<_CustomDropdownButton>
   }
 
   void _showContextMenu() {
+    if (!widget.enabled) return;
+
     _elements = widget.elements;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final RenderBox renderBox =

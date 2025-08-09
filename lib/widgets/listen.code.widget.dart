@@ -1,11 +1,22 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class ListenCodeWidget extends StatefulWidget {
-  Widget child;
-  void Function(String) onScan;
-  ListenCodeWidget({super.key, required this.child, required this.onScan});
+  final Widget child;
+  final void Function(String) onScan;
+  final bool enabled;
+
+  final FocusNode focusNode;
+
+  const ListenCodeWidget({
+    super.key,
+    required this.child,
+    required this.onScan,
+    required this.focusNode,
+    this.enabled = true,
+  });
 
   @override
   State<ListenCodeWidget> createState() => _ListenCodeWidgetState();
@@ -15,13 +26,17 @@ class _ListenCodeWidgetState extends State<ListenCodeWidget> {
   String code = '';
   Timer? _scanTimer;
 
-  FocusNode focusNode = FocusNode();
-  void _onScan(KeyEvent event) {
-    if (event.logicalKey.keyLabel == 'Num Lock') {
-      return;
-    }
+  KeyEventResult _handleKey(FocusNode node, KeyEvent event) {
+    if (event is! KeyDownEvent) return KeyEventResult.ignored;
 
-    final char = event.character ?? '';
+    final char = event.character;
+    if (char == null ||
+        char.isEmpty ||
+        char.codeUnitAt(0) < 32 ||
+        char.codeUnitAt(0) > 126 ||
+        event.logicalKey == LogicalKeyboardKey.numLock) {
+      return KeyEventResult.ignored;
+    }
 
     code += char;
 
@@ -30,28 +45,22 @@ class _ListenCodeWidgetState extends State<ListenCodeWidget> {
       _onScanComplete(code);
       code = '';
     });
+
+    return KeyEventResult.handled;
   }
 
   void _onScanComplete(String scannedCode) {
     print('✅ Código escaneado: $scannedCode');
     widget.onScan(scannedCode);
-    // Aquí puedes procesar el código, buscar el producto, etc.
-  }
-
-  @override
-  void initState() {
-    focusNode.requestFocus();
-    super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    return KeyboardListener(
-        focusNode: focusNode,
-        autofocus: true,
-        child: widget.child,
-        onKeyEvent: (keyEvent) {
-          _onScan(keyEvent);
-        });
+    return Focus(
+      focusNode: widget.focusNode,
+      autofocus: widget.enabled,
+      onKeyEvent: _handleKey,
+      child: widget.child,
+    );
   }
 }
