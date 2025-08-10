@@ -760,14 +760,11 @@ class _CustomDropdownButtonState extends State<_CustomDropdownButton>
 
   @override
   Widget build(BuildContext context) {
-    if (widget.elements.isNotEmpty) {
-      _saleElement =
-          widget.elements.firstWhere((e) => e.id == widget.currentValue);
-    }
-
     if (widget.currentValue != null) {
-      _saleElement =
-          widget.elements.firstWhere((e) => e.id == widget.currentValue);
+      _saleElement = widget.elements
+          .firstWhere((e) => e.id == widget.currentValue, orElse: () {
+        return Services();
+      });
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           widget.onChanged(_saleElement!, widget.currentValue);
