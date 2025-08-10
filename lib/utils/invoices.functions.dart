@@ -1,12 +1,9 @@
 import 'dart:convert';
-
 import 'package:barcode/barcode.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:moment_dart/moment_dart.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-
 import 'package:uresax_invoice_sys/models/payment.dart';
 import 'package:uresax_invoice_sys/models/sale.abs.dart';
 import 'package:uresax_invoice_sys/settings.dart';
@@ -25,16 +22,6 @@ pw.Document createDefaultInvoice(Sale sale) {
 
   List<String> columns() {
     return sale.items[0].toDisplay().keys.toList();
-  }
-
-  String labelInvoice = 'FACTURA';
-
-  if (sale.ncfTypeId == '50') {
-    labelInvoice = 'PROFORMA';
-  }
-
-  if (sale.ncfTypeId?.contains('4') == true) {
-    labelInvoice = 'NOTA DE CREDITO';
   }
 
   document.addPage(pw.MultiPage(header: (ctx) {
@@ -525,5 +512,228 @@ Future<pw.Document> createPaymentInvoice(Payment payment) async {
               ]))
         ];
       }));
+  return document;
+}
+
+pw.Document createVerticalInvoice(Sale sale) {
+  // Generar código QR
+  final qr = Barcode.qrCode();
+
+  List<String> columns() {
+    return sale.items[0].toDisplay().keys.toList();
+  }
+
+  List<pw.Widget> paymentsWidgets = [];
+
+  if (sale.effective != 0) {
+    paymentsWidgets.add(pw.Container(
+        margin: pw.EdgeInsets.symmetric(vertical: kDefaultPadding / 3),
+        child: pw.Text('EFECTIVO', style: pw.TextStyle(fontSize: 8))));
+  }
+
+  if (sale.creditCard != 0) {
+    paymentsWidgets.add(pw.Container(
+        margin: pw.EdgeInsets.symmetric(vertical: kDefaultPadding / 3),
+        child: pw.Text('TARJETA DE CREDITO O DEBITO',
+            style: pw.TextStyle(fontSize: 8))));
+  }
+
+  if (sale.checkOrTransf != 0) {
+    paymentsWidgets.add(pw.Container(
+        margin: pw.EdgeInsets.symmetric(vertical: kDefaultPadding / 3),
+        child: pw.Text('CHEQUE O TRANSFERENCIA',
+            style: pw.TextStyle(fontSize: 8))));
+  }
+
+  if (sale.saleToCredit != 0) {
+    paymentsWidgets.add(pw.Container(
+        margin: pw.EdgeInsets.symmetric(vertical: kDefaultPadding / 3),
+        child: pw.Text('VENTA A CREDITO', style: pw.TextStyle(fontSize: 8))));
+  }
+
+  pw.Document document = pw.Document(
+      theme: pw.ThemeData(defaultTextStyle: pw.TextStyle(fontSize: 8)));
+  document.addPage(pw.MultiPage(
+      margin: pw.EdgeInsets.symmetric(horizontal: 150, vertical: 60),
+      crossAxisAlignment: pw.CrossAxisAlignment.center,
+      orientation: pw.PageOrientation.portrait,
+      header: (ctx) {
+        return pw
+            .Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
+          pw.Align(
+              alignment: pw.Alignment.center,
+              child: pw.Column(children: [
+                pw.Text(company?.name ?? '',
+                    style: pw.TextStyle(
+                        fontSize: 13, fontWeight: pw.FontWeight.bold)),
+                pw.SizedBox(height: kDefaultPadding / 2),
+                pw.Text('RNC: ${company?.rncOrId}')
+              ])),
+          pw.SizedBox(height: kDefaultPadding),
+          pw.Container(
+              margin: pw.EdgeInsets.symmetric(vertical: kDefaultPadding / 3),
+              child: pw.Text('Razon Social Cliente: ${sale.clientName}')),
+          pw.Container(
+              margin: pw.EdgeInsets.symmetric(vertical: kDefaultPadding / 3),
+              child: pw.Text('Rnc Cliente: ${sale.clientId}')),
+          pw.Container(
+              margin: pw.EdgeInsets.symmetric(vertical: kDefaultPadding / 3),
+              child: pw.Text(
+                  'Fecha Emision: ${sale.createdAt?.format(payload: 'DD/MM/YYYY')}')),
+          pw.Container(
+              margin: pw.EdgeInsets.symmetric(vertical: kDefaultPadding / 3),
+              child: pw.Text('NCF: ${sale.ncf}')),
+          sale.ncfAffected != null
+              ? pw.Container(
+                  margin:
+                      pw.EdgeInsets.symmetric(vertical: kDefaultPadding / 3),
+                  child: pw.Text('NCF AFECTADO: ${sale.ncfAffected}'))
+              : pw.SizedBox(),
+          pw.Divider(color: PdfColor.fromHex('#9E9D9D'), height: 0.3),
+          pw.Container(
+            margin: pw.EdgeInsets.symmetric(vertical: kDefaultPadding / 4),
+            child: pw.Align(
+                alignment: pw.Alignment.center,
+                child: pw.Text(sale.ncfTypeName ?? '',
+                    style: pw.TextStyle(
+                        fontWeight: pw.FontWeight.bold, fontSize: 6))),
+          ),
+          pw.Divider(color: PdfColor.fromHex('#9E9D9D'), height: 0.3),
+        ]);
+      },
+      build: (ctx) {
+        return [
+          pw.Table(children: [
+            pw.TableRow(
+                decoration: pw.BoxDecoration(
+                    border: pw.Border(
+                        bottom:
+                            pw.BorderSide(color: PdfColor.fromHex('#e6e6e6')))),
+                children: List.generate(columns().length, (index) {
+                  var col = columns()[index];
+
+                  return pw.Padding(
+                      padding: pw.EdgeInsets.all(kDefaultPadding / 3),
+                      child: pw.Text(col,
+                          style: pw.TextStyle(
+                              color: PdfColors.black, fontSize: 5)));
+                })),
+            ...List.generate(sale.items.length, (index) {
+              var item = sale.items[index];
+              var values = item.toDisplay().values.toList();
+              return pw.TableRow(
+                  decoration: pw.BoxDecoration(
+                      border: pw.Border(
+                          bottom: pw.BorderSide(
+                              color: PdfColor.fromHex('#e6e6e6')))),
+                  children: List.generate(values.length, (i) {
+                    var val = values[i];
+                    return pw.Padding(
+                        padding: pw.EdgeInsets.all(kDefaultPadding / 3),
+                        child: pw.Text(val, style: pw.TextStyle(fontSize: 5)));
+                  }));
+            })
+          ]),
+          pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Expanded(
+                    child: pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.start,
+                        children: [
+                      pw.Container(
+                          margin: pw.EdgeInsets.symmetric(
+                              vertical: kDefaultPadding / 2),
+                          child: pw.Text('Forma de pagos:',
+                              style: pw.TextStyle(
+                                  fontWeight: pw.FontWeight.bold))),
+                      ...paymentsWidgets
+                    ])),
+                pw.Expanded(
+                    child: pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.end,
+                        children: [
+                      pw.Container(
+                          margin: pw.EdgeInsets.symmetric(
+                              vertical: kDefaultPadding / 2),
+                          child: pw.Text('Subtotal: ${sale.net?.toCoin()}')),
+                      pw.Container(
+                          margin: pw.EdgeInsets.symmetric(
+                              vertical: kDefaultPadding / 2),
+                          child:
+                              pw.Text('Descuento: ${sale.discount?.toCoin()}')),
+                      pw.Container(
+                          margin: pw.EdgeInsets.symmetric(
+                              vertical: kDefaultPadding / 2),
+                          child: pw.Text('Itbis: ${sale.tax?.toCoin()}')),
+                      pw.Container(
+                          margin: pw.EdgeInsets.symmetric(
+                              vertical: kDefaultPadding / 2),
+                          child: pw.Text('Total: ${sale.total?.toCoin()}'))
+                    ]))
+              ]),
+          pw.SizedBox(height: kDefaultPadding),
+          pw.Column(children: [
+            pw.Container(
+                width: 100,
+                height: 100,
+                margin: pw.EdgeInsets.symmetric(vertical: kDefaultPadding),
+                child: pw.BarcodeWidget(
+                    data: sale.dgiiURL != null
+                        ? sale.dgiiURL ?? ''
+                        : sale.ncf ?? '',
+                    barcode: qr)),
+            sale.securityCode != null
+                ? pw.Container(
+                    margin:
+                        pw.EdgeInsets.symmetric(vertical: kDefaultPadding / 4),
+                    child: pw.Row(
+                        mainAxisAlignment: pw.MainAxisAlignment.center,
+                        children: [
+                          pw.Text('Codigo de seguridad:',
+                              style: pw.TextStyle(
+                                  fontSize: 9, fontWeight: pw.FontWeight.bold)),
+                          pw.SizedBox(width: 5),
+                          pw.Text(sale.securityCode ?? '',
+                              style: pw.TextStyle(fontSize: 9)),
+                        ]))
+                : pw.SizedBox(),
+            sale.signatureDate != null
+                ? pw.Container(
+                    margin:
+                        pw.EdgeInsets.symmetric(vertical: kDefaultPadding / 4),
+                    child: pw.Row(
+                        mainAxisAlignment: pw.MainAxisAlignment.center,
+                        children: [
+                          pw.Text('Fecha de Firma:',
+                              style: pw.TextStyle(
+                                  fontSize: 9, fontWeight: pw.FontWeight.bold)),
+                          pw.SizedBox(width: 5),
+                          pw.Text(
+                              sale.signatureDate?.format(
+                                      payload: 'DD-MM-YYYY HH:mm:ss') ??
+                                  '',
+                              style: pw.TextStyle(fontSize: 9)),
+                        ]))
+                : pw.SizedBox(),
+            sale.authorName != null
+                ? pw.Container(
+                    margin:
+                        pw.EdgeInsets.symmetric(vertical: kDefaultPadding / 4),
+                    child: pw.Row(
+                        mainAxisAlignment: pw.MainAxisAlignment.center,
+                        children: [
+                          pw.Text('Atendido por:',
+                              style: pw.TextStyle(
+                                  fontSize: 9, fontWeight: pw.FontWeight.bold)),
+                          pw.SizedBox(width: 5),
+                          pw.Text(sale.authorName ?? '',
+                              style: pw.TextStyle(fontSize: 9)),
+                        ]))
+                : pw.SizedBox()
+          ])
+        ];
+      }));
+
   return document;
 }

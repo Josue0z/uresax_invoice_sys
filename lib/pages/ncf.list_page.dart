@@ -47,11 +47,22 @@ class _NcfListPageState extends State<NcfListPage> {
             title: Text(ncfList.ncfTypeName ?? ''),
             subtitle: Text('INICIAL: ${ncfList.start} - FINAL: ${ncfList.end}'),
             trailing: Wrap(
+              runAlignment: WrapAlignment.center,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 Text(
                     'Fecha de Vencimiento: ${ncfList.expirationDate?.format(payload: 'DD/MM/YYYY')}'),
                 SizedBox(
                   width: kDefaultPadding,
+                ),
+                Container(
+                  padding: EdgeInsets.all(kDefaultPadding / 2),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(30),
+                    color: ncfList.color.withOpacity(0.2),
+                  ),
+                  child: Text(ncfList.label,
+                      style: TextStyle(color: ncfList.color)),
                 )
               ],
             ),

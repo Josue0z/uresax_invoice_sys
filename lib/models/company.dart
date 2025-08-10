@@ -11,31 +11,25 @@ class Company {
   String? email;
   String? address;
   String? logo;
-  Company({
-    this.name,
-    this.rncOrId,
-    this.phone1,
-    this.phone2,
-    this.email,
-    this.address,
-    this.logo,
-  });
+  DateTime? expirationDate;
+  Company(
+      {this.name,
+      this.rncOrId,
+      this.phone1,
+      this.phone2,
+      this.email,
+      this.address,
+      this.logo,
+      this.expirationDate});
 
   static Future<Company?> get() async {
     try {
       final conn = SqlConector.connection;
-      var result = await conn?.execute(
-          'select name, "rncOrId", phone1, phone2, email, address, logo from public."Company" LIMIT 1');
+      var result =
+          await conn?.execute('select * from public."Company" LIMIT 1');
       if (result != null) {
         var first = result[0];
-        return Company(
-            name: first[0] as String?,
-            rncOrId: first[1] as String?,
-            phone1: first[2] as String?,
-            phone2: first[3] as String?,
-            email: first[4] as String?,
-            address: first[5] as String,
-            logo: first[6] as String?);
+        return Company.fromMap(first.toColumnMap());
       }
       return null;
     } catch (e) {
@@ -48,7 +42,7 @@ class Company {
       final conn = SqlConector.connection;
       await conn?.execute(
           Sql.named(
-              '''update public."Company" set name = @name, "rncOrId" = @rncOrId, phone1 = @phone1, phone2 = @phone2, email = @email, address = @address, logo = @logo'''),
+              '''update public."Company" set name = @name, "rncOrId" = @rncOrId, phone1 = @phone1, phone2 = @phone2, email = @email, address = @address, logo = @logo, "expirationDate" = @expirationDate'''),
           parameters: toMap());
       return await get();
     } catch (e) {
@@ -85,19 +79,20 @@ class Company {
       'email': email,
       'address': address,
       'logo': logo,
+      'expirationDate': expirationDate
     };
   }
 
   factory Company.fromMap(Map<String, dynamic> map) {
     return Company(
-      name: map['name'],
-      rncOrId: map['rncOrId'],
-      phone1: map['phone1'],
-      phone2: map['phone2'],
-      email: map['email'],
-      address: map['address'],
-      logo: map['logo'],
-    );
+        name: map['name'],
+        rncOrId: map['rncOrId'],
+        phone1: map['phone1'],
+        phone2: map['phone2'],
+        email: map['email'],
+        address: map['address'],
+        logo: map['logo'],
+        expirationDate: map['expirationDate']);
   }
 
   String toJson() => json.encode(toMap());

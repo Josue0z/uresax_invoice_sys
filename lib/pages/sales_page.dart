@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:moment_dart/moment_dart.dart';
 import 'package:open_file/open_file.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:uresax_invoice_sys/modals/filter.sales.modal.dart';
 import 'package:uresax_invoice_sys/modals/payment.editor.modal.dart';
 import 'package:uresax_invoice_sys/models/sale.abs.dart';
@@ -17,6 +16,7 @@ import 'package:uresax_invoice_sys/utils/functions.dart';
 import 'package:uresax_invoice_sys/utils/invoices.functions.dart';
 import 'package:path/path.dart' as path;
 import 'package:uresax_invoice_sys/widgets/date.range_widget.dart';
+import 'package:pdf/widgets.dart' as pw;
 
 class SalesPage extends StatefulWidget {
   const SalesPage({super.key});
@@ -66,7 +66,14 @@ class _SalesPageState extends State<SalesPage> {
       var items = await sale.getSaleData();
 
       sale.items = items;
-      var doc = createDefaultInvoice(sale);
+
+      pw.Document doc;
+
+      if (eCommerceMode) {
+        doc = createVerticalInvoice(sale);
+      } else {
+        doc = createDefaultInvoice(sale);
+      }
 
       var bytes = await doc.save();
       var dir = await getUresaxInvoiceDir();

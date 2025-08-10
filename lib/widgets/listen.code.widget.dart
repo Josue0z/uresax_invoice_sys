@@ -25,6 +25,7 @@ class ListenCodeWidget extends StatefulWidget {
 class _ListenCodeWidgetState extends State<ListenCodeWidget> {
   String code = '';
   Timer? _scanTimer;
+  Timer? xtimer;
 
   KeyEventResult _handleKey(FocusNode node, KeyEvent event) {
     if (event is! KeyDownEvent) return KeyEventResult.ignored;
@@ -52,6 +53,18 @@ class _ListenCodeWidgetState extends State<ListenCodeWidget> {
   void _onScanComplete(String scannedCode) {
     print('✅ Código escaneado: $scannedCode');
     widget.onScan(scannedCode);
+  }
+
+  @override
+  void initState() {
+    widget.focusNode.requestFocus();
+
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   @override

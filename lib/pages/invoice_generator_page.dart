@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:amount_input_formatter/amount_input_formatter.dart';
 import 'package:ecf_dgii/ecf_dgii.dart';
 import 'package:flutter/material.dart';
@@ -90,6 +92,10 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
 
   bool get esGubernamental {
     return currentNcfTypeId == '45' || currentNcfTypeId == '15';
+  }
+
+  bool get onlyEcommerce {
+    return (eCommerceMode && widget.sale is SaleProduct);
   }
 
   _onScanCode(String code) async {
@@ -335,6 +341,14 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
         int dif = checkObj['dif'];
         String name = checkObj['name'];
         throw 'QUEDAN $dif $name';
+      }
+
+      var ncfList = await NcfsList(ncfTypeId: currentNcfTypeId).findNcf();
+
+      if (ncfList != null) {
+        fechaVencimiento = ncfList.expirationDate!;
+        fechaVencimientoController.value = TextEditingValue(
+            text: fechaVencimiento.format(payload: 'DD/MM/YYYY'));
       }
     } catch (e) {
       showTopSnackBar(context, message: e.toString(), color: Colors.red);
@@ -749,9 +763,10 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
               ? calcularCodigoModificacion(widget.sale.createdAt!, now)
               : '',
           numeroComprobante: sale.ncf ?? '',
-          numeroComprobanteModificado: sale.ncfAffected ?? '',
-          rncOtroContribuyente:
-              esNotaCredito ? company?.rncOrId?.replaceAll('-', '') ?? '' : '',
+          numeroComprobanteModificado: _currentSale?.ncf ?? '',
+          rncOtroContribuyente: esNotaCredito
+              ? company?.rncOrId?.trim().replaceAll('-', '') ?? ''
+              : '',
           codigoModificacion:
               esNotaCredito ? currentOverrideCode.toString() : '',
           fechaEmision: fechaEmision,
@@ -759,7 +774,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
               ? ''
               : fechaVencimiento.format(payload: 'DD-MM-YYYY'),
           fechaEmisionNcfModificado: esNotaCredito
-              ? widget.sale.createdAt?.format(payload: 'DD-MM-YYYY') ?? ''
+              ? _currentSale?.createdAt?.format(payload: 'DD-MM-YYYY') ?? ''
               : '',
           fechaLimitePago: currentPaymentType == 1
               ? ''
@@ -776,7 +791,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
           telefonoEmisor2: company?.phone2 ?? '',
           telefonoEmisor3: '',
           totalPaginas: '',
-          rncEmisor: company?.rncOrId?.replaceAll('-', '') ?? '',
+          rncEmisor: company?.rncOrId?.trim().replaceAll('-', '') ?? '',
           razonSocialEmisor: company?.name ?? '',
           nombreComercial: '',
           correoEmisor: company?.email ?? '',
@@ -903,6 +918,14 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
     ];
 
     loading = false;
+
+    if (currentNcfTypeId != null) {
+      var ncfList = await NcfsList(ncfTypeId: currentNcfTypeId).findNcf();
+
+      if (ncfList != null) {
+        fechaVencimiento = ncfList.expirationDate!;
+      }
+    }
 
     setState(() {});
   }
@@ -1033,15 +1056,11 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                               widget.sale.createdAt = res.createdAt;
                               widget.sale.expirationDate = res.expirationDate;
 
-                              currentCurrencyId = res.currencyId;
-
-                              widget.sale.currencyId = currentCurrencyId;
+                              currentCurrencyId = _currentSale?.currencyId;
 
                               currentPaymentType = res.tipoPago;
 
-                              widget.sale.rate = res.rate;
-
-                              if (res.rate != null) {
+                              if (_currentSale?.rate != null) {
                                 rate.value = TextEditingValue(
                                     text:
                                         widget.sale.rate?.toStringAsFixed(2) ??
@@ -1232,39 +1251,44 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                                             }),
                                       )
                                     : SizedBox(),
-                                TextFormField(
-                                  controller: issueDateController,
-                                  readOnly: true,
-                                  style: Theme.of(context).textTheme.bodyMedium,
-                                  decoration: InputDecoration(
-                                      labelText: 'FECHA DE EMISION',
-                                      hintText: 'DD/MM/YYYY',
-                                      suffixIcon: IconButton(
-                                          onPressed: _showDatePicker2,
-                                          icon: Icon(Icons.calendar_month))),
+                                Container(
+                                  margin:
+                                      EdgeInsets.only(bottom: kDefaultPadding),
+                                  child: TextFormField(
+                                    controller: issueDateController,
+                                    readOnly: true,
+                                    style:
+                                        Theme.of(context).textTheme.bodyMedium,
+                                    decoration: InputDecoration(
+                                        labelText: 'FECHA DE EMISION',
+                                        hintText: 'DD/MM/YYYY',
+                                        suffixIcon: IconButton(
+                                            onPressed: onlyEcommerce
+                                                ? null
+                                                : _showDatePicker2,
+                                            icon: Icon(Icons.calendar_month))),
+                                  ),
                                 ),
-                                SizedBox(
-                                  height: kDefaultPadding,
-                                ),
-                                esGubernamental
+                                esGubernamental || onlyEcommerce
                                     ? SizedBox()
-                                    : TextFormField(
-                                        controller: retentionDateController,
-                                        readOnly: true,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium,
-                                        decoration: InputDecoration(
-                                            labelText: 'FECHA DE RETENCION',
-                                            hintText: 'DD/MM/YYYY',
-                                            suffixIcon: IconButton(
-                                                onPressed: _showDatePicker,
-                                                icon: Icon(
-                                                    Icons.calendar_month))),
+                                    : Container(
+                                        margin: EdgeInsets.only(
+                                            bottom: kDefaultPadding),
+                                        child: TextFormField(
+                                          controller: retentionDateController,
+                                          readOnly: true,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium,
+                                          decoration: InputDecoration(
+                                              labelText: 'FECHA DE RETENCION',
+                                              hintText: 'DD/MM/YYYY',
+                                              suffixIcon: IconButton(
+                                                  onPressed: _showDatePicker,
+                                                  icon: Icon(
+                                                      Icons.calendar_month))),
+                                        ),
                                       ),
-                                SizedBox(
-                                  height: kDefaultPadding,
-                                ),
                                 TextFormField(
                                   controller: fechaVencimientoController,
                                   readOnly: true,
@@ -1284,7 +1308,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                           height: kDefaultPadding,
                         ),
                         ListenCodeWidget(
-                          enabled: widget.sale is SaleProduct,
+                          enabled: widget.sale is SaleProduct && eCommerceMode,
                           focusNode: _focusNode,
                           onScan: _onScanCode,
                           child: Container(),
@@ -1316,7 +1340,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                           ),
                         ),
                         SizedBox(height: kDefaultPadding),
-                        !isSale || widget.editing
+                        !isSale || widget.editing || onlyEcommerce
                             ? SizedBox()
                             : SizedBox(
                                 width: 150,

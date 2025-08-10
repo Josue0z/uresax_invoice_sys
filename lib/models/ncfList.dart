@@ -1,5 +1,5 @@
 import 'dart:convert';
-
+import 'package:flutter/material.dart';
 import 'package:postgres/postgres.dart';
 import 'package:uresax_invoice_sys/apis/sql.dart';
 
@@ -22,12 +22,38 @@ class NcfsList {
       this.createdAt,
       this.finish = false});
 
+  Color get color {
+    return finish == true ? Colors.green : Colors.red;
+  }
+
+  String get label {
+    return finish == false ? 'SIN FINALIZAR' : 'FINALIZADO';
+  }
+
   static Future<List<NcfsList>> get() async {
     try {
       final conne = SqlConector.connection;
       var result = await conne?.execute('select * from public."NcfsListView"');
       return result?.map((e) => NcfsList.fromMap(e.toColumnMap())).toList() ??
           [];
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<NcfsList?> findNcf() async {
+    try {
+      final conne = SqlConector.connection;
+      var result = await conne?.execute(
+          Sql.named(
+              'select * from public."NcfsListView" where "ncfTypeId" = @ncfTypeId and finish = false'),
+          parameters: {'ncfTypeId': ncfTypeId});
+
+      if (result!.isEmpty) return null;
+      return result
+          .map((e) => NcfsList.fromMap(e.toColumnMap()))
+          .toList()
+          .first;
     } catch (e) {
       rethrow;
     }

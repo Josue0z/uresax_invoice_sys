@@ -424,48 +424,46 @@ class _InvoiceItemGeneratorWidgetState
               decoration: InputDecoration(labelText: 'TOTAL', hintText: '0.00'),
             ),
           ),
-          widget.esGubernamental
-              ? SizedBox()
-              : Container(
-                  width: 200,
-                  margin: EdgeInsets.only(left: kDefaultPadding),
-                  child: DropdownButtonFormField(
-                      isExpanded: true,
-                      value: currentRetentionTaxId,
-                      decoration: InputDecoration(labelText: 'RETENCION ITBIS'),
-                      items: retentionsTaxes
-                          .map((e) => DropdownMenuItem(
-                              value: e.id, child: Text(e.name ?? '')))
-                          .toList(),
-                      onChanged: widget.saleItem is CreditNoteProduct ||
-                              widget.saleItem is CreditNoteService ||
-                              (widget.editing &&
-                                  widget.saleItem.retentionTaxId != null) ||
-                              enabledOnlyEcommerce
-                          ? null
-                          : _onSelectedRetentionTax),
-                ),
-          widget.esGubernamental
-              ? SizedBox()
-              : Container(
-                  width: 200,
-                  margin: EdgeInsets.only(left: kDefaultPadding),
-                  child: DropdownButtonFormField(
-                      value: currentRetentionIsrId,
-                      isExpanded: true,
-                      decoration: InputDecoration(labelText: 'RETENCION ISR'),
-                      items: retentionsIsrs
-                          .map((e) => DropdownMenuItem(
-                              value: e.id, child: Text(e.name ?? '')))
-                          .toList(),
-                      onChanged: widget.saleItem is CreditNoteProduct ||
-                              widget.saleItem is CreditNoteService ||
-                              (widget.editing &&
-                                  widget.saleItem.retentionIsrId != null) ||
-                              enabledOnlyEcommerce
-                          ? null
-                          : _onSelectedRetentionIsr),
-                ),
+          Container(
+            width: 200,
+            margin: EdgeInsets.only(left: kDefaultPadding),
+            child: DropdownButtonFormField(
+                isExpanded: true,
+                value: currentRetentionTaxId,
+                decoration: InputDecoration(labelText: 'RETENCION ITBIS'),
+                items: retentionsTaxes
+                    .map((e) => DropdownMenuItem(
+                        value: e.id, child: Text(e.name ?? '')))
+                    .toList(),
+                onChanged: widget.esGubernamental ||
+                        widget.saleItem is CreditNoteProduct ||
+                        widget.saleItem is CreditNoteService ||
+                        (widget.editing &&
+                            widget.saleItem.retentionTaxId != null) ||
+                        enabledOnlyEcommerce
+                    ? null
+                    : _onSelectedRetentionTax),
+          ),
+          Container(
+            width: 200,
+            margin: EdgeInsets.only(left: kDefaultPadding),
+            child: DropdownButtonFormField(
+                value: currentRetentionIsrId,
+                isExpanded: true,
+                decoration: InputDecoration(labelText: 'RETENCION ISR'),
+                items: retentionsIsrs
+                    .map((e) => DropdownMenuItem(
+                        value: e.id, child: Text(e.name ?? '')))
+                    .toList(),
+                onChanged: widget.esGubernamental ||
+                        widget.saleItem is CreditNoteProduct ||
+                        widget.saleItem is CreditNoteService ||
+                        (widget.editing &&
+                            widget.saleItem.retentionIsrId != null) ||
+                        enabledOnlyEcommerce
+                    ? null
+                    : _onSelectedRetentionIsr),
+          ),
           Container(
             width: 150,
             margin: EdgeInsets.only(left: kDefaultPadding),

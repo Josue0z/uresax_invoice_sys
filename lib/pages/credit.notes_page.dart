@@ -11,6 +11,7 @@ import 'package:uresax_invoice_sys/utils/functions.dart';
 import 'package:uresax_invoice_sys/utils/invoices.functions.dart';
 import 'package:path/path.dart' as path;
 import 'package:uresax_invoice_sys/widgets/date.range_widget.dart';
+import 'package:pdf/widgets.dart' as pw;
 
 class CreditNotesPage extends StatefulWidget {
   const CreditNotesPage({super.key});
@@ -39,7 +40,13 @@ class _CreditNotesPageState extends State<CreditNotesPage> {
       var items = await sale.getSaleData();
 
       sale.items = items;
-      var doc = createDefaultInvoice(sale);
+      pw.Document doc;
+
+      if (eCommerceMode) {
+        doc = createVerticalInvoice(sale);
+      } else {
+        doc = createDefaultInvoice(sale);
+      }
 
       var bytes = await doc.save();
       var dir = await getUresaxInvoiceDir();
