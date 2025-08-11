@@ -109,21 +109,25 @@ class _ProductsPageState extends State<ProductsPage> {
                 product.name ?? '',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
-              subtitle:
-                  Text('${product.wareHouseName} - ${product.price?.toCoin()}'),
+              subtitle: Text(
+                  '${product.wareHouseName} - ${product.providerName} - ${product.price?.toCoin()}'),
               trailing: Wrap(
                 runAlignment: WrapAlignment.center,
                 alignment: WrapAlignment.center,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  Text(
-                    'Total: ${product.total?.toCoin()}',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  SizedBox(width: kDefaultPadding),
-                  Text(
-                    product.quantity.toString(),
-                    style: Theme.of(context).textTheme.bodyMedium,
+                  Container(
+                    padding: EdgeInsets.all(kDefaultPadding / 2),
+                    decoration: BoxDecoration(
+                        color: product.color.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(50)),
+                    child: Text(
+                      product.quantity.toString(),
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.copyWith(color: product.color),
+                    ),
                   ),
                   SizedBox(width: kDefaultPadding),
                   IconButton(

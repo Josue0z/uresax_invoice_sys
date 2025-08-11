@@ -44,6 +44,18 @@ class _NcfListPageState extends State<NcfListPage> {
             minTileHeight: 90,
             contentPadding: EdgeInsets.symmetric(
                 vertical: kDefaultPadding, horizontal: kDefaultPadding),
+            leading: Container(
+              width: 70,
+              height: 70,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                  color: Theme.of(context).primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(90)),
+              child: Icon(
+                Icons.receipt_long,
+                color: Theme.of(context).primaryColor,
+              ),
+            ),
             title: Text(ncfList.ncfTypeName ?? ''),
             subtitle: Text('INICIAL: ${ncfList.start} - FINAL: ${ncfList.end}'),
             trailing: Wrap(
@@ -59,7 +71,7 @@ class _NcfListPageState extends State<NcfListPage> {
                   padding: EdgeInsets.all(kDefaultPadding / 2),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(30),
-                    color: ncfList.color.withOpacity(0.2),
+                    color: ncfList.color.withOpacity(0.1),
                   ),
                   child: Text(ncfList.label,
                       style: TextStyle(color: ncfList.color)),

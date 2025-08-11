@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
 import 'package:postgres/postgres.dart';
 import 'package:uresax_invoice_sys/apis/sql.dart';
 import 'package:uresax_invoice_sys/models/sale.element.abs.dart';
@@ -36,6 +37,13 @@ class Products implements SaleElement {
       this.wareHouseId,
       this.wareHouseName,
       this.code});
+
+  Color get color {
+    if (quantity == null) Colors.red;
+
+    return quantity! >= 3 ? Colors.green : Colors.red;
+  }
+
   Future<Products> create() async {
     try {
       final conne = SqlConector.connection;

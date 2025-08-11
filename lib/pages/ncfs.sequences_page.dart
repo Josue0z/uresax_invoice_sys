@@ -65,6 +65,18 @@ class _NcfsSequencesPageState extends State<NcfsSequencesPage> {
                 title: Text(ncf.name ?? ''),
                 minVerticalPadding: kDefaultPadding,
                 minTileHeight: 70,
+                leading: Container(
+                  width: 70,
+                  height: 70,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                      color: Theme.of(context).primaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(90)),
+                  child: Icon(
+                    Icons.receipt_long,
+                    color: Theme.of(context).primaryColor,
+                  ),
+                ),
                 trailing: Wrap(
                   children: [
                     SizedBox(

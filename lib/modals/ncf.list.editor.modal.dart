@@ -19,35 +19,39 @@ class _NcfListEditorModalState extends State<NcfListEditorModal> {
   TextEditingController expirationDateController = TextEditingController();
   TextEditingController start = TextEditingController();
   TextEditingController end = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   _onSubmit() async {
-    try {
-      int? xstart = int.tryParse(start.text);
-      int? xend = int.tryParse(end.text);
-      var ncfList = NcfsList(
-          ncfTypeId: currentNcfTypeId,
-          ncfTypeName: currentNcfTypeName,
-          start: xstart,
-          end: xend,
-          expirationDate: expirationDate);
+    if (_formKey.currentState!.validate()) {
+      try {
+        int? xstart = int.tryParse(start.text);
+        int? xend = int.tryParse(end.text);
+        var ncfList = NcfsList(
+            ncfTypeId: currentNcfTypeId,
+            ncfTypeName: currentNcfTypeName,
+            start: xstart,
+            end: xend,
+            expirationDate: expirationDate);
 
-      var secuecia = NcfSecuencia(
-          id: currentNcfTypeId,
-          lastValue: xstart,
-          minValue: xstart,
-          maxValue: xend);
-      await ncfList.create();
-      await secuecia.update();
+        var secuecia = NcfSecuencia(
+            id: currentNcfTypeId,
+            lastValue: xstart,
+            minValue: xstart,
+            maxValue: xend);
+        await ncfList.create();
+        await secuecia.update();
 
-      Navigator.pop(context, 'CREATE');
-    } catch (e) {
-      showTopSnackBar(context, message: e.toString(), color: Colors.red);
+        Navigator.pop(context, 'CREATE');
+      } catch (e) {
+        showTopSnackBar(context, message: e.toString(), color: Colors.red);
+      }
     }
   }
 
   _showDatePicker2() async {
     var result = await showDatePicker(
         context: context,
+        initialDate: expirationDate,
         firstDate: DateTime.now().subtract(const Duration(days: 365)),
         lastDate: DateTime.now().add(const Duration(days: 365 * 25)));
 
@@ -60,14 +64,16 @@ class _NcfListEditorModalState extends State<NcfListEditorModal> {
 
   @override
   void initState() {
-    expirationDateController.value =
-        TextEditingValue(text: expirationDate.format(payload: 'DD/MM/YYYY'));
+    /* expirationDateController.value =
+        TextEditingValue(text: expirationDate.format(payload: 'DD/MM/YYYY'));*/
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     return Dialog(
+        child: Form(
+      key: _formKey,
       child: SizedBox(
         width: 450,
         child: ListView(
@@ -96,6 +102,7 @@ class _NcfListEditorModalState extends State<NcfListEditorModal> {
             ),
             DropdownButtonFormField(
                 isExpanded: true,
+                validator: (val) => val == null ? 'CAMPO OBLIGATORIO' : null,
                 items: List.generate(ncfs.length, (index) {
                   var ncf = ncfs[index];
                   return DropdownMenuItem(
@@ -113,6 +120,7 @@ class _NcfListEditorModalState extends State<NcfListEditorModal> {
                 Expanded(
                     child: TextFormField(
                   controller: start,
+                  validator: (val) => val!.isEmpty ? 'CAMPO OBLIGATORIO' : null,
                   decoration:
                       InputDecoration(labelText: 'INICIAL', hintText: '1'),
                 )),
@@ -122,6 +130,7 @@ class _NcfListEditorModalState extends State<NcfListEditorModal> {
                 Expanded(
                     child: TextFormField(
                   controller: end,
+                  validator: (val) => val!.isEmpty ? 'CAMPO OBLIGATORIO' : null,
                   decoration:
                       InputDecoration(labelText: 'FINAL', hintText: '9999999'),
                 )),
@@ -134,6 +143,7 @@ class _NcfListEditorModalState extends State<NcfListEditorModal> {
               controller: expirationDateController,
               readOnly: true,
               style: Theme.of(context).textTheme.bodyMedium,
+              validator: (val) => val!.isEmpty ? 'CAMPO OBLIGATORIO' : null,
               decoration: InputDecoration(
                   labelText: 'FECHA DE VENCIMIENTO',
                   hintText: 'DD/MM/YYYY',
@@ -153,6 +163,6 @@ class _NcfListEditorModalState extends State<NcfListEditorModal> {
           ],
         ),
       ),
-    );
+    ));
   }
 }

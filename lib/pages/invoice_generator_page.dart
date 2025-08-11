@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:amount_input_formatter/amount_input_formatter.dart';
 import 'package:ecf_dgii/ecf_dgii.dart';
@@ -109,6 +110,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
 
         if (selectedItem.productId == null) {
           if (product != null) {
+            _focusNode.requestFocus();
             if (widget.items.length == 1 && widget.items[0].productId == null) {
               setState(() {
                 widget.items = [];
@@ -667,7 +669,15 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
 
   Future<void> _enviarDgii(Sale sale) async {
     try {
-      //GeneratorEndPoint.envEcfType = EnvEcfType.cert;
+      bool enabledEcfProduction = bool.parse(
+          Platform.environment['URESAX_INVOICE_ENABLED_ECF_PRODUCTION'] ??
+              'false');
+
+      if (enabledEcfProduction) {
+        GeneratorEndPoint.envEcfType = EnvEcfType.ecf;
+      } else {
+        GeneratorEndPoint.envEcfType = EnvEcfType.testEcf;
+      }
       final cert = certFile;
 
       String password = localStorage.getItem('certPassword') ?? '';
@@ -1320,10 +1330,12 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                             scrollDirection: Axis.horizontal,
                             child: Column(
                               children: [
-                                ...List.generate(widget.items.length, (index) {
-                                  var item = widget.items[index];
+                                ...widget.items.map((item) {
+                                  var index = widget.items.indexOf(item);
+
                                   return InvoiceItemGeneratorWidget(
                                     saleItem: item,
+                                    index: index,
                                     saleItems: widget.items,
                                     editing: widget.editing,
                                     esGubernamental: esGubernamental,
@@ -1334,21 +1346,89 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                                       setState(() {});
                                     },
                                   );
-                                }),
+                                })
                               ],
                             ),
                           ),
                         ),
                         SizedBox(height: kDefaultPadding),
-                        !isSale || widget.editing || onlyEcommerce
-                            ? SizedBox()
-                            : SizedBox(
-                                width: 150,
-                                height: 50,
-                                child: ElevatedButton(
-                                    onPressed: _addSaleItem,
-                                    child: Text('AGREGAR')),
-                              ),
+                        Row(
+                          children: [
+                            !isSale || widget.editing || onlyEcommerce
+                                ? SizedBox()
+                                : SizedBox(
+                                    width: 150,
+                                    height: 50,
+                                    child: ElevatedButton(
+                                        onPressed: _addSaleItem,
+                                        child: Text('AGREGAR')),
+                                  ),
+                            SizedBox(
+                              width: kDefaultPadding,
+                            ),
+                            widget.items.isNotEmpty
+                                ? SizedBox(
+                                    width: 150,
+                                    height: 50,
+                                    child: ElevatedButton(
+                                        style: ButtonStyle(
+                                            backgroundColor:
+                                                WidgetStatePropertyAll(
+                                                    const Color.fromARGB(
+                                                        244, 213, 224, 250))),
+                                        onPressed: () async {
+                                          clientName.text = '';
+                                          rncOrId.text = '';
+                                          currentTypeIncomeId = null;
+                                          currentNcfTypeId = null;
+                                          currentCurrencyId = null;
+                                          currentOverrideCode = null;
+                                          currentPaymentMethodId = null;
+                                          currentPaymentType = null;
+                                          amount.text = '';
+                                          amountInputFormatter.clear();
+                                          widget.sale.amountPaid = 0;
+                                          description.text = '';
+                                          retentionDate = null;
+                                          retentionDateController.text = '';
+                                          _currentSale = null;
+
+                                          setState(() {
+                                            widget.items = [];
+                                          });
+
+                                          await Future.delayed(
+                                              const Duration(milliseconds: 90));
+                                          if (widget.sale is SaleProduct) {
+                                            setState(() {
+                                              widget.sale =
+                                                  SaleProduct(items: []);
+
+                                              widget.items
+                                                  .add(SaleItemProduct());
+                                            });
+                                          }
+                                          if (widget.sale is SaleService) {
+                                            setState(() {
+                                              widget.sale =
+                                                  SaleService(items: []);
+
+                                              widget.items
+                                                  .add(SaleItemService());
+                                            });
+                                          }
+                                          setState(() {});
+                                        },
+                                        child: Text(
+                                          'REINICIAR',
+                                          style: TextStyle(
+                                              color: Theme.of(context)
+                                                  .primaryColor),
+                                        )),
+                                  )
+                                : SizedBox(),
+                          ],
+                        ),
                         SizedBox(height: kDefaultPadding),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,

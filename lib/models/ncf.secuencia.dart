@@ -50,7 +50,9 @@ class NcfSecuencia {
         SELECT setval('public."${id}_seq"',$lastValue, false);
     ''');
 
-      await conne?.execute('''SELECT nextval('public."${id}_seq"')''');
+      if (lastValue! > 1) {
+        await conne?.execute('''SELECT nextval('public."${id}_seq"')''');
+      }
 
       await conne?.execute('''
      ALTER SEQUENCE public."${id}_seq"

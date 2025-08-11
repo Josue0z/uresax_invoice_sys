@@ -27,6 +27,8 @@ class InvoiceItemGeneratorWidget extends StatefulWidget {
 
   bool esGubernamental;
 
+  int index;
+
   Function(SaleItem) onChanged;
 
   InvoiceItemGeneratorWidget(
@@ -36,7 +38,8 @@ class InvoiceItemGeneratorWidget extends StatefulWidget {
       required this.saleItem,
       required this.saleItems,
       required this.enableds,
-      required this.onChanged});
+      required this.onChanged,
+      required this.index});
 
   @override
   State<InvoiceItemGeneratorWidget> createState() =>
@@ -191,14 +194,18 @@ class _InvoiceItemGeneratorWidgetState
       widget.saleItem.net18 = widget.saleItem.net;
     }
 
+    if (currentTaxId == null) {
+      widget.saleItem.indicadorFacturacion = 4;
+      widget.saleItem.exemptAmount = widget.saleItem.net;
+      widget.saleItem.net18 = 0;
+      widget.saleItem.tax18 = 0;
+      widget.saleItem.net16 = 0;
+      widget.saleItem.tax16 = 0;
+    }
     if (widget.saleItem.retentionIsrId != null ||
         widget.saleItem.retentionTaxId != null) {
       widget.saleItem.indicadorAgentePercepcion = 1;
     }
-
-    /*var netToPaid = widget.saleItem.total! -
-        (widget.saleItem.retentionTax ?? 0) -
-        (widget.saleItem.retentionIsr ?? 0);*/
 
     startQuantity = widget.saleItem.quantity ?? 1;
     widget.saleItem.returnQuantity = startQuantity;
@@ -273,37 +280,41 @@ class _InvoiceItemGeneratorWidgetState
       height: 100,
       child: Row(
         children: [
-          widget.saleItem is CreditNoteProduct ||
-                  widget.saleItem is CreditNoteService
-              ? Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        if (widget.saleItem.enabled == true) {
-                          if (widget.enableds.length > 1) {
-                            widget.saleItem.enabled = false;
+          Row(
+            children: [
+              widget.saleItem is CreditNoteProduct ||
+                      widget.saleItem is CreditNoteService
+                  ? Container(
+                      margin: EdgeInsets.only(right: kDefaultPadding),
+                      child: GestureDetector(
+                        onTap: () {
+                          if (widget.saleItem is CreditNoteProduct ||
+                              widget.saleItem is CreditNoteService) {
+                            if (widget.saleItem.enabled == true) {
+                              if (widget.enableds.length > 1) {
+                                widget.saleItem.enabled = false;
+                              }
+                            } else {
+                              widget.saleItem.enabled = true;
+                            }
+                            widget.onChanged(widget.saleItem);
                           }
-                        } else {
-                          widget.saleItem.enabled = true;
-                        }
-                      },
-                      child: Container(
-                        width: 50,
-                        height: 50,
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(50),
-                            color: Colors.black12),
-                        child: widget.saleItem.enabled == true
-                            ? Icon(Icons.remove)
-                            : Icon(Icons.add),
+                        },
+                        child: Container(
+                          width: 50,
+                          height: 50,
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(50),
+                              color: Colors.black12),
+                          child: widget.saleItem.enabled == true
+                              ? Icon(Icons.remove)
+                              : Icon(Icons.add),
+                        ),
                       ),
-                    ),
-                    SizedBox(
-                      width: kDefaultPadding,
                     )
-                  ],
-                )
-              : SizedBox(),
+                  : SizedBox(),
+            ],
+          ),
           SizedBox(
             width: 150,
             child: TextFormField(
