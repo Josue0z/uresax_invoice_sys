@@ -41,7 +41,7 @@ class Products implements SaleElement {
   Color get color {
     if (quantity == null) Colors.red;
 
-    return quantity! >= 3 ? Colors.green : Colors.red;
+    return quantity! > 0 ? Colors.green : Colors.red;
   }
 
   Future<Products> create() async {

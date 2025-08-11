@@ -1356,16 +1356,15 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                           children: [
                             !isSale || widget.editing || onlyEcommerce
                                 ? SizedBox()
-                                : SizedBox(
+                                : Container(
                                     width: 150,
                                     height: 50,
+                                    margin:
+                                        EdgeInsets.only(right: kDefaultPadding),
                                     child: ElevatedButton(
                                         onPressed: _addSaleItem,
                                         child: Text('AGREGAR')),
                                   ),
-                            SizedBox(
-                              width: kDefaultPadding,
-                            ),
                             widget.items.isNotEmpty
                                 ? SizedBox(
                                     width: 150,

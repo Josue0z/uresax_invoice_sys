@@ -207,8 +207,6 @@ class _InvoiceItemGeneratorWidgetState
       widget.saleItem.indicadorAgentePercepcion = 1;
     }
 
-    startQuantity = widget.saleItem.quantity ?? 1;
-    widget.saleItem.returnQuantity = startQuantity;
     quantity.value = TextEditingValue(
       text: widget.saleItem.quantity?.toString() ?? '',
       selection: TextSelection.collapsed(
@@ -243,6 +241,9 @@ class _InvoiceItemGeneratorWidgetState
 
   @override
   void initState() {
+    startQuantity = widget.saleItem.quantity ?? 1;
+    widget.saleItem.returnQuantity = widget.saleItem.quantity ?? 1;
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _syncControllersWithSaleItem();
@@ -346,12 +347,14 @@ class _InvoiceItemGeneratorWidgetState
                             ),
                             IconButton(
                                 onPressed: () {
-                                  if (widget.saleItem.quantity! >=
+                                  print(startQuantity);
+                                  if (widget.saleItem.quantity! ==
                                       startQuantity) {
                                     return;
                                   }
                                   widget.saleItem.quantity =
                                       widget.saleItem.quantity! + 1;
+
                                   widget.saleItem.returnQuantity =
                                       widget.saleItem.returnQuantity! + 1;
 
