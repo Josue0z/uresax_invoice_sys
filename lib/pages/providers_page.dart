@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uresax_invoice_sys/modals/provider.editor.modal.dart';
 import 'package:uresax_invoice_sys/models/provider.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 
@@ -15,6 +16,26 @@ class _ProvidersPageState extends State<ProvidersPage> {
 
   _onSelected(Providers provider) {
     Navigator.pop(context, provider);
+  }
+
+  _showProviderEditorModal(BuildContext context,
+      {required Providers provider, bool editing = false}) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return ProviderEditorModal(
+          provider: Providers(),
+          editing: editing,
+        );
+      },
+    ).then((event) async {
+      if (event != null) {
+        if (event != null) {
+          providers = await Providers.get();
+          setState(() {});
+        }
+      }
+    });
   }
 
   _initAsync() async {
@@ -83,11 +104,22 @@ class _ProvidersPageState extends State<ProvidersPage> {
                           },
                           icon: Icon(Icons.arrow_right_outlined))
                       : SizedBox(),
-                  IconButton(onPressed: () {}, icon: Icon(Icons.edit))
+                  IconButton(
+                      onPressed: () {
+                        _showProviderEditorModal(context,
+                            provider: provider, editing: true);
+                      },
+                      icon: Icon(Icons.edit))
                 ],
               ),
             );
           }),
+      floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            _showProviderEditorModal(context,
+                provider: Providers(), editing: false);
+          },
+          child: Icon(Icons.add)),
     );
   }
 }

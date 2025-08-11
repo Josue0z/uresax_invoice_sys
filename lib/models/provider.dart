@@ -33,6 +33,39 @@ class Providers {
     }
   }
 
+  Future<Providers?> create() async {
+    try {
+      final conne = SqlConector.connection;
+      var parameters = toMap();
+      parameters.remove('id');
+      parameters.remove('createdAt');
+
+      var result = await conne?.execute(
+          Sql.named('insert into public."Providers" '
+              '(name, "rncOrId") values (@name, @rncOrId) returning *'),
+          parameters: parameters);
+      return Providers.fromMap(result!.first.toColumnMap());
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> update() async {
+    try {
+      final conne = SqlConector.connection;
+      var parameters = toMap();
+      parameters.remove('id');
+      parameters.remove('createdAt');
+
+      await conne?.execute(
+          Sql.named(
+              'update public."Providers" set name = @name, "rncOrId" = @rncOrId where id = @id returning *'),
+          parameters: parameters);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Providers copyWith({
     int? id,
     String? name,
