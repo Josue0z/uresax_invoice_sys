@@ -1,9 +1,11 @@
 import 'dart:convert';
 import 'package:barcode/barcode.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:moment_dart/moment_dart.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:uresax_invoice_sys/models/orden.model.dart';
 import 'package:uresax_invoice_sys/models/payment.dart';
 import 'package:uresax_invoice_sys/models/sale.abs.dart';
 import 'package:uresax_invoice_sys/settings.dart';
@@ -398,6 +400,174 @@ pw.Document createDefaultInvoice(Sale sale) {
                         sale.currencyId == 1
                             ? sale.amountPaid?.toDop()
                             : sale.amountPaid?.toUS() ?? '',
+                        style: pw.TextStyle(fontSize: 8))
+                  ])),
+        ]))
+      ])
+    ];
+  }, footer: (ctx) {
+    return pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        children: [
+          pw.Column(children: [
+            pw.Container(width: 150, height: 0.5, color: PdfColors.black),
+            pw.SizedBox(height: kDefaultPadding / 2),
+            pw.Text('Recibido por', style: pw.TextStyle(fontSize: 8))
+          ]),
+          pw.SizedBox(width: kDefaultPadding),
+          pw.Column(children: [
+            pw.Container(width: 150, height: 0.5, color: PdfColors.black),
+            pw.SizedBox(height: kDefaultPadding / 2),
+            pw.Text('Entregado por', style: pw.TextStyle(fontSize: 8))
+          ]),
+        ]);
+  }));
+  return document;
+}
+
+pw.Document createDefaultOrdenPurchase(OrdenModel orden) {
+  var document = pw.Document();
+  // Generar código QR
+  // final qr = Barcode.qrCode();
+
+  List<String> columns() {
+    return orden.items![0].toDisplay().keys.toList();
+  }
+
+  document.addPage(pw.MultiPage(header: (ctx) {
+    return pw.Column(children: [
+      pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [
+        pw.Expanded(
+            flex: 2,
+            child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Row(children: [
+                    company?.logo != null
+                        ? pw.Row(
+                            mainAxisAlignment: pw.MainAxisAlignment.start,
+                            children: [
+                                pw.Image(
+                                    pw.MemoryImage(
+                                        base64Decode(company!.logo!)),
+                                    width: 80),
+                                pw.SizedBox(width: kDefaultPadding / 2),
+                              ])
+                        : pw.SizedBox(),
+                    pw.Text(company?.name ?? '',
+                        style: pw.TextStyle(
+                            fontSize: 16, fontWeight: pw.FontWeight.bold)),
+                  ]),
+                  pw.SizedBox(height: kDefaultPadding / 2),
+                  pw.Text(company?.rncOrId ?? '',
+                      style: pw.TextStyle(fontSize: 10)),
+                  pw.SizedBox(height: kDefaultPadding / 2),
+                  pw.Text(company?.address ?? '',
+                      style: pw.TextStyle(fontSize: 10)),
+                  pw.SizedBox(height: kDefaultPadding / 2),
+                  pw.Text(company?.phone1 ?? '',
+                      style: pw.TextStyle(fontSize: 10)),
+                  pw.SizedBox(height: kDefaultPadding / 2),
+                  pw.Text(company?.email ?? '',
+                      style: pw.TextStyle(fontSize: 10))
+                ])),
+        pw.Expanded(
+            child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.end,
+                children: [
+              pw.Text('ORDEN DE COMPRA',
+                  textAlign: pw.TextAlign.right,
+                  style: pw.TextStyle(
+                      fontWeight: pw.FontWeight.bold, fontSize: 14)),
+              pw.SizedBox(height: kDefaultPadding),
+              pw.Container(
+                margin: pw.EdgeInsets.only(bottom: kDefaultPadding / 2),
+                child: pw.Row(
+                    mainAxisAlignment: pw.MainAxisAlignment.end,
+                    children: [
+                      pw.Text(
+                        'Orden #',
+                        style: pw.TextStyle(fontSize: 10),
+                        textAlign: pw.TextAlign.right,
+                      ),
+                      pw.SizedBox(width: kDefaultPadding),
+                      pw.Text(
+                        orden.ordenNum.toString(),
+                        style: pw.TextStyle(fontSize: 10),
+                        textAlign: pw.TextAlign.right,
+                      )
+                    ]),
+              ),
+              pw.Container(
+                margin: pw.EdgeInsets.symmetric(
+                  vertical: kDefaultPadding / 2,
+                ),
+                child: pw.Row(
+                    mainAxisAlignment: pw.MainAxisAlignment.end,
+                    children: [
+                      pw.Text(
+                        'Fecha',
+                        style: pw.TextStyle(fontSize: 10),
+                        textAlign: pw.TextAlign.right,
+                      ),
+                      pw.SizedBox(width: kDefaultPadding),
+                      pw.Text(
+                        orden.createdAt?.format(payload: 'DD/MM/YYYY') ?? '',
+                        style: pw.TextStyle(fontSize: 10),
+                        textAlign: pw.TextAlign.right,
+                      )
+                    ]),
+              ),
+            ]))
+      ]),
+    ]);
+  }, build: (ctx) {
+    return [
+      pw.SizedBox(height: kDefaultPadding),
+      pw.Table(children: [
+        pw.TableRow(
+            decoration: pw.BoxDecoration(color: PdfColor.fromHex('#343a40')),
+            children: List.generate(columns().length, (index) {
+              var col = columns()[index];
+
+              return pw.Padding(
+                  padding: pw.EdgeInsets.all(kDefaultPadding / 4),
+                  child: pw.Text(col,
+                      style:
+                          pw.TextStyle(color: PdfColors.white, fontSize: 6)));
+            })),
+        ...List.generate(orden.items?.length ?? 0, (index) {
+          var item = orden.items?[index];
+          var values = item?.toDisplay().values.toList();
+          return pw.TableRow(
+              decoration: pw.BoxDecoration(
+                  border: pw.Border(
+                      bottom:
+                          pw.BorderSide(color: PdfColor.fromHex('#e6e6e6')))),
+              children: List.generate(values?.length ?? 0, (i) {
+                var val = values?[i];
+                return pw.Padding(
+                    padding: pw.EdgeInsets.all(kDefaultPadding / 4),
+                    child: pw.Text(val, style: pw.TextStyle(fontSize: 6)));
+              }));
+        })
+      ]),
+      pw.SizedBox(height: kDefaultPadding),
+      pw.Row(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
+        pw.Expanded(child: pw.Container()),
+        pw.Expanded(
+            child: pw.Column(children: [
+          pw.Container(
+              margin: pw.EdgeInsets.symmetric(vertical: kDefaultPadding / 2),
+              decoration: pw.BoxDecoration(
+                  border: pw.Border(
+                      bottom:
+                          pw.BorderSide(color: PdfColor.fromHex('#e6e6e6')))),
+              child: pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Text('Total a Pagar', style: pw.TextStyle(fontSize: 8)),
+                    pw.Text(orden.total?.toDop() ?? '',
                         style: pw.TextStyle(fontSize: 8))
                   ])),
         ]))

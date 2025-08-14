@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:postgres/postgres.dart';
 import 'package:uresax_invoice_sys/apis/sql.dart';
 
 class WareHouses {
@@ -11,12 +12,56 @@ class WareHouses {
     this.name,
     this.createdAt,
   });
-  static Future<List<WareHouses>> get() async {
+  static Future<List<WareHouses>> get({String? search}) async {
     try {
       final conne = SqlConector.connection;
-      var result = await conne?.execute('select * from public."WareHouses"');
-      return result?.map((e) => WareHouses.fromMap(e.toColumnMap())).toList() ??
-          [];
+      var parameters = {};
+      String params = '';
+
+      if (search != null) {
+        params += '''where lower(name) like  lower(@search)''';
+        parameters.addAll({'search': '%$search%'});
+      }
+
+      var result = await conne
+          ?.execute('select * from public."WareHouses" $params order by name');
+      return [
+        WareHouses(name: 'SELECCIONAR ALMACEN'),
+        ...result!.map((e) => WareHouses.fromMap(e.toColumnMap()))
+      ];
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<WareHouses?> create() async {
+    try {
+      final conne = SqlConector.connection;
+      var parameters = toMap();
+      parameters.remove('id');
+      parameters.remove('createdAt');
+
+      var result = await conne?.execute(
+          Sql.named('insert into public."WareHouses" '
+              '(name) values (@name) returning *'),
+          parameters: parameters);
+      return WareHouses.fromMap(result!.first.toColumnMap());
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> update() async {
+    try {
+      final conne = SqlConector.connection;
+      var parameters = toMap();
+
+      parameters.remove('createdAt');
+
+      await conne?.execute(
+          Sql.named(
+              'update public."WareHouses" set name = @name where id = @id returning *'),
+          parameters: parameters);
     } catch (e) {
       rethrow;
     }

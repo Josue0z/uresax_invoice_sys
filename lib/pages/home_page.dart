@@ -18,11 +18,14 @@ import 'package:uresax_invoice_sys/pages/invoice_generator_page.dart';
 import 'package:uresax_invoice_sys/pages/login_page.dart';
 import 'package:uresax_invoice_sys/pages/ncf.list_page.dart';
 import 'package:uresax_invoice_sys/pages/ncfs.sequences_page.dart';
+import 'package:uresax_invoice_sys/pages/ordens_purchases_page.dart';
 import 'package:uresax_invoice_sys/pages/products_page.dart';
+import 'package:uresax_invoice_sys/pages/providers_page.dart';
 import 'package:uresax_invoice_sys/pages/sales.607.form_page.dart';
 import 'package:uresax_invoice_sys/pages/sales_page.dart';
 import 'package:uresax_invoice_sys/pages/services_page.dart';
 import 'package:uresax_invoice_sys/pages/users_page.dart';
+import 'package:uresax_invoice_sys/pages/warehouses_page.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 
 class HomePage extends StatefulWidget {
@@ -65,6 +68,21 @@ class _HomePageState extends State<HomePage> {
       'svg': 'assets/svgs/undraw_groceries_4via.svg'
     },
     {
+      'id': 13,
+      'title': 'PROVEEDORES',
+      'svg': 'assets/svgs/undraw_order-delivered_puaw.svg'
+    },
+    {
+      'id': 14,
+      'title': 'ALMACENES',
+      'svg': 'assets/svgs/undraw_web-shopping_xd5k.svg'
+    },
+    {
+      'id': 15,
+      'title': 'VER ORDENES DE COMPRAS',
+      'svg': 'assets/svgs/undraw_successful-purchase_p2fz.svg'
+    },
+    {
       'id': 5,
       'title': 'TUS FACTURAS',
       'svg': 'assets/svgs/undraw_receipt_tzi0.svg'
@@ -87,12 +105,12 @@ class _HomePageState extends State<HomePage> {
     {
       'id': 11,
       'title': 'VER TUS COMPROBANTES',
-      'svg': 'assets/svgs/undraw_complete-form_aarh.svg'
+      'svg': 'assets/svgs/undraw_key-points_mnrr.svg'
     },
     {
       'id': 12,
       'title': 'LISTA NCFS AGREGADOS',
-      'svg': 'assets/svgs/undraw_complete-form_aarh.svg'
+      'svg': 'assets/svgs/undraw_timeline_2gfy.svg'
     }
   ];
 
@@ -161,6 +179,21 @@ class _HomePageState extends State<HomePage> {
         context, MaterialPageRoute(builder: (ctx) => NcfListPage()));
   }
 
+  _showProvidersPage() async {
+    await Navigator.push(
+        context, MaterialPageRoute(builder: (ctx) => ProvidersPage()));
+  }
+
+  _showWareHousesPage() async {
+    await Navigator.push(
+        context, MaterialPageRoute(builder: (ctx) => WareHousesPage()));
+  }
+
+  _showOrdensPurchasesPage() async {
+    await Navigator.push(
+        context, MaterialPageRoute(builder: (ctx) => OrdensPurchasesPage()));
+  }
+
   _showPage(int id) {
     switch (id) {
       case 1:
@@ -202,6 +235,17 @@ class _HomePageState extends State<HomePage> {
         break;
       case 12:
         _showNcfsList();
+        break;
+
+      case 13:
+        _showProvidersPage();
+        break;
+      case 14:
+        _showWareHousesPage();
+        break;
+
+      case 15:
+        _showOrdensPurchasesPage();
         break;
       default:
     }
@@ -256,6 +300,19 @@ class _HomePageState extends State<HomePage> {
       options.removeWhere((e) => e['id'] == 11);
     }
 
+    if (!currentUser!.permissions!.contains('ALLOW_VIEW_NCFS_LIST_EDITOR')) {
+      options.removeWhere((e) => e['id'] == 12);
+    }
+    if (!currentUser!.permissions!.contains('ALLOW_VIEW_PROVIDERS')) {
+      options.removeWhere((e) => e['id'] == 13);
+    }
+    if (!currentUser!.permissions!.contains('ALLOW_VIEW_WAREHOUSES')) {
+      options.removeWhere((e) => e['id'] == 14);
+    }
+
+    if (!currentUser!.permissions!.contains('ALLOW_VIEW_ORDENS_PURCHASES')) {
+      options.removeWhere((e) => e['id'] == 15);
+    }
     return Scaffold(
         appBar: AppBar(
           title: Column(

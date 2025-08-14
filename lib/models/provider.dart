@@ -54,7 +54,7 @@ class Providers {
     try {
       final conne = SqlConector.connection;
       var parameters = toMap();
-      parameters.remove('id');
+
       parameters.remove('createdAt');
 
       await conne?.execute(

@@ -1,37 +1,37 @@
 import 'package:flutter/material.dart';
-import 'package:uresax_invoice_sys/modals/provider.editor.modal.dart';
-import 'package:uresax_invoice_sys/models/provider.dart';
+import 'package:uresax_invoice_sys/modals/warehouses.editor.modal.dart';
+import 'package:uresax_invoice_sys/models/warehouse.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 
-class ProvidersPage extends StatefulWidget {
+class WareHousesPage extends StatefulWidget {
   bool selectorMode;
-  ProvidersPage({super.key, this.selectorMode = false});
+  WareHousesPage({super.key, this.selectorMode = false});
 
   @override
-  State<ProvidersPage> createState() => _ProvidersPageState();
+  State<WareHousesPage> createState() => _WareHousesPageState();
 }
 
-class _ProvidersPageState extends State<ProvidersPage> {
-  List<Providers> providers = [];
+class _WareHousesPageState extends State<WareHousesPage> {
+  List<WareHouses> wareHouses = [];
 
-  _onSelected(Providers provider) {
-    Navigator.pop(context, provider);
+  _onSelected(WareHouses wareHouse) {
+    Navigator.pop(context, wareHouse);
   }
 
-  _showProviderEditorModal(BuildContext context,
-      {required Providers provider, bool editing = false}) {
+  _showWareHousesEditorModal(BuildContext context,
+      {required WareHouses wareHouse, bool editing = false}) {
     showDialog(
       context: context,
       builder: (context) {
-        return ProviderEditorModal(
-          provider: provider,
+        return WareHousesEditorModal(
+          wareHouse: wareHouse,
           editing: editing,
         );
       },
     ).then((event) async {
       if (event != null) {
         if (event != null) {
-          providers = await Providers.get();
+          wareHouses = await WareHouses.get();
           setState(() {});
         }
       }
@@ -40,7 +40,7 @@ class _ProvidersPageState extends State<ProvidersPage> {
 
   _initAsync() async {
     try {
-      providers = await Providers.get();
+      wareHouses = await WareHouses.get();
 
       setState(() {});
     } catch (e) {
@@ -56,12 +56,10 @@ class _ProvidersPageState extends State<ProvidersPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.selectorMode) {
-      providers.removeWhere((e) => e.id == null);
-    }
+    wareHouses.removeWhere((e) => e.id == null);
     return Scaffold(
       appBar: AppBar(
-        title: Text('TUS PROVEEDORES (${providers.length})'),
+        title: Text('ALMACENES (${wareHouses.length})'),
         actions: [
           Wrap(
             runAlignment: WrapAlignment.center,
@@ -72,7 +70,7 @@ class _ProvidersPageState extends State<ProvidersPage> {
                 height: 50,
                 child: TextFormField(
                   onChanged: (words) async {
-                    providers = await Providers.get(search: words);
+                    wareHouses = await WareHouses.get(search: words);
                     setState(() {});
                   },
                   decoration: InputDecoration(
@@ -88,10 +86,10 @@ class _ProvidersPageState extends State<ProvidersPage> {
         ],
       ),
       body: ListView.separated(
-          itemCount: providers.length,
+          itemCount: wareHouses.length,
           separatorBuilder: (ctx, i) => const Divider(),
           itemBuilder: (ctx, index) {
-            var provider = providers[index];
+            var wareHouse = wareHouses[index];
             return ListTile(
               minVerticalPadding: kDefaultPadding,
               leading: Container(
@@ -102,16 +100,16 @@ class _ProvidersPageState extends State<ProvidersPage> {
                 ),
                 child: Center(
                   child: Icon(
-                    Icons.people_alt_rounded,
+                    Icons.inventory_2_outlined,
                     color: Theme.of(context).primaryColor,
                     size: 24,
                   ),
                 ),
               ),
-              title: Text(provider.name ?? ''),
+              title: Text(wareHouse.name ?? ''),
               onTap: widget.selectorMode
                   ? () {
-                      _onSelected(provider);
+                      _onSelected(wareHouse);
                     }
                   : null,
               trailing: Wrap(
@@ -119,14 +117,14 @@ class _ProvidersPageState extends State<ProvidersPage> {
                   widget.selectorMode
                       ? IconButton(
                           onPressed: () {
-                            _onSelected(provider);
+                            _onSelected(wareHouse);
                           },
                           icon: Icon(Icons.arrow_right_outlined))
                       : SizedBox(),
                   IconButton(
                       onPressed: () {
-                        _showProviderEditorModal(context,
-                            provider: provider, editing: true);
+                        _showWareHousesEditorModal(context,
+                            wareHouse: wareHouse, editing: true);
                       },
                       icon: Icon(Icons.edit))
                 ],
@@ -135,8 +133,8 @@ class _ProvidersPageState extends State<ProvidersPage> {
           }),
       floatingActionButton: FloatingActionButton(
           onPressed: () {
-            _showProviderEditorModal(context,
-                provider: Providers(), editing: false);
+            _showWareHousesEditorModal(context,
+                wareHouse: WareHouses(), editing: false);
           },
           child: Icon(Icons.add)),
     );

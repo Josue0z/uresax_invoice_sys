@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:uresax_invoice_sys/modals/product.editor.modal.dart';
 import 'package:uresax_invoice_sys/models/product.dart';
+import 'package:uresax_invoice_sys/models/warehouse.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/utils/extensions.dart';
 
@@ -37,6 +38,7 @@ class _ProductsPageState extends State<ProductsPage> {
   _initAsync() async {
     try {
       products = await Products.get();
+      wareHouses = await WareHouses.get();
       setState(() {});
     } catch (e) {
       print(e);

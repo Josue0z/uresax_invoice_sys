@@ -1,41 +1,41 @@
 import 'package:flutter/material.dart';
-import 'package:uresax_invoice_sys/models/provider.dart';
+import 'package:uresax_invoice_sys/models/warehouse.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/utils/functions.dart';
 
-class ProviderEditorModal extends StatefulWidget {
-  final Providers provider;
+class WareHousesEditorModal extends StatefulWidget {
+  WareHouses wareHouse;
   bool editing;
-  ProviderEditorModal(
-      {super.key, required this.provider, this.editing = false});
+  WareHousesEditorModal(
+      {super.key, required this.wareHouse, this.editing = false});
 
   @override
-  State<ProviderEditorModal> createState() => _ProviderEditorModalState();
+  State<WareHousesEditorModal> createState() => _WareHousesEditorModalState();
 }
 
-class _ProviderEditorModalState extends State<ProviderEditorModal> {
+class _WareHousesEditorModalState extends State<WareHousesEditorModal> {
   TextEditingController name = TextEditingController();
   TextEditingController rncOrId = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   String get title {
-    return widget.editing ? 'EDITANDO PROVEEDOR' : 'AGREGANDO PROVEEDOR';
+    return widget.editing ? 'EDITANDO ALMACEN' : 'AGREGANDO ALMACEN';
   }
 
   String get btnText {
-    return widget.editing ? 'EDITAR PROVEEDOR' : 'CREAR PROVEEDOR';
+    return widget.editing ? 'EDITAR ALMACEN' : 'CREAR ALMACEN';
   }
 
   Future<void> _onSubmit() async {
     if (_formKey.currentState!.validate()) {
-      Providers? provider;
+      WareHouses? wareHouse;
       try {
-        widget.provider.name = name.text;
-        widget.provider.rncOrId = rncOrId.text;
+        widget.wareHouse.name = name.text;
+
         if (widget.editing) {
-          await widget.provider.update();
+          await widget.wareHouse.update();
         } else {
-          provider = await widget.provider.create();
+          wareHouse = await widget.wareHouse.create();
         }
         Navigator.pop(context, widget.editing ? 'UPDATE' : 'CREATE');
       } catch (e) {
@@ -46,8 +46,8 @@ class _ProviderEditorModalState extends State<ProviderEditorModal> {
 
   @override
   void initState() {
-    name.text = widget.provider.name ?? '';
-    rncOrId.text = widget.provider.rncOrId ?? '';
+    name.text = widget.wareHouse.name ?? '';
+
     super.initState();
   }
 
@@ -77,16 +77,6 @@ class _ProviderEditorModalState extends State<ProviderEditorModal> {
                         },
                         icon: Icon(Icons.close))
                   ],
-                ),
-                Container(
-                  margin: EdgeInsets.symmetric(vertical: kDefaultPadding),
-                  child: TextFormField(
-                    controller: rncOrId,
-                    validator: (val) =>
-                        val!.isEmpty ? 'CAMPO OBLIGATORIO' : null,
-                    decoration: InputDecoration(
-                        labelText: 'Rnc/Cedula', hintText: 'Escribir algo...'),
-                  ),
                 ),
                 Container(
                   margin: EdgeInsets.only(bottom: kDefaultPadding),

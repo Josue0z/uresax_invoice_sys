@@ -165,4 +165,7 @@ class Services implements SaleElement {
 
   @override
   String? code;
+
+  @override
+  double? cost;
 }

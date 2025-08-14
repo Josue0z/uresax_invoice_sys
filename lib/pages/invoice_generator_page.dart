@@ -28,6 +28,7 @@ import 'package:uresax_invoice_sys/models/sale.service.dart';
 import 'package:uresax_invoice_sys/models/service.dart';
 import 'package:uresax_invoice_sys/models/taxes.dart';
 import 'package:uresax_invoice_sys/models/taxpayer.dart';
+import 'package:uresax_invoice_sys/pages/printers_page.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/utils/extensions.dart';
 import 'package:uresax_invoice_sys/utils/functions.dart';
@@ -1163,7 +1164,15 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                       : const SizedBox(),
                   const SizedBox(
                     width: kDefaultPadding,
-                  )
+                  ),
+                  IconButton(
+                      onPressed: () async {
+                        await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (ctx) => PrintersPage()));
+                      },
+                      icon: Icon(Icons.print))
                 ],
               )
             ],

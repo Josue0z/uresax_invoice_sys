@@ -36,7 +36,8 @@ class Products implements SaleElement {
       this.providerName,
       this.wareHouseId,
       this.wareHouseName,
-      this.code});
+      this.code,
+      this.cost});
 
   Color get color {
     if (quantity == null) Colors.red;
@@ -49,7 +50,7 @@ class Products implements SaleElement {
       final conne = SqlConector.connection;
       var result = await conne?.execute(
           Sql.named(
-              '''insert into public."Products"(name, price, quantity,chassis,"licensePlate","taxId","providerId","wareHouseId","code") values(@name,@price,@quantity,@chassis,@licensePlate,@taxId,@providerId,@wareHouseId,@code) RETURNING *'''),
+              '''insert into public."Products"(name, price, quantity,chassis,"licensePlate","taxId","providerId","wareHouseId","code",cost) values(@name,@price,@quantity,@chassis,@licensePlate,@taxId,@providerId,@wareHouseId,@code,@cost) RETURNING *'''),
           parameters: {
             'name': name,
             'price': price,
@@ -59,7 +60,8 @@ class Products implements SaleElement {
             'taxId': taxId,
             'providerId': providerId,
             'wareHouseId': wareHouseId,
-            'code': code
+            'code': code,
+            'cost': cost
           });
 
       return Products.fromMap(result!.first.toColumnMap());
@@ -73,7 +75,7 @@ class Products implements SaleElement {
       final conne = SqlConector.connection;
       var result = await conne?.execute(
           Sql.named(
-              '''update public."Products" set name = @name, price = @price, quantity = @quantity, chassis = @chassis, "licensePlate" = @licensePlate, "taxId" = @taxId, "providerId" = @providerId, "wareHouseId" = @wareHouseId, "code" = @code where id = @id RETURNING *'''),
+              '''update public."Products" set name = @name, price = @price, quantity = @quantity, chassis = @chassis, "licensePlate" = @licensePlate, "taxId" = @taxId, "providerId" = @providerId, "wareHouseId" = @wareHouseId, "code" = @code, cost = @cost where id = @id RETURNING *'''),
           parameters: {
             'id': id,
             'name': name,
@@ -85,6 +87,7 @@ class Products implements SaleElement {
             'providerId': providerId,
             'wareHouseId': wareHouseId,
             'code': code,
+            'cost': cost
           });
 
       return Products.fromMap(result!.first.toColumnMap());
@@ -180,6 +183,11 @@ class Products implements SaleElement {
     if (code != null) {
       map.addAll({'code': code});
     }
+
+    if (cost != null) {
+      map.addAll({'cost': cost});
+    }
+
     return map;
   }
 
@@ -202,7 +210,8 @@ class Products implements SaleElement {
         providerName: map['providerName'],
         wareHouseId: map['wareHouseId'],
         wareHouseName: map['wareHouseName'],
-        code: map['code']);
+        code: map['code'],
+        cost: map['cost'] != null ? double.parse(map['cost']) : null);
   }
 
   String toJson() => json.encode(toMap());
@@ -262,4 +271,7 @@ class Products implements SaleElement {
 
   @override
   String? code;
+
+  @override
+  double? cost;
 }

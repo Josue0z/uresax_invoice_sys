@@ -16,7 +16,6 @@ class SelectorItemWidget<T> extends FormField<T> {
           dynamic value = state.value ?? initialValue;
           String val = value?.name ?? title;
           return Container(
-            margin: EdgeInsets.only(bottom: kDefaultPadding),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -52,6 +51,7 @@ class SelectorItemWidget<T> extends FormField<T> {
                                       val,
                                       style: TextStyle(
                                           color: Colors.black, fontSize: 16),
+                                      overflow: TextOverflow.ellipsis,
                                     )),
                                     Icon(Icons.arrow_drop_down,
                                         color: Colors.black45)

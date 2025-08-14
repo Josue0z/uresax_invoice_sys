@@ -19,6 +19,7 @@ class ProductEditorModal extends StatefulWidget {
 
 class _ProductEditorModalState extends State<ProductEditorModal> {
   TextEditingController name = TextEditingController();
+  TextEditingController cost = TextEditingController();
   TextEditingController amount = TextEditingController();
   TextEditingController quantity = TextEditingController();
   TextEditingController factor = TextEditingController();
@@ -27,6 +28,9 @@ class _ProductEditorModalState extends State<ProductEditorModal> {
   TextEditingController code = TextEditingController();
   TextEditingController licensePlate = TextEditingController();
   AmountInputFormatter amountInputFormatter =
+      AmountInputFormatter(fractionalDigits: 2);
+
+  AmountInputFormatter costInputFormatter =
       AmountInputFormatter(fractionalDigits: 2);
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
@@ -51,15 +55,16 @@ class _ProductEditorModalState extends State<ProductEditorModal> {
   _onSubmit() async {
     if (_formKey.currentState!.validate()) {
       try {
-        widget.product.name = name.text;
+        widget.product.name = name.text.trim();
         widget.product.price = amountInputFormatter.doubleValue;
+        widget.product.cost = costInputFormatter.doubleValue;
         widget.product.quantity = xxquantity;
-        widget.product.chassis = chassis.text;
-        widget.product.licensePlate = licensePlate.text;
+        widget.product.chassis = chassis.text.trim();
+        widget.product.licensePlate = licensePlate.text.trim();
         widget.product.taxId = currentTaxId;
         widget.product.wareHouseId = currentWareHouseId;
         widget.product.providerId = currentProviderId;
-        widget.product.code = code.text;
+        widget.product.code = code.text.trim();
         if (!widget.editing) {
           await widget.product.create();
           Navigator.pop(context, 'CREATE');
@@ -102,6 +107,11 @@ class _ProductEditorModalState extends State<ProductEditorModal> {
           TextEditingValue.empty,
           TextEditingValue(
               text: widget.product.price?.toStringAsFixed(2) ?? ''));
+
+      cost.value = costInputFormatter.formatEditUpdate(
+          TextEditingValue.empty,
+          TextEditingValue(
+              text: widget.product.cost?.toStringAsFixed(2) ?? ''));
     }
     code.value = TextEditingValue(text: widget.product.code ?? '');
 
@@ -172,47 +182,62 @@ class _ProductEditorModalState extends State<ProductEditorModal> {
                               )
                             : SizedBox(),
                         eCommerceMode
-                            ? SelectorItemWidget<Providers>(
-                                context: context,
-                                initialValue: currentProvider,
-                                validator: (val) => val?.id == null
-                                    ? 'CAMPO OBLIGATORIO'
-                                    : null,
-                                onChanged: (xprovider) {
-                                  currentProvider = xprovider;
-                                  currentProviderId = xprovider?.id;
-                                },
-                                screen: ProvidersPage(selectorMode: true),
-                                title: 'SELECCIONA PROVEEDOR',
-                              )
+                            ? Container(
+                                margin:
+                                    EdgeInsets.only(bottom: kDefaultPadding),
+                                child: SelectorItemWidget<Providers>(
+                                  context: context,
+                                  initialValue: currentProvider,
+                                  validator: (val) => val?.id == null
+                                      ? 'CAMPO OBLIGATORIO'
+                                      : null,
+                                  onChanged: (xprovider) {
+                                    currentProvider = xprovider;
+                                    currentProviderId = xprovider?.id;
+                                  },
+                                  screen: ProvidersPage(selectorMode: true),
+                                  title: 'SELECCIONA PROVEEDOR',
+                                ))
                             : SizedBox(),
-                        TextFormField(
-                          controller: name,
-                          validator: (val) =>
-                              val!.isEmpty ? 'CAMPO OBLIGATORIO' : null,
-                          decoration: InputDecoration(
-                              labelText: 'NOMBRE',
-                              hintText: 'Escribir nombre...'),
+                        Container(
+                          margin: EdgeInsets.only(bottom: kDefaultPadding),
+                          child: TextFormField(
+                            controller: name,
+                            validator: (val) =>
+                                val!.isEmpty ? 'CAMPO OBLIGATORIO' : null,
+                            decoration: InputDecoration(
+                                labelText: 'NOMBRE',
+                                hintText: 'Escribir nombre...'),
+                          ),
                         ),
-                        SizedBox(
-                          height: kDefaultPadding,
+                        Container(
+                          margin: EdgeInsets.only(bottom: kDefaultPadding),
+                          child: TextFormField(
+                            controller: cost,
+                            validator: (val) =>
+                                val!.isEmpty ? 'CAMPO OBLIGATORIO' : null,
+                            inputFormatters: [costInputFormatter],
+                            decoration: InputDecoration(
+                                labelText: 'COSTO', hintText: '0.00'),
+                          ),
                         ),
-                        TextFormField(
-                          controller: amount,
-                          validator: (val) =>
-                              val!.isEmpty ? 'CAMPO OBLIGATORIO' : null,
-                          inputFormatters: [amountInputFormatter],
-                          decoration: InputDecoration(
-                              labelText: 'PRECIO', hintText: '0.00'),
+                        Container(
+                          margin: EdgeInsets.only(bottom: kDefaultPadding),
+                          child: TextFormField(
+                            controller: amount,
+                            validator: (val) =>
+                                val!.isEmpty ? 'CAMPO OBLIGATORIO' : null,
+                            inputFormatters: [amountInputFormatter],
+                            decoration: InputDecoration(
+                                labelText: 'PRECIO', hintText: '0.00'),
+                          ),
                         ),
                         eCommerceMode
                             ? Container(
-                                margin: EdgeInsets.symmetric(
-                                    vertical: kDefaultPadding),
+                                margin:
+                                    EdgeInsets.only(bottom: kDefaultPadding),
                                 child: TextFormField(
                                   controller: code,
-                                  validator: (val) =>
-                                      val!.isEmpty ? 'CAMPO OBLIGATORIO' : null,
                                   decoration: InputDecoration(
                                       labelText: 'CODIGO PRODUCTO',
                                       hintText: 'Escribir...'),

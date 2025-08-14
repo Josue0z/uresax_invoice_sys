@@ -65,12 +65,14 @@ dependencies:
   localstorage: ^5.0.0
   ecf_dgii: ^1.0.18
   flutter_platform_alert: ^0.8.0
+  flutter_thermal_printer: ^1.2.2
 
 
 
 dependency_overrides:
   path: 1.9.0
   intl: ^0.20.2
+ 
 
 
 dev_dependencies:

@@ -159,7 +159,7 @@ class _MyAppState extends State<MyApp> {
           scrollBehavior: ScrollConfiguration.of(context).copyWith(
               dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse}),
           theme: ThemeData(
-              primaryColor: Colors.blue,
+              primaryColor: const Color(0xFF2196F3),
               primarySwatch: Colors.blue,
               useMaterial3: false,
               scrollbarTheme: ScrollbarThemeData(
