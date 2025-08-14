@@ -14,4 +14,5 @@ abstract class SaleElement {
   int? wareHouseId;
   String? wareHouseName;
   String? code;
+  double? cost;
 }
