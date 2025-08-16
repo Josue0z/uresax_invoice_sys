@@ -1,7 +1,9 @@
 import 'dart:convert';
-import 'package:barcode/barcode.dart';
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_esc_pos_utils/flutter_esc_pos_utils.dart';
 import 'package:moment_dart/moment_dart.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -20,7 +22,7 @@ Future<pw.Font> loadMaterialIconsFont() async {
 pw.Document createDefaultInvoice(Sale sale) {
   var document = pw.Document();
   // Generar código QR
-  final qr = Barcode.qrCode();
+  final qr = pw.Barcode.qrCode();
 
   List<String> columns() {
     return sale.items[0].toDisplay().keys.toList();
@@ -687,7 +689,7 @@ Future<pw.Document> createPaymentInvoice(Payment payment) async {
 
 pw.Document createVerticalInvoice(Sale sale) {
   // Generar código QR
-  final qr = Barcode.qrCode();
+  final qr = pw.Barcode.qrCode();
 
   List<String> columns() {
     return sale.items[0].toDisplay().keys.toList();
@@ -906,4 +908,151 @@ pw.Document createVerticalInvoice(Sale sale) {
       }));
 
   return document;
+}
+
+Future<List<int>> createDefaultTicket(
+    {String name = 'default', required Sale sale}) async {
+  // Using default profile
+  final profile = await CapabilityProfile.load(name: name);
+  final generator = Generator(PaperSize.mm80, profile);
+  List<int> bytes = [];
+  generator.setStyles(PosStyles(width: PosTextSize.size6));
+
+  createDivider() {
+    final divider = '-' * 48; // Para mm80
+    bytes += generator.text(divider, styles: PosStyles(align: PosAlign.center));
+  }
+
+  bytes += generator.text(company?.name ?? '',
+      styles: PosStyles(bold: true, align: PosAlign.center));
+
+  bytes += generator.text(company?.rncOrId ?? '',
+      styles: PosStyles(align: PosAlign.center));
+
+  bytes += generator.emptyLines(1);
+
+  bytes += generator.text('Rnc/Cedula: ${sale.clientId}',
+      styles: PosStyles(align: PosAlign.left));
+  bytes += generator.text('Cliente: ${sale.clientName}',
+      styles: PosStyles(align: PosAlign.left));
+  bytes +=
+      generator.text(sale.ncf ?? '', styles: PosStyles(align: PosAlign.left));
+
+  if (sale.ncfAffected != null) {
+    bytes += generator.text(sale.ncfAffected ?? '',
+        styles: PosStyles(align: PosAlign.left));
+  }
+  bytes += generator.text(
+      'Fecha de Emision: ${sale.createdAt?.format(payload: 'DD/MM/YYYY')}',
+      styles: PosStyles(align: PosAlign.left));
+
+  createDivider();
+
+  bytes += generator.text(sale.ncfTypeName ?? '',
+      styles: PosStyles(align: PosAlign.center, bold: true));
+
+  createDivider();
+
+  var cols = sale.items[0].toDisplayReceipt().keys.toList();
+  bytes += generator.row(List.generate(cols.length, (i) {
+    var e = cols[i];
+    return PosColumn(text: e, width: i == 1 ? 4 : 2);
+  }));
+  createDivider();
+
+  for (var item in sale.items) {
+    var values = item.toDisplayReceipt().values.toList();
+
+    bytes += generator.row(List.generate(values.length, (i) {
+      var w = i == 0
+          ? 1
+          : i == 1
+              ? 5
+              : 2;
+      var e = values[i];
+
+      return PosColumn(text: e, width: w);
+    }));
+
+    createDivider();
+  }
+
+  bytes += generator.emptyLines(2);
+
+  List<String> paymentsMethods = [];
+
+  List<String> calcs = [
+    'TOTAL NETO: ${sale.net?.toDop()}',
+    'DESCUENTO: ${sale.discount?.toDop()}',
+    'TOTAL ITBIS: ${sale.tax?.toDop()}',
+    'TOTAL FACTURADO: ${sale.total?.toDop()}'
+  ];
+
+  if (sale.effective != 0) {
+    paymentsMethods.add('EFECTIVO');
+  }
+
+  if (sale.creditCard != 0) {
+    paymentsMethods.add('TARJETA DE CREDITO O DEBITO');
+  }
+  if (sale.checkOrTransf != 0) {
+    paymentsMethods.add('CHEQUE O TRANSFERENCIA');
+  }
+
+  if (sale.saleToCredit != 0) {
+    paymentsMethods.add('VENTA A CREDITO');
+  }
+
+  final maxLines = max(paymentsMethods.length, calcs.length);
+
+  for (int i = 0; i < maxLines; i++) {
+    final leftText = i < paymentsMethods.length ? paymentsMethods[i] : '';
+
+    String? label;
+    String? value;
+
+    if (i < calcs.length) {
+      final parts = calcs[i].split(':');
+      label = parts.length > 1 ? '${parts[0].trim()}' : calcs[i];
+      value = parts.length > 1 ? parts[1].trim() : '';
+    }
+
+    bytes += generator.row([
+      PosColumn(
+        text: leftText,
+        width: 4,
+        styles: PosStyles(align: PosAlign.left),
+      ),
+      PosColumn(
+        text: label ?? '',
+        width: 4,
+        styles: PosStyles(align: PosAlign.left),
+      ),
+      PosColumn(
+        text: value ?? '',
+        width: 4,
+        styles: PosStyles(align: PosAlign.right),
+      ),
+    ]);
+  }
+
+  bytes += generator.emptyLines(5);
+
+  bytes += generator.qrcode(sale.dgiiURL ?? sale.ncf ?? '',
+      align: PosAlign.center, size: QRSize.size7);
+  bytes += generator.emptyLines(1);
+
+  if (sale.signatureDate != null) {
+    bytes += generator.text('Codigo de Seguridad: ${sale.securityCode}',
+        styles: PosStyles(align: PosAlign.center));
+
+    bytes += generator.text(
+        'Fecha de Firma: ${sale.signatureDate?.format(payload: 'DD-MM-YYYY HH:mm:ss')}',
+        styles: PosStyles(align: PosAlign.center));
+  }
+
+  bytes += generator.feed(2);
+  bytes += generator.cut();
+
+  return bytes;
 }

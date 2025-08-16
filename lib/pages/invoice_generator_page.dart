@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:localstorage/localstorage.dart';
 import 'package:moment_dart/moment_dart.dart';
 import 'package:printing/printing.dart';
+import 'package:uresax_invoice_sys/apis/printers.handler.dart';
 import 'package:uresax_invoice_sys/modals/ncfs.selector.modal.dart';
 import 'package:uresax_invoice_sys/models/credit.note.item.product.dart';
 import 'package:uresax_invoice_sys/models/credit.note.item.service.dart';
@@ -284,14 +285,22 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
           await _enviarDgii(sale);
         }
 
-        var doc = createDefaultInvoice(sale!);
+        if (eCommerceMode) {
+          var printer = localStorage.getItem('printer') ?? '';
 
-        await Printing.layoutPdf(
-          onLayout: (format) async => await doc.save(),
-        );
+          var bytes = await createDefaultTicket(sale: sale!);
+
+          await PrinterHandler.printBytes(printer, bytes);
+        } else {
+          var doc = createDefaultInvoice(sale!);
+
+          await Printing.layoutPdf(
+            onLayout: (format) async => await doc.save(),
+          );
+        }
 
         await NcfsList(ncfTypeId: currentNcfTypeId)
-            .updateFinish(currentNcf: sale.ncfSeq!);
+            .updateFinish(currentNcf: sale!.ncfSeq!);
 
         Navigator.pop(context, widget.editing ? 'UPDATE' : null);
 
@@ -299,6 +308,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
             message: widget.editing ? 'FACTURA EDITADA' : 'FACTURA CREADA',
             color: Colors.green);
       } catch (e) {
+        print(e);
         showTopSnackBar(context, message: e.toString(), color: Colors.red);
       }
     }
@@ -1172,7 +1182,10 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                             MaterialPageRoute(
                                 builder: (ctx) => PrintersPage()));
                       },
-                      icon: Icon(Icons.print))
+                      icon: Icon(Icons.print)),
+                  SizedBox(
+                    width: kDefaultPadding,
+                  ),
                 ],
               )
             ],

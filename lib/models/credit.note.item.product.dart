@@ -125,6 +125,23 @@ class CreditNoteProduct implements SaleItem {
   }
 
   @override
+  Map<String, dynamic> toDisplayReceipt() {
+    String description = productName ?? '';
+
+    if ((chassis != null && chassis != '') ||
+        (licensePlate != null && licensePlate != '')) {
+      description = '$productName\nCHASIS: $chassis\nPLACA: $licensePlate';
+    }
+    return {
+      'CANT': quantity.toString(),
+      'DESCRIPCION': description,
+      'PRECIO': (net! / quantity!).toCoin(),
+      'ITBIS': tax?.toCoin(),
+      'TOTAL': total?.toCoin() ?? ''
+    };
+  }
+
+  @override
   String? productName;
 
   @override

@@ -14,6 +14,8 @@ class OrdenModel {
   DateTime? createdAt;
   List<OrdenItemModel>? items;
   double? amountPaid;
+  String? authorId;
+  String? authorName;
   OrdenModel(
       {this.id,
       this.ordenNum,
@@ -22,7 +24,9 @@ class OrdenModel {
       this.total,
       this.createdAt,
       this.items = const [],
-      this.amountPaid = 0});
+      this.amountPaid = 0,
+      this.authorId,
+      this.authorName});
 
   static Future<List<OrdenModel>> get() async {
     try {
@@ -67,13 +71,14 @@ class OrdenModel {
       parameters.remove('createdAt');
       parameters.remove('ordenNum');
       parameters.remove('items');
+      parameters.remove('authorName');
 
       final conne = SqlConector.connection;
 
       await conne?.runTx((transaction) async {
         var result = await transaction.execute(
             Sql.named(
-                '''insert into public."OrdenPurchases"(id, net, tax, total,"amountPaid") values(@id, @net, @tax, @total,@amountPaid) RETURNING *'''),
+                '''insert into public."OrdenPurchases"(id, net, tax, total,"amountPaid","authorId") values(@id, @net, @tax, @total,@amountPaid,@authorId) RETURNING *'''),
             parameters: parameters);
 
         orden = OrdenModel.fromMap(result.first.toColumnMap());
@@ -98,7 +103,9 @@ class OrdenModel {
       double? total,
       DateTime? createdAt,
       List<OrdenItemModel>? items,
-      double? amountPaid}) {
+      double? amountPaid,
+      String? authorId,
+      String? authorName}) {
     return OrdenModel(
         id: id ?? this.id,
         ordenNum: ordenNum ?? this.ordenNum,
@@ -107,7 +114,9 @@ class OrdenModel {
         total: total ?? this.total,
         createdAt: createdAt ?? this.createdAt,
         amountPaid: amountPaid ?? this.amountPaid,
-        items: items ?? this.items);
+        items: items ?? this.items,
+        authorId: authorId ?? this.authorId,
+        authorName: authorName ?? this.authorName);
   }
 
   Map<String, dynamic> toMap() {
@@ -119,6 +128,8 @@ class OrdenModel {
       'total': total,
       'createdAt': createdAt,
       'amountPaid': amountPaid,
+      'authorId': authorId,
+      'authorName': authorName,
       'items': items?.map((e) => e.toMap()).toList(),
     };
   }
@@ -136,7 +147,9 @@ class OrdenModel {
         items: map['items'] != null
             ? List<OrdenItemModel>.from(
                 (map['items'] as List).map((x) => OrdenItemModel.fromMap(x)))
-            : []);
+            : [],
+        authorId: map['authorId'],
+        authorName: map['authorName']);
   }
 
   String toJson() => json.encode(toMap());

@@ -226,6 +226,17 @@ class CreditNoteService implements SaleItem {
   }
 
   @override
+  Map<String, dynamic> toDisplayReceipt() {
+    return {
+      'CANT': quantity.toString(),
+      'DESCRIPCION': serviceName,
+      'PRECIO': (net! / quantity!).toCoin(),
+      'ITBIS': tax?.toCoin(),
+      'TOTAL': total?.toCoin() ?? ''
+    };
+  }
+
+  @override
   String? serviceName;
 
   @override

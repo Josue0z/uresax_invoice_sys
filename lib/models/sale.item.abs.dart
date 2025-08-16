@@ -50,6 +50,10 @@ abstract class SaleItem {
     throw UnimplementedError();
   }
 
+  Map<String, dynamic> toDisplayReceipt() {
+    throw UnimplementedError();
+  }
+
   double get precio {
     throw UnimplementedError();
   }
