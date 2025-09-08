@@ -3,16 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 
 class SelectorItemWidget<T> extends FormField<T> {
-  SelectorItemWidget({
-    super.key,
-    required BuildContext context,
-    required String title,
-    required Widget screen,
-    required void Function(T?) onChanged,
-    super.initialValue,
-    super.validator,
-    super.autovalidateMode = AutovalidateMode.disabled,
-  }) : super(builder: (state) {
+  SelectorItemWidget(
+      {super.key,
+      required BuildContext context,
+      required String title,
+      required Widget screen,
+      required void Function(T?) onChanged,
+      super.initialValue,
+      super.validator,
+      super.autovalidateMode = AutovalidateMode.disabled,
+      super.enabled = true})
+      : super(builder: (state) {
           dynamic value = state.value ?? initialValue;
           String val = value?.name ?? title;
           return Container(
@@ -32,16 +33,20 @@ class SelectorItemWidget<T> extends FormField<T> {
                       borderRadius: BorderRadius.circular(20),
                       child: Ink(
                         child: InkWell(
-                            onTap: () async {
-                              var res = await Navigator.push<T>(context,
-                                  MaterialPageRoute(builder: (ctx) => screen));
-                              if (res != null) {
-                                state.didChange(res);
-                                state.save();
-                                state.validate();
-                                onChanged(res);
-                              }
-                            },
+                            onTap: !enabled
+                                ? null
+                                : () async {
+                                    var res = await Navigator.push<T>(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (ctx) => screen));
+                                    if (res != null) {
+                                      state.didChange(res);
+                                      state.save();
+                                      state.validate();
+                                      onChanged(res);
+                                    }
+                                  },
                             child: Padding(
                                 padding: EdgeInsets.all(kDefaultPadding * 0.8),
                                 child: Row(

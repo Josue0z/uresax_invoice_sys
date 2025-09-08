@@ -1,19 +1,39 @@
 import 'dart:convert';
 
-class EntryWareHouseItemModel {
+import 'package:postgres/postgres.dart';
+import 'package:uresax_invoice_sys/models/warehouse.obj.dart';
+import 'package:uresax_invoice_sys/utils/extensions.dart';
+
+class EntryWareHouseItemModel implements WareHouseElementItem {
+  @override
   String? id;
+  @override
+  String? ordenId;
+  @override
   String? entryId;
+  @override
   int? productId;
+  @override
   String? productName;
+  @override
   int? providerId;
+  @override
   String? providerName;
+  @override
   int? quantity;
+  @override
   int? units;
+  @override
   double? price;
+  @override
   double? net;
+  @override
   double? discount;
+  @override
   double? tax;
+  @override
   double? total;
+  @override
   DateTime? createdAt;
   EntryWareHouseItemModel({
     this.id,
@@ -31,6 +51,55 @@ class EntryWareHouseItemModel {
     this.total,
     this.createdAt,
   });
+
+  @override
+  Future<EntryWareHouseItemModel?> create([TxSession? transaction]) async {
+    try {
+      var parameters = toMap();
+
+      parameters.remove('createdAt');
+      parameters.remove('productName');
+      parameters.remove('providerId');
+      parameters.remove('providerName');
+
+      var result = await transaction?.execute(
+          Sql.named('insert into public."EntriesWareHouseItems" '
+              '(id, "entryId", "productId", quantity, units, price, net, discount, tax, total) '
+              'values (@id,@entryId, @productId, @quantity, @units, @price, @net, @discount, @tax, @total) returning *'),
+          parameters: parameters);
+
+      await transaction?.execute(Sql.named(
+          '''update public."Products" set quantity = quantity + $quantity where id = $productId'''));
+
+      return EntryWareHouseItemModel.fromMap(result!.first.toColumnMap());
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Map<String, dynamic> toDisplay() {
+    return {
+      'CANTIDAD': quantity?.toStringAsFixed(2),
+      'UNIDADES': units?.toStringAsFixed(2),
+      'PRODUCTO': productName,
+      'PROVEEDOR': providerName,
+      'PRECIO': price?.toDop(),
+      'NETO': net?.toDop(),
+      'TOTAL': total?.toDop()
+    };
+  }
+
+  @override
+  Map<String, dynamic> toDisplayReceipt() {
+    return {
+      'DESCRIPCION.':
+          '${quantity?.toStringAsFixed(2)} x ${price?.toCoin()}\n$productName\n$providerName',
+      'UNT.': units?.toStringAsFixed(2),
+      'NETO': net?.toDop(),
+      'TOTAL': total?.toDop()
+    };
+  }
 
   EntryWareHouseItemModel copyWith({
     String? id,

@@ -285,7 +285,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
           await _enviarDgii(sale);
         }
 
-        if (eCommerceMode) {
+        if (eCommerceMode && widget.sale is SaleProduct) {
           var printer = localStorage.getItem('printer') ?? '';
 
           var bytes = await createDefaultTicket(sale: sale!);
@@ -294,9 +294,12 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
         } else {
           var doc = createDefaultInvoice(sale!);
 
-          await Printing.layoutPdf(
+          await PrinterHandler.showPdfView(
+              context: context, bytes: await doc.save(), sale: sale);
+
+          /* await Printing.layoutPdf(
             onLayout: (format) async => await doc.save(),
-          );
+          );*/
         }
 
         await NcfsList(ncfTypeId: currentNcfTypeId)

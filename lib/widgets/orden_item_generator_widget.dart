@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:uresax_invoice_sys/models/orden.item.model.dart';
 import 'package:uresax_invoice_sys/models/product.dart';
+import 'package:uresax_invoice_sys/models/warehouse.obj.dart';
 import 'package:uresax_invoice_sys/pages/products_page.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/widgets/selector.item.widget.dart';
 
 class OrdenItemGeneratorWidget extends StatefulWidget {
-  final OrdenItemModel ordenItemModel;
+  final WareHouseElementItem ordenItemModel;
 
-  Function(OrdenItemModel) onChanged;
+  Function(WareHouseElementItem) onChanged;
   OrdenItemGeneratorWidget(
       {super.key, required this.ordenItemModel, required this.onChanged});
 
@@ -26,6 +27,10 @@ class _OrdenItemGeneratorWidgetState extends State<OrdenItemGeneratorWidget> {
   TextEditingController totalAmount = TextEditingController();
 
   Products? selectedProduct;
+
+  bool get isOrdenItem {
+    return widget.ordenItemModel is OrdenItemModel;
+  }
 
   _calc() {
     var cost = selectedProduct?.cost ?? 0;
@@ -57,14 +62,18 @@ class _OrdenItemGeneratorWidgetState extends State<OrdenItemGeneratorWidget> {
 
   @override
   void initState() {
-    if (widget.ordenItemModel.id != null) {
-      if (!mounted) return;
-      selectedProduct = Products(
-          id: widget.ordenItemModel.productId,
-          name: widget.ordenItemModel.productName,
-          cost: widget.ordenItemModel.price ?? 0);
+    if (widget.ordenItemModel.id != null ||
+        widget.ordenItemModel.productId != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          selectedProduct = Products(
+              id: widget.ordenItemModel.productId,
+              name: widget.ordenItemModel.productName,
+              cost: widget.ordenItemModel.price ?? 0);
 
-      _calc();
+          _calc();
+        }
+      });
     }
     super.initState();
   }
@@ -80,6 +89,7 @@ class _OrdenItemGeneratorWidgetState extends State<OrdenItemGeneratorWidget> {
             width: 150,
             child: TextFormField(
               controller: quantity,
+              readOnly: !isOrdenItem,
               onChanged: (val) {
                 var xquantity = int.tryParse(val) ?? 1;
                 widget.ordenItemModel.quantity = xquantity;
@@ -103,6 +113,8 @@ class _OrdenItemGeneratorWidgetState extends State<OrdenItemGeneratorWidget> {
             child: SelectorItemWidget<Products>(
                 context: context,
                 title: 'SELECCIONAR PRODUCTO',
+                initialValue: selectedProduct,
+                enabled: isOrdenItem,
                 screen: ProductsPage(selectedMode: true),
                 onChanged: (xproduct) {
                   selectedProduct = xproduct;

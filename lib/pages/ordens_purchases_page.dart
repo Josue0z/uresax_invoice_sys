@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:moment_dart/moment_dart.dart';
 import 'package:open_file/open_file.dart';
+import 'package:uresax_invoice_sys/models/entry.warehouse.item.model.dart';
+import 'package:uresax_invoice_sys/models/entry.warehouse.model.dart';
 import 'package:uresax_invoice_sys/models/orden.item.model.dart';
 import 'package:uresax_invoice_sys/models/orden.model.dart';
 import 'package:uresax_invoice_sys/pages/ordens_generator_page.dart';
@@ -43,6 +45,49 @@ class _OrdensPurchasesPageState extends State<OrdensPurchasesPage> {
     });
   }
 
+  _showEntryPurchaseGenerator(OrdenModel orden) async {
+    var value = await Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (ctx) => OrdensGeneratorPage(
+                ordenModel: EntryWareHouseModel(
+                    ordenId: orden.id,
+                    ordenNum: orden.ordenNum,
+                    driverId: orden.driverId,
+                    driverIdentification: orden.driverIdentification,
+                    driverName: orden.driverName,
+                    driverEmail: orden.driverEmail,
+                    driverPhone: orden.driverPhone,
+                    items: orden.items
+                        ?.map((e) => EntryWareHouseItemModel(
+                              productId: e.productId,
+                              productName: e.productName,
+                              providerId: e.providerId,
+                              providerName: e.providerName,
+                              price: e.price,
+                              quantity: e.quantity,
+                              net: e.net,
+                              discount: e.discount,
+                              tax: e.tax,
+                              total: e.total,
+                            ))
+                        .toList()))));
+
+    if (value != null && value is String) {
+      _initAsync();
+    }
+  }
+
+  _showActionPage(int option, {required OrdenModel orden}) async {
+    orden.items = await orden.getItems();
+    switch (option) {
+      case 1:
+        _showEntryPurchaseGenerator(orden);
+        break;
+      default:
+    }
+  }
+
   _showOrdenPurchaseInvoice(OrdenModel orden) async {
     orden.items = await orden.getItems();
     var doc = createDefaultOrdenPurchase(orden);
@@ -75,7 +120,13 @@ class _OrdensPurchasesPageState extends State<OrdensPurchasesPage> {
       ),
       body: ListView.separated(
           itemBuilder: (ctx, index) {
+            List<Map<String, dynamic>> options = [];
+
             var orden = ordens[index];
+
+            if (orden.applyEntry == false) {
+              options.add({'id': 1, 'title': 'Generar Entrada de Almacen'});
+            }
             return ListTile(
               minTileHeight: 90,
               contentPadding: EdgeInsets.symmetric(
@@ -103,14 +154,33 @@ class _OrdensPurchasesPageState extends State<OrdensPurchasesPage> {
                     width: kDefaultPadding / 2,
                   ),
                   Text(orden.total?.toDop() ?? ''),
-                  SizedBox(
-                    width: kDefaultPadding,
+                  Container(
+                    margin: EdgeInsets.symmetric(horizontal: kDefaultPadding),
+                    padding: EdgeInsets.all(kDefaultPadding / 2),
+                    decoration: BoxDecoration(
+                        color: orden.color.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(30)),
+                    child: Text(
+                      orden.labelText,
+                      style: TextStyle(color: orden.color),
+                    ),
                   ),
                   IconButton(
                       onPressed: () {
                         _showOrdenPurchaseInvoice(orden);
                       },
-                      icon: Icon(Icons.visibility))
+                      icon: Icon(Icons.visibility)),
+                  options.isEmpty
+                      ? SizedBox()
+                      : PopupMenuButton<int>(onSelected: (id) {
+                          _showActionPage(id, orden: orden);
+                        }, itemBuilder: (ctx) {
+                          return List.generate(options.length, (index) {
+                            var item = options[index];
+                            return PopupMenuItem(
+                                value: item['id'], child: Text(item['title']));
+                          });
+                        })
                 ],
               ),
             );

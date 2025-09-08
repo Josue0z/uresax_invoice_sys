@@ -7,11 +7,21 @@ import 'package:flutter_esc_pos_utils/flutter_esc_pos_utils.dart';
 import 'package:moment_dart/moment_dart.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:uresax_invoice_sys/models/credit.note.product.dart';
+import 'package:uresax_invoice_sys/models/credit.note.service.dart';
 import 'package:uresax_invoice_sys/models/orden.model.dart';
 import 'package:uresax_invoice_sys/models/payment.dart';
 import 'package:uresax_invoice_sys/models/sale.abs.dart';
+import 'package:uresax_invoice_sys/models/warehouse.obj.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/utils/extensions.dart';
+
+List<int> createDivider(Generator generator) {
+  List<int> bytes = [];
+  final divider = '-' * 48; // Para mm80
+  bytes += generator.text(divider, styles: PosStyles(align: PosAlign.center));
+  return bytes;
+}
 
 Future<pw.Font> loadMaterialIconsFont() async {
   final fontData =
@@ -467,10 +477,13 @@ pw.Document createDefaultOrdenPurchase(OrdenModel orden) {
                   pw.Text(company?.address ?? '',
                       style: pw.TextStyle(fontSize: 10)),
                   pw.SizedBox(height: kDefaultPadding / 2),
-                  pw.Text(company?.phone1 ?? '',
+                  pw.Text('TEL: ${company?.phone1}',
                       style: pw.TextStyle(fontSize: 10)),
                   pw.SizedBox(height: kDefaultPadding / 2),
-                  pw.Text(company?.email ?? '',
+                  pw.Text('CORREO: ${company?.email}',
+                      style: pw.TextStyle(fontSize: 10)),
+                  pw.SizedBox(height: kDefaultPadding / 2),
+                  pw.Text('CONDUCTOR: ${orden.driverName}',
                       style: pw.TextStyle(fontSize: 10))
                 ])),
         pw.Expanded(
@@ -918,11 +931,6 @@ Future<List<int>> createDefaultTicket(
   List<int> bytes = [];
   generator.setStyles(PosStyles(width: PosTextSize.size6));
 
-  createDivider() {
-    final divider = '-' * 48; // Para mm80
-    bytes += generator.text(divider, styles: PosStyles(align: PosAlign.center));
-  }
-
   bytes += generator.text(company?.name ?? '',
       styles: PosStyles(bold: true, align: PosAlign.center));
 
@@ -946,19 +954,19 @@ Future<List<int>> createDefaultTicket(
       'Fecha de Emision: ${sale.createdAt?.format(payload: 'DD/MM/YYYY')}',
       styles: PosStyles(align: PosAlign.left));
 
-  createDivider();
+  bytes += createDivider(generator);
 
   bytes += generator.text(sale.ncfTypeName ?? '',
       styles: PosStyles(align: PosAlign.center, bold: true));
 
-  createDivider();
+  bytes += createDivider(generator);
 
   var cols = sale.items[0].toDisplayReceipt().keys.toList();
   bytes += generator.row(List.generate(cols.length, (i) {
     var e = cols[i];
     return PosColumn(text: e, width: i == 1 ? 4 : 2);
   }));
-  createDivider();
+  bytes += createDivider(generator);
 
   for (var item in sale.items) {
     var values = item.toDisplayReceipt().values.toList();
@@ -974,19 +982,27 @@ Future<List<int>> createDefaultTicket(
       return PosColumn(text: e, width: w);
     }));
 
-    createDivider();
+    bytes += createDivider(generator);
   }
 
   bytes += generator.emptyLines(2);
 
   List<String> paymentsMethods = [];
 
+  bool isCreditNote =
+      sale is CreditNoteAsProduct || sale is CreditNoteAsService;
+
   List<String> calcs = [
     'TOTAL NETO: ${sale.net?.toDop()}',
     'DESCUENTO: ${sale.discount?.toDop()}',
     'TOTAL ITBIS: ${sale.tax?.toDop()}',
-    'TOTAL FACTURADO: ${sale.total?.toDop()}'
   ];
+
+  if (isCreditNote) {
+    calcs.addAll(['TOTAL DEVOLUCION: ${sale.total!.toDop()}']);
+  } else {
+    calcs.addAll(['TOTAL FACTURADO: ${sale.total!.toDop()}']);
+  }
 
   if (sale.effective != 0) {
     paymentsMethods.add('EFECTIVO');
@@ -1050,6 +1066,77 @@ Future<List<int>> createDefaultTicket(
         'Fecha de Firma: ${sale.signatureDate?.format(payload: 'DD-MM-YYYY HH:mm:ss')}',
         styles: PosStyles(align: PosAlign.center));
   }
+
+  bytes += generator.feed(2);
+  bytes += generator.cut();
+
+  return bytes;
+}
+
+Future<List<int>> createDefaultOrdenTicket(
+    {String name = 'default', required WareHouseElement entry}) async {
+  // Using default profile
+  final profile = await CapabilityProfile.load(name: name);
+  final generator = Generator(PaperSize.mm80, profile);
+  List<int> bytes = [];
+  generator.setStyles(PosStyles(width: PosTextSize.size6));
+
+  bool isOrden = entry is OrdenModel;
+  int num = entry.ordenNum ?? entry.entryNum ?? 0;
+
+  bytes += generator.text(company?.name ?? '',
+      styles: PosStyles(bold: true, align: PosAlign.center));
+
+  bytes += generator.text(company?.rncOrId ?? '',
+      styles: PosStyles(align: PosAlign.center));
+
+  String label = isOrden ? 'ORDEN' : 'ENTRADA';
+  String labelTag = isOrden ? 'ORDEN DE COMPRA' : 'ENTRADA DE ALMACEN';
+
+  bytes +=
+      generator.text('$label #$num', styles: PosStyles(align: PosAlign.left));
+
+  bytes += generator.text(
+      'Fecha de Emision: ${entry.createdAt?.format(payload: 'DD/MM/YYYY')}',
+      styles: PosStyles(align: PosAlign.left));
+
+  bytes += generator.text('CONDUCTOR: ${entry.driverName}',
+      styles: PosStyles(align: PosAlign.left));
+
+  bytes += createDivider(generator);
+
+  bytes += generator.text(labelTag,
+      styles: PosStyles(align: PosAlign.center, bold: true));
+
+  bytes += createDivider(generator);
+  var cols = entry.items![0].toDisplayReceipt().keys.toList();
+  bytes += generator.row(List.generate(cols.length, (i) {
+    var e = cols[i];
+    return PosColumn(text: e, width: i == 0 ? 6 : 3);
+  }));
+  bytes += createDivider(generator);
+
+  for (var item in entry.items!) {
+    var values = item.toDisplayReceipt().values.toList();
+
+    bytes += generator.row(List.generate(values.length, (i) {
+      var w = i == 0 ? 6 : 3;
+      var e = values[i];
+
+      return PosColumn(text: e, width: w);
+    }));
+
+    bytes += createDivider(generator);
+  }
+
+  bytes += generator.emptyLines(2);
+
+  bytes += generator.text('TOTAL A PAGAR: ${entry.total?.toDop()}',
+      styles: PosStyles(align: PosAlign.right));
+
+  bytes += generator.emptyLines(2);
+
+  bytes += generator.qrcode(num.toString(), size: QRSize.size7);
 
   bytes += generator.feed(2);
   bytes += generator.cut();

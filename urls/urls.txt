@@ -108,3 +108,5 @@ https://ecf.dgii.gov.do/TesteCF/ConsultaTimbre?RncEmisor=101675489&RncComprador=
 https://ecf.dgii.gov.do/TesteCF/ConsultaTimbre?RncEmisor=101675489&RncComprador=130274363&ENCF=E310000001105&FechaEmision=15-08-2025&MontoTotal=10498.00&FechaFirma=15-08-2025%2018:29:27&CodigoSeguridad=VQzX4m
 https://ecf.dgii.gov.do/TesteCF/ConsultaTimbre?RncEmisor=101675489&RncComprador=130579962&ENCF=E310000001106&FechaEmision=15-08-2025&MontoTotal=10498.00&FechaFirma=15-08-2025%2018:35:24&CodigoSeguridad=T7/f2K
 https://ecf.dgii.gov.do/TesteCF/ConsultaTimbre?RncEmisor=101675489&RncComprador=00112118823&ENCF=E310000001107&FechaEmision=15-08-2025&MontoTotal=10498.00&FechaFirma=15-08-2025%2018:41:37&CodigoSeguridad=JGGrAJ
+https://ecf.dgii.gov.do/TesteCF/ConsultaTimbre?RncEmisor=101675489&RncComprador=00112118823&ENCF=E340000001040&FechaEmision=16-08-2025&MontoTotal=10498.00&FechaFirma=16-08-2025%2015:13:17&CodigoSeguridad=QnRd0s
+https://ecf.dgii.gov.do/TesteCF/ConsultaTimbre?RncEmisor=101675489&RncComprador=130579962&ENCF=E340000001041&FechaEmision=16-08-2025&MontoTotal=10498.00&FechaFirma=16-08-2025%2015:23:18&CodigoSeguridad=jPadsF

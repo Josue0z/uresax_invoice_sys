@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_platform_alert/flutter_platform_alert.dart';
 import 'package:localstorage/localstorage.dart';
+import 'package:pdfrx/pdfrx.dart';
 import 'package:uresax_invoice_sys/apis/sql.dart';
 import 'package:uresax_invoice_sys/models/bank.dart';
 import 'package:uresax_invoice_sys/models/company.dart';
@@ -14,7 +15,6 @@ import 'package:uresax_invoice_sys/models/override.codes.dart';
 import 'package:uresax_invoice_sys/models/payment.method.dart';
 import 'package:uresax_invoice_sys/models/payment.type.dart';
 import 'package:uresax_invoice_sys/models/permission.dart';
-import 'package:uresax_invoice_sys/models/provider.dart';
 import 'package:uresax_invoice_sys/models/role.dart';
 import 'package:uresax_invoice_sys/models/taxes.dart';
 import 'package:uresax_invoice_sys/models/type.income.dart';
@@ -28,6 +28,7 @@ import 'package:window_manager/window_manager.dart';
 void main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
+    pdfrxFlutterInitialize();
 
     var hostname = Platform.environment['URESAX_INVOICE_DATABASE_HOSTNAME'];
     var databaseName = Platform.environment['URESAX_INVOICE_DATABASE_NAME'];

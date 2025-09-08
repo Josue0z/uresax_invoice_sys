@@ -1,6 +1,14 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:uresax_invoice_sys/models/sale.abs.dart';
+import 'package:uresax_invoice_sys/pages/pdf.view_page.dart';
+import 'package:path/path.dart' as path;
+import 'package:uresax_invoice_sys/settings.dart';
+import 'package:uresax_invoice_sys/utils/functions.dart';
+
 class PrinterHandler {
   /// Detecta la plataforma actual
   static bool get isWindows => Platform.isWindows;
@@ -29,6 +37,48 @@ class PrinterHandler {
     }
   }
 
+  /// Imprime un PDF desde bytes en Windows, macOS o Linux
+  Future<void> printPdfBytes(String printerName, List<int> pdfBytes) async {
+    // Guarda los bytes en un archivo temporal
+    final tempDir = Directory.systemTemp;
+    final tempFile =
+        File('${tempDir.path}${Platform.pathSeparator}temp_print.pdf');
+    await tempFile.writeAsBytes(pdfBytes);
+
+    if (Platform.isMacOS || Platform.isLinux) {
+      // Usa el comando 'lp' para enviar el archivo al spool de impresión
+      final result =
+          await Process.run('lp', ['-d', printerName, tempFile.path]);
+      if (result.exitCode != 0) {
+        stderr.writeln('Error al imprimir en macOS/Linux: ${result.stderr}');
+      }
+    } else if (Platform.isWindows) {
+      // Usa Adobe Reader si está disponible
+      final adobePath =
+          r'C:\Program Files (x86)\Adobe\Acrobat Reader DC\Reader\AcroRd32.exe';
+      if (await File(adobePath).exists()) {
+        final result =
+            await Process.run(adobePath, ['/t', tempFile.path, printerName]);
+        if (result.exitCode != 0) {
+          stderr
+              .writeln('Error al imprimir con Adobe Reader: ${result.stderr}');
+        }
+      } else {
+        // Alternativa: usar el comando 'print' (solo para archivos de texto)
+        final result = await Process.run(
+            'cmd', ['/c', 'print /d:"$printerName" "${tempFile.path}"']);
+        if (result.exitCode != 0) {
+          stderr.writeln('Error al imprimir con cmd: ${result.stderr}');
+        }
+      }
+    } else {
+      throw UnsupportedError('Plataforma no soportada');
+    }
+
+    // Limpieza opcional
+    await tempFile.delete();
+  }
+
   /// Imprime los bytes ESC/POS en la impresora seleccionada
   static Future<void> printBytes(
       String printerName, List<int> escPosBytes) async {
@@ -44,6 +94,23 @@ class PrinterHandler {
       await process.exitCode;
     } else {
       throw UnsupportedError('Plataforma no soportada');
+    }
+  }
+
+  static Future<void> showPdfView(
+      {required BuildContext context,
+      required List<int> bytes,
+      required Sale sale}) async {
+    try {
+      await Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (ctx) => PDFScreen(
+                    bytes: bytes,
+                    fileName: '${sale.ncf}_${company?.name}.PDF',
+                  )));
+    } catch (e) {
+      throw UnsupportedError('No se puede mostrar el pdf');
     }
   }
 }

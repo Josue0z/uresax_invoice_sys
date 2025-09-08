@@ -1,21 +1,38 @@
 import 'dart:convert';
 import 'package:postgres/postgres.dart';
+import 'package:uresax_invoice_sys/models/warehouse.obj.dart';
 import 'package:uresax_invoice_sys/utils/extensions.dart';
 
-class OrdenItemModel {
+class OrdenItemModel implements WareHouseElementItem {
+  @override
   String? id;
+  @override
   String? ordenId;
+  @override
+  String? entryId;
+  @override
   int? productId;
+  @override
   String? productName;
+  @override
   int? providerId;
+  @override
   String? providerName;
+  @override
   int? quantity;
+  @override
   int? units;
+  @override
   double? price;
+  @override
   double? net;
+  @override
   double? discount;
+  @override
   double? tax;
+  @override
   double? total;
+  @override
   DateTime? createdAt;
   OrdenItemModel({
     this.id,
@@ -34,6 +51,7 @@ class OrdenItemModel {
     this.createdAt,
   });
 
+  @override
   Future<OrdenItemModel?> create([TxSession? transaction]) async {
     try {
       var parameters = toMap();
@@ -55,6 +73,7 @@ class OrdenItemModel {
     }
   }
 
+  @override
   Map<String, dynamic> toDisplay() {
     return {
       'CANTIDAD': quantity?.toStringAsFixed(2),
@@ -63,6 +82,16 @@ class OrdenItemModel {
       'PROVEEDOR': providerName,
       'PRECIO': price?.toDop(),
       'NETO': net?.toDop(),
+      'TOTAL': total?.toDop()
+    };
+  }
+
+  @override
+  Map<String, dynamic> toDisplayReceipt() {
+    return {
+      'DESCRIPCION.':
+          '${quantity?.toStringAsFixed(2)} x ${price?.toCoin()}\n$productName\n$providerName',
+      'UNT.': units?.toStringAsFixed(2),
       'TOTAL': total?.toDop()
     };
   }

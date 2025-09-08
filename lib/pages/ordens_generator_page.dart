@@ -1,13 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:localstorage/localstorage.dart';
+import 'package:uresax_invoice_sys/apis/printers.handler.dart';
+import 'package:uresax_invoice_sys/models/drivers.dart';
 import 'package:uresax_invoice_sys/models/orden.item.model.dart';
 import 'package:uresax_invoice_sys/models/orden.model.dart';
+import 'package:uresax_invoice_sys/models/warehouse.obj.dart';
+import 'package:uresax_invoice_sys/pages/drivers_page.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/utils/extensions.dart';
 import 'package:uresax_invoice_sys/utils/functions.dart';
+import 'package:uresax_invoice_sys/utils/invoices.functions.dart';
 import 'package:uresax_invoice_sys/widgets/orden_item_generator_widget.dart';
+import 'package:uresax_invoice_sys/widgets/selector.item.widget.dart';
 
 class OrdensGeneratorPage extends StatefulWidget {
-  final OrdenModel ordenModel;
+  final WareHouseElement ordenModel;
   const OrdensGeneratorPage({super.key, required this.ordenModel});
 
   @override
@@ -15,6 +22,22 @@ class OrdensGeneratorPage extends StatefulWidget {
 }
 
 class _OrdensGeneratorPageState extends State<OrdensGeneratorPage> {
+  Drivers? driver;
+
+  bool get isOrden {
+    return widget.ordenModel is OrdenModel;
+  }
+
+  String get title {
+    return isOrden
+        ? 'GENERANDO ORDEN DE COMPRA...'
+        : 'GENERANDO ENTRADA DE ALMACEN';
+  }
+
+  String get btnText {
+    return isOrden ? 'CREAR ORDEN DE COMPRA' : 'CREAR ENTRADA DE ALMACEN';
+  }
+
   double get totalAmount {
     return data['totalAmount'] ?? 0.0;
   }
@@ -24,8 +47,17 @@ class _OrdensGeneratorPageState extends State<OrdensGeneratorPage> {
       widget.ordenModel.net = totalAmount;
       widget.ordenModel.tax = 0;
       widget.ordenModel.total = totalAmount;
+      widget.ordenModel.amountPaid = 0;
+      widget.ordenModel.authorId = currentUser?.id;
+      widget.ordenModel.driverId = driver?.id;
 
-      await widget.ordenModel.create();
+      var orden = await widget.ordenModel.create();
+
+      if (orden != null) {
+        var printer = localStorage.getItem('printer') ?? '';
+        var bytes = await createDefaultOrdenTicket(entry: orden);
+        await PrinterHandler.printBytes(printer, bytes);
+      }
 
       Navigator.pop(context, 'CREATE');
     } catch (e) {
@@ -44,10 +76,22 @@ class _OrdensGeneratorPageState extends State<OrdensGeneratorPage> {
   }
 
   @override
+  void initState() {
+    driver = Drivers(
+        id: widget.ordenModel.driverId,
+        name: widget.ordenModel.driverName,
+        phone: widget.ordenModel.driverPhone,
+        email: widget.ordenModel.driverEmail);
+    print(driver);
+    setState(() {});
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: const Text('GENERANDO ORDEN DE COMPRA...'),
+          title: Text(title),
         ),
         body: Padding(
             padding: EdgeInsets.all(kDefaultPadding),
@@ -86,17 +130,19 @@ class _OrdensGeneratorPageState extends State<OrdensGeneratorPage> {
                             ),
                           ],
                         )),
-                    SizedBox(
-                      width: 250,
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          widget.ordenModel.items?.add(OrdenItemModel());
-                          setState(() {});
-                        },
-                        child: Text('AGREGAR PRODUCTO'),
-                      ),
-                    ),
+                    isOrden
+                        ? SizedBox(
+                            width: 250,
+                            height: 50,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                widget.ordenModel.items?.add(OrdenItemModel());
+                                setState(() {});
+                              },
+                              child: Text('AGREGAR PRODUCTO'),
+                            ),
+                          )
+                        : SizedBox(),
                   ],
                 )),
                 const Divider(),
@@ -104,6 +150,19 @@ class _OrdensGeneratorPageState extends State<OrdensGeneratorPage> {
                     child: Container(
                   child: Column(
                     children: [
+                      Container(
+                        width: double.infinity,
+                        margin: EdgeInsets.symmetric(vertical: kDefaultPadding),
+                        child: SelectorItemWidget<Drivers>(
+                            context: context,
+                            initialValue: driver,
+                            title: 'SELECCIONAR CONDUCTOR',
+                            screen: DriversPage(selectedMode: true),
+                            onChanged: (xdriver) {
+                              driver = xdriver;
+                              print(driver);
+                            }),
+                      ),
                       Container(
                           margin: EdgeInsets.only(bottom: kDefaultPadding),
                           child: Row(
@@ -131,8 +190,7 @@ class _OrdensGeneratorPageState extends State<OrdensGeneratorPage> {
                         height: 50,
                         margin: EdgeInsets.symmetric(vertical: kDefaultPadding),
                         child: ElevatedButton(
-                            onPressed: _onSubmit,
-                            child: Text('CREAR ORDEN DE COMPRA')),
+                            onPressed: _onSubmit, child: Text(btnText)),
                       )
                     ],
                   ),
