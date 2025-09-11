@@ -1,13 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:uresax_invoice_sys/models/sale.abs.dart';
 import 'package:uresax_invoice_sys/pages/pdf.view_page.dart';
-import 'package:path/path.dart' as path;
 import 'package:uresax_invoice_sys/settings.dart';
-import 'package:uresax_invoice_sys/utils/functions.dart';
 
 class PrinterHandler {
   /// Detecta la plataforma actual

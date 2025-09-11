@@ -204,10 +204,12 @@ class _SalesPageState extends State<SalesPage> {
           List<Map<String, dynamic>> salesOptions = [
             {'id': 1, 'name': 'Ver Factura'},
             {'id': 2, 'name': 'Ver pagos'},
-            {'id': 3, 'name': 'Abonar pago'},
           ];
 
-          if (sale.retentionDate == null || sale.debt! > 0) {
+          if (sale.debt! > 0) {
+            salesOptions.add(
+              {'id': 3, 'name': 'Abonar pago'},
+            );
             salesOptions.add({'id': 4, 'name': 'Editar Factura'});
           }
 

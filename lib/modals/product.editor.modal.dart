@@ -160,45 +160,37 @@ class _ProductEditorModalState extends State<ProductEditorModal> {
                       child: SingleChildScrollView(
                     child: Column(
                       children: [
-                        eCommerceMode
-                            ? Container(
-                                margin: EdgeInsets.symmetric(
-                                    vertical: kDefaultPadding),
-                                child: DropdownButtonFormField(
-                                    value: currentWareHouseId,
-                                    validator: (val) => val == null
-                                        ? 'CAMPO OBLIGATORIO'
-                                        : null,
-                                    items: List.generate(wareHouses.length,
-                                        (index) {
-                                      var wareHouse = wareHouses[index];
-                                      return DropdownMenuItem(
-                                          value: wareHouse.id,
-                                          child: Text(wareHouse.name ?? ''));
-                                    }),
-                                    onChanged: (id) {
-                                      currentWareHouseId = id;
-                                    }),
-                              )
-                            : SizedBox(),
-                        eCommerceMode
-                            ? Container(
-                                margin:
-                                    EdgeInsets.only(bottom: kDefaultPadding),
-                                child: SelectorItemWidget<Providers>(
-                                  context: context,
-                                  initialValue: currentProvider,
-                                  validator: (val) => val?.id == null
-                                      ? 'CAMPO OBLIGATORIO'
-                                      : null,
-                                  onChanged: (xprovider) {
-                                    currentProvider = xprovider;
-                                    currentProviderId = xprovider?.id;
-                                  },
-                                  screen: ProvidersPage(selectorMode: true),
-                                  title: 'SELECCIONA PROVEEDOR',
-                                ))
-                            : SizedBox(),
+                        Container(
+                          margin:
+                              EdgeInsets.symmetric(vertical: kDefaultPadding),
+                          child: DropdownButtonFormField(
+                              value: currentWareHouseId,
+                              validator: (val) =>
+                                  val == null ? 'CAMPO OBLIGATORIO' : null,
+                              items: List.generate(wareHouses.length, (index) {
+                                var wareHouse = wareHouses[index];
+                                return DropdownMenuItem(
+                                    value: wareHouse.id,
+                                    child: Text(wareHouse.name ?? ''));
+                              }),
+                              onChanged: (id) {
+                                currentWareHouseId = id;
+                              }),
+                        ),
+                        Container(
+                            margin: EdgeInsets.only(bottom: kDefaultPadding),
+                            child: SelectorItemWidget<Providers>(
+                              context: context,
+                              initialValue: currentProvider,
+                              validator: (val) =>
+                                  val?.id == null ? 'CAMPO OBLIGATORIO' : null,
+                              onChanged: (xprovider) {
+                                currentProvider = xprovider;
+                                currentProviderId = xprovider?.id;
+                              },
+                              screen: ProvidersPage(selectorMode: true),
+                              title: 'SELECCIONA PROVEEDOR',
+                            )),
                         Container(
                           margin: EdgeInsets.only(bottom: kDefaultPadding),
                           child: TextFormField(
@@ -244,8 +236,8 @@ class _ProductEditorModalState extends State<ProductEditorModal> {
                                 ),
                               )
                             : Container(
-                                margin: EdgeInsets.symmetric(
-                                    vertical: kDefaultPadding),
+                                margin:
+                                    EdgeInsets.only(bottom: kDefaultPadding),
                                 child: TextFormField(
                                   controller: chassis,
                                   validator: (val) =>
@@ -257,8 +249,8 @@ class _ProductEditorModalState extends State<ProductEditorModal> {
                               ),
                         !eCommerceMode
                             ? Container(
-                                margin: EdgeInsets.symmetric(
-                                    vertical: kDefaultPadding),
+                                margin:
+                                    EdgeInsets.only(bottom: kDefaultPadding),
                                 child: TextFormField(
                                   controller: licensePlate,
                                   validator: (val) =>
