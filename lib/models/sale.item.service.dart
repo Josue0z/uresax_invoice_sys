@@ -32,6 +32,8 @@ class SaleItemService implements SaleItem {
       this.serviceId,
       this.productId,
       this.discount = 0,
+      this.discountId,
+      this.discountName,
       this.net = 0,
       this.tax = 0,
       this.total = 0,
@@ -134,6 +136,8 @@ class SaleItemService implements SaleItem {
     return SaleItemService(
         id: map['id'],
         serviceId: map['serviceId'],
+        discountId: map['discountId'],
+        discountName: map['discountName'],
         discount:
             map['discount'] != null ? double.parse(map['discount']) : null,
         net: map['net'] != null ? double.parse(map['net']) : null,
@@ -284,4 +288,7 @@ class SaleItemService implements SaleItem {
 
   @override
   double? price;
+
+  @override
+  String? discountName;
 }

@@ -42,6 +42,8 @@ abstract class SaleItem {
 
   double? price;
 
+  String? discountName;
+
   Map<String, dynamic> toMap() {
     throw UnimplementedError();
   }

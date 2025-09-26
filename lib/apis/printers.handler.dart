@@ -34,7 +34,8 @@ class PrinterHandler {
   }
 
   /// Imprime un PDF desde bytes en Windows, macOS o Linux
-  Future<void> printPdfBytes(String printerName, List<int> pdfBytes) async {
+  static Future<void> printPdfBytes(
+      String printerName, List<int> pdfBytes) async {
     // Guarda los bytes en un archivo temporal
     final tempDir = Directory.systemTemp;
     final tempFile =

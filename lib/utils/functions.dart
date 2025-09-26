@@ -115,10 +115,11 @@ showLoader(BuildContext context) async {
       context: context,
       builder: (ctx) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadiusGeometry.circular(30)),
           content: SizedBox(
-            width: 250,
-            height: 250,
+            width: 150,
+            height: 150,
             child: Center(
               child: CircularProgressIndicator(),
             ),

@@ -27,39 +27,41 @@ class SaleItemProduct implements SaleItem {
   @override
   int? quantity;
 
-  SaleItemProduct(
-      {this.id,
-      this.productId,
-      this.serviceId,
-      this.discount = 0,
-      this.net = 0,
-      this.tax = 0,
-      this.total = 0,
-      this.retentionTax = 0,
-      this.retentionIsr = 0,
-      this.saleId,
-      this.creditNoteId,
-      this.quantity = 1,
-      this.productName,
-      this.chassis,
-      this.licensePlate,
-      this.taxId,
-      this.retentionIsrId,
-      this.retentionTaxId,
-      this.discountId,
-      this.serviceName,
-      this.enabled = true,
-      this.returnQuantity,
-      this.tax18,
-      this.tax16,
-      this.tax3,
-      this.net18,
-      this.net16,
-      this.net3,
-      this.exemptAmount,
-      this.indicadorFacturacion,
-      this.indicadorAgentePercepcion,
-      this.price});
+  SaleItemProduct({
+    this.id,
+    this.productId,
+    this.serviceId,
+    this.discount = 0,
+    this.net = 0,
+    this.tax = 0,
+    this.total = 0,
+    this.retentionTax = 0,
+    this.retentionIsr = 0,
+    this.saleId,
+    this.creditNoteId,
+    this.quantity = 1,
+    this.productName,
+    this.chassis,
+    this.licensePlate,
+    this.taxId,
+    this.retentionIsrId,
+    this.retentionTaxId,
+    this.discountId,
+    this.discountName,
+    this.serviceName,
+    this.enabled = true,
+    this.returnQuantity,
+    this.tax18,
+    this.tax16,
+    this.tax3,
+    this.net18,
+    this.net16,
+    this.net3,
+    this.exemptAmount,
+    this.indicadorFacturacion,
+    this.indicadorAgentePercepcion,
+    this.price,
+  });
 
   @override
   int? productId;
@@ -174,6 +176,8 @@ class SaleItemProduct implements SaleItem {
     return SaleItemProduct(
         id: map['id'],
         productId: map['productId'],
+        discountId: map['discountId'],
+        discountName: map['discountName'],
         discount:
             map['discount'] != null ? double.parse(map['discount']) : null,
         net: map['net'] != null ? double.parse(map['net']) : null,
@@ -299,4 +303,7 @@ class SaleItemProduct implements SaleItem {
 
   @override
   double? price;
+
+  @override
+  String? discountName;
 }

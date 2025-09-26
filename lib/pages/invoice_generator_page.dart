@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:localstorage/localstorage.dart';
 import 'package:moment_dart/moment_dart.dart';
-import 'package:printing/printing.dart';
 import 'package:uresax_invoice_sys/apis/printers.handler.dart';
 import 'package:uresax_invoice_sys/modals/ncfs.selector.modal.dart';
 import 'package:uresax_invoice_sys/models/credit.note.item.product.dart';
@@ -226,6 +225,8 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
           widget.sale.maxSequence = 8;
         }
 
+        showLoader(context);
+
         if (widget.sale.prefix == 'E') {
           var xhas = await hasInternet();
           if (!xhas) {
@@ -281,7 +282,10 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
           sale = await widget.sale.update();
         }
 
-        if (electronicNcfEnabled && widget.sale.prefix == 'E' && sale != null) {
+        if (!widget.editing &&
+            electronicNcfEnabled &&
+            widget.sale.prefix == 'E' &&
+            sale != null) {
           await _enviarDgii(sale);
         }
 
@@ -290,9 +294,13 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
 
           var bytes = await createDefaultTicket(sale: sale!);
 
+          Navigator.pop(context);
+
           await PrinterHandler.printBytes(printer, bytes);
         } else {
           var doc = createDefaultInvoice(sale!);
+
+          Navigator.pop(context);
 
           await PrinterHandler.showPdfView(
               context: context, bytes: await doc.save(), sale: sale);
@@ -302,8 +310,12 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
           );*/
         }
 
+        showLoader(context);
+
         await NcfsList(ncfTypeId: currentNcfTypeId)
-            .updateFinish(currentNcf: sale!.ncfSeq!);
+            .updateFinish(currentNcf: sale.ncfSeq!);
+
+        Navigator.pop(context);
 
         Navigator.pop(context, widget.editing ? 'UPDATE' : null);
 
@@ -312,6 +324,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
             color: Colors.green);
       } catch (e) {
         print(e);
+        Navigator.pop(context);
         showTopSnackBar(context, message: e.toString(), color: Colors.red);
       }
     }
@@ -788,9 +801,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
               : '',
           numeroComprobante: sale.ncf ?? '',
           numeroComprobanteModificado: _currentSale?.ncf ?? '',
-          rncOtroContribuyente: esNotaCredito
-              ? company?.rncOrId?.trim().replaceAll('-', '') ?? ''
-              : '',
+          rncOtroContribuyente: '',
           codigoModificacion:
               esNotaCredito ? currentOverrideCode.toString() : '',
           fechaEmision: fechaEmision,
@@ -904,10 +915,16 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
       await ecf.descargarSemilla();
       await ecf.validarSemilla();
       await ecf.firmar();
-      await ecf.enviarEcf();
+      dynamic estado;
+
+      estado = await ecf.enviarEcf();
 
       print(ecf.trackId);
       print(ecf.token);
+
+      if (ecf.trackId != '') {
+        estado = await ecf.obtenerEcfEstadoDatos();
+      }
 
       DateFormat xdateFormat = DateFormat('dd-MM-yyyy HH:mm:ss');
       var fechaFirma = xdateFormat.parse(ecf.fechaHoraFirma);
@@ -915,8 +932,17 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
       sale.signatureDate = fechaFirma;
       sale.securityCode = ecf.codigoSeguridad;
       sale.ecfXmlFirmado = ecf.ecfSignXml;
-
       await sale.updateEcfInfo();
+
+      if (estado != null) {
+        var codigo = estado['codigo'] is int
+            ? estado['codigo']
+            : int.parse(estado['codigo']);
+
+        sale.estadoDgii = codigo;
+
+        await sale.updateEcfInfo();
+      }
     } catch (e) {
       rethrow;
     }
@@ -1036,7 +1062,9 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        _focusNode.requestFocus();
+        if (widget.sale is SaleProduct && eCommerceMode) {
+          _focusNode.requestFocus();
+        }
       },
       child: Scaffold(
           appBar: AppBar(
@@ -1105,6 +1133,8 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                                           productName: e.productName,
                                           discount: e.discount,
                                           discountId: e.discountId,
+                                          discountName: e.discountName,
+                                          price: e.price,
                                           net: e.net,
                                           taxId: e.taxId,
                                           tax: e.tax,
@@ -1137,6 +1167,8 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                                           productName: e.productName,
                                           discount: e.discount,
                                           discountId: e.discountId,
+                                          discountName: e.discountName,
+                                          price: e.price,
                                           net: e.net,
                                           taxId: e.taxId,
                                           tax: e.tax,

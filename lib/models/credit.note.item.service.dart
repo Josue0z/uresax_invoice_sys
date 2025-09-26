@@ -31,6 +31,8 @@ class CreditNoteService implements SaleItem {
       {this.id,
       this.productId,
       this.serviceId,
+      this.discountId,
+      this.discountName,
       this.discount,
       this.net,
       this.tax,
@@ -47,7 +49,6 @@ class CreditNoteService implements SaleItem {
       this.retentionIsrId,
       this.retentionTaxId,
       this.chassis,
-      this.discountId,
       this.enabled = true,
       this.returnQuantity,
       this.tax18,
@@ -140,6 +141,8 @@ class CreditNoteService implements SaleItem {
       serviceName: map['serviceName'],
       productId: map['productId'],
       productName: map['productName'],
+      discountId: map['discountId'],
+      discountName: map['discountName'],
       discount: map['discount'] != null ? double.parse(map['discount']) : null,
       net: double.parse(map['net']),
       tax: double.parse(map['tax']),
@@ -151,7 +154,6 @@ class CreditNoteService implements SaleItem {
       quantity: map['quantity'],
       licensePlate: map['licensePlate'],
       taxId: map['taxId'],
-      discountId: map['discountId'],
       retentionTaxId: map['retentionTaxId'],
       retentionIsrId: map['retentionIsrId'],
       chassis: map['chassis'],
@@ -288,4 +290,7 @@ class CreditNoteService implements SaleItem {
 
   @override
   double? price;
+
+  @override
+  String? discountName;
 }

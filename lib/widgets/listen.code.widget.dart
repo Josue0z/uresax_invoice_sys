@@ -57,7 +57,9 @@ class _ListenCodeWidgetState extends State<ListenCodeWidget> {
 
   @override
   void initState() {
-    widget.focusNode.requestFocus();
+    if (widget.enabled) {
+      widget.focusNode.requestFocus();
+    }
 
     super.initState();
   }

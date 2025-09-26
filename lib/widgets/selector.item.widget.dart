@@ -16,9 +16,10 @@ class SelectorItemWidget<T> extends FormField<T> {
       : super(builder: (state) {
           dynamic value = state.value ?? initialValue;
           String val = value?.name ?? title;
-          return Container(
+          return SizedBox(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
                     clipBehavior: Clip.hardEdge,

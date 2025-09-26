@@ -1,7 +1,10 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:uresax_invoice_sys/models/credit.note.item.product.dart';
 import 'package:uresax_invoice_sys/models/credit.note.item.service.dart';
+import 'package:uresax_invoice_sys/models/discount.dart';
 import 'package:uresax_invoice_sys/models/product.dart';
 import 'package:uresax_invoice_sys/models/retention.isr.dart';
 import 'package:uresax_invoice_sys/models/retention.tax.dart';
@@ -15,6 +18,7 @@ import 'package:uresax_invoice_sys/models/taxes.dart';
 import 'package:uresax_invoice_sys/pages/products_page.dart';
 import 'package:uresax_invoice_sys/pages/services_page.dart';
 import 'package:uresax_invoice_sys/settings.dart';
+import 'package:uresax_invoice_sys/widgets/selector.item.widget.dart';
 
 class InvoiceItemGeneratorWidget extends StatefulWidget {
   SaleItem saleItem;
@@ -58,10 +62,12 @@ class _InvoiceItemGeneratorWidgetState
   int? currentTaxId;
   int? currentRetentionTaxId;
   String? currentRetentionIsrId;
+  int? discountId;
 
   SaleElement? el;
   RetentionTax? retentionTax;
   RetentionIsr? retentionIsr;
+  Discount? discountEl;
   Taxes? currentTax;
 
   int startQuantity = 0;
@@ -83,18 +89,18 @@ class _InvoiceItemGeneratorWidgetState
     return '';
   }
 
-  _onSelected(int? option) {
-    currenId = option;
+  _onSelected(SaleElement? element) {
+    currenId = element?.id;
 
     if (widget.saleItem is SaleItemService) {
-      widget.saleItem.serviceId = option;
+      widget.saleItem.serviceId = currenId;
     }
 
     if (widget.saleItem is SaleItemProduct) {
-      widget.saleItem.productId = option;
+      widget.saleItem.productId = currenId;
     }
 
-    el = elements.firstWhere((e) => e.id == option);
+    el = element;
 
     currentTaxId = el?.taxId;
 
@@ -104,7 +110,7 @@ class _InvoiceItemGeneratorWidgetState
 
     widget.saleItem.productName = el?.name;
 
-    if (option != null) {
+    if (currenId != null) {
     } else {
       widget.saleItem.total = null;
       widget.saleItem.tax = null;
@@ -149,6 +155,30 @@ class _InvoiceItemGeneratorWidgetState
   _calc() {
     widget.saleItem.net =
         (el?.price ?? widget.saleItem.net!) * (widget.saleItem.quantity ?? 1);
+    double d = 0;
+
+    discountEl = discounts.firstWhere((e) => e.id == discountId,
+        orElse: () => Discount());
+
+    if (widget.saleItem is SaleItemService ||
+        widget.saleItem is SaleItemProduct) {
+      widget.saleItem.discount = 0;
+      if (discountEl?.id != null) {
+        if (discountEl?.symbolId == 1) {
+          d = (discountEl!.rate! / 100) * widget.saleItem.net!;
+        }
+
+        if (discountEl?.symbolId == 2) {
+          d = discountEl!.rate!;
+        }
+
+        widget.saleItem.discount = d;
+        widget.saleItem.net = widget.saleItem.net! - d;
+      } else {
+        d = 0;
+        widget.saleItem.discount = d;
+      }
+    }
 
     widget.saleItem.tax18 = 0;
     widget.saleItem.tax16 = 0;
@@ -234,7 +264,7 @@ class _InvoiceItemGeneratorWidgetState
   }
 
   bool get enabledOnlyEcommerce {
-    return (eCommerceMode &&
+    return (eCommerceMode ||
         (widget.saleItem is SaleItemProduct ||
             widget.saleItem is CreditNoteProduct));
   }
@@ -255,6 +285,19 @@ class _InvoiceItemGeneratorWidgetState
 
   void _syncControllersWithSaleItem() {
     currenId = widget.saleItem.serviceId ?? widget.saleItem.productId;
+    el = widget.saleItem is SaleItemService ||
+            widget.saleItem is CreditNoteService
+        ? Services(
+            id: widget.saleItem.serviceId,
+            name: widget.saleItem.serviceName,
+            price: widget.saleItem.price)
+        : Products(
+            id: widget.saleItem.productId,
+            name: widget.saleItem.productName,
+            price: widget.saleItem.price);
+
+    discountId = widget.saleItem.discountId;
+
     currentTaxId = widget.saleItem.taxId;
     currentRetentionIsrId = widget.saleItem.retentionIsrId;
     currentRetentionTaxId = widget.saleItem.retentionTaxId;
@@ -323,7 +366,7 @@ class _InvoiceItemGeneratorWidgetState
               readOnly: widget.saleItem is CreditNoteProduct ||
                   widget.saleItem is CreditNoteService ||
                   widget.editing ||
-                  enabledOnlyEcommerce,
+                  eCommerceMode,
               validator: (val) => val!.isEmpty ? 'CAMPO OBLIGATORIO' : null,
               onChanged: _onChangedQuantity,
               decoration: InputDecoration(
@@ -347,7 +390,6 @@ class _InvoiceItemGeneratorWidgetState
                             ),
                             IconButton(
                                 onPressed: () {
-                                  print(startQuantity);
                                   if (widget.saleItem.quantity! ==
                                       startQuantity) {
                                     return;
@@ -372,18 +414,25 @@ class _InvoiceItemGeneratorWidgetState
           SizedBox(
             width: kDefaultPadding,
           ),
-          CustomDropdownFormField(
-              title: title,
-              initialValue: currenId,
-              saleItem: widget.saleItem,
-              elements: elements,
-              enabled: !enabledOnlyEcommerce,
-              validator: (val) {
-                return val == null ? 'CAMPO OBLIGATORIO' : null;
-              },
-              onChanged: (element, option) {
-                _onSelected(option);
-              }),
+          SizedBox(
+            width: 250,
+            child: SelectorItemWidget<SaleElement>(
+                context: context,
+                title: title,
+                initialValue: el,
+                enabled: widget.saleItem is SaleItemProduct ||
+                    widget.saleItem is SaleItemService,
+                validator: (val) {
+                  return el?.id == null ? 'CAMPO OBLIGATORIO' : null;
+                },
+                screen: widget.saleItem is SaleItemService
+                    ? ServicesPage(selectedMode: true)
+                    : ProductsPage(selectedMode: true),
+                onChanged: (element) {
+                  el = element;
+                  _onSelected(el);
+                }),
+          ),
           SizedBox(
             width: kDefaultPadding,
           ),
@@ -399,14 +448,27 @@ class _InvoiceItemGeneratorWidgetState
             width: kDefaultPadding,
           ),
           SizedBox(
-            width: 150,
+            width: 250,
             child: DropdownButtonFormField<int>(
-                decoration: InputDecoration(labelText: 'DESCUENTO'),
-                items: [],
+                initialValue: discountId,
+                isExpanded: true,
+                decoration: InputDecoration(
+                    labelText: 'DESCUENTO',
+                    suffixIcon:
+                        IconButton(onPressed: () {}, icon: Icon(Icons.add))),
+                items: List.generate(discounts.length, (index) {
+                  var discount = discounts[index];
+                  return DropdownMenuItem(
+                      value: discount.id, child: Text(discount.name ?? ''));
+                }),
                 onChanged: widget.saleItem is CreditNoteProduct ||
                         widget.saleItem is CreditNoteService
                     ? null
-                    : (option) {}),
+                    : (id) {
+                        discountId = id;
+                        widget.saleItem.discountId = discountId;
+                        _calc();
+                      }),
           ),
           SizedBox(
             width: kDefaultPadding,

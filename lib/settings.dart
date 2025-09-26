@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:uresax_invoice_sys/models/bank.dart';
 import 'package:uresax_invoice_sys/models/company.dart';
 import 'package:uresax_invoice_sys/models/currency.dart';
+import 'package:uresax_invoice_sys/models/discount.dart';
 import 'package:uresax_invoice_sys/models/ncftype.dart';
 import 'package:uresax_invoice_sys/models/override.codes.dart';
 import 'package:uresax_invoice_sys/models/payment.method.dart';
@@ -44,6 +45,8 @@ List<OverrideCode> overrideCodes = [];
 List<Providers> providers = [];
 
 List<WareHouses> wareHouses = [];
+
+List<Discount> discounts = [];
 
 const double kDefaultPadding = 20;
 
