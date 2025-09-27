@@ -115,7 +115,8 @@ class _OrdenItemGeneratorWidgetState extends State<OrdenItemGeneratorWidget> {
                 title: 'SELECCIONAR PRODUCTO',
                 initialValue: selectedProduct,
                 enabled: isOrdenItem,
-                screen: ProductsPage(selectedMode: true),
+                screen:
+                    ProductsPage(selectedMode: true, isOrdenGenerator: true),
                 onChanged: (xproduct) {
                   selectedProduct = xproduct;
                   _calc();

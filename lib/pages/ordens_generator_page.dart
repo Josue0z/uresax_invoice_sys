@@ -82,7 +82,7 @@ class _OrdensGeneratorPageState extends State<OrdensGeneratorPage> {
         name: widget.ordenModel.driverName,
         phone: widget.ordenModel.driverPhone,
         email: widget.ordenModel.driverEmail);
-    print(driver);
+
     setState(() {});
     super.initState();
   }

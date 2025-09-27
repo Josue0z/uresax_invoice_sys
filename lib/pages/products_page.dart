@@ -4,10 +4,13 @@ import 'package:uresax_invoice_sys/models/product.dart';
 import 'package:uresax_invoice_sys/models/warehouse.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/utils/extensions.dart';
+import 'package:uresax_invoice_sys/utils/functions.dart';
 
 class ProductsPage extends StatefulWidget {
   bool selectedMode;
-  ProductsPage({super.key, this.selectedMode = false});
+  bool isOrdenGenerator;
+  ProductsPage(
+      {super.key, this.selectedMode = false, this.isOrdenGenerator = false});
 
   @override
   State<ProductsPage> createState() => _ProductsPageState();
@@ -90,7 +93,15 @@ class _ProductsPageState extends State<ProductsPage> {
               minVerticalPadding: kDefaultPadding,
               onTap: widget.selectedMode
                   ? () {
-                      Navigator.pop(context, product);
+                      try {
+                        if (product.quantity == 0 && !widget.isOrdenGenerator) {
+                          throw 'NO EXISTEN ${product.name} EN EL INVENTARIO';
+                        }
+                        Navigator.pop(context, product);
+                      } catch (e) {
+                        showTopSnackBar(context,
+                            message: e.toString(), color: Colors.red);
+                      }
                     }
                   : null,
               leading: Container(
@@ -112,7 +123,7 @@ class _ProductsPageState extends State<ProductsPage> {
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               subtitle: Text(
-                  '${product.wareHouseName} - ${product.providerName} - ${product.price?.toCoin()}'),
+                  '${product.wareHouseName} - ${product.providerName} - ${product.categoryName} / ${product.price?.toCoin()}'),
               trailing: Wrap(
                 runAlignment: WrapAlignment.center,
                 alignment: WrapAlignment.center,

@@ -37,7 +37,9 @@ class Products implements SaleElement {
       this.wareHouseId,
       this.wareHouseName,
       this.code,
-      this.cost});
+      this.cost,
+      this.categoryId,
+      this.categoryName});
 
   Color get color {
     if (quantity == null) Colors.red;
@@ -50,7 +52,7 @@ class Products implements SaleElement {
       final conne = SqlConector.connection;
       var result = await conne?.execute(
           Sql.named(
-              '''insert into public."Products"(name, price, quantity,chassis,"licensePlate","taxId","providerId","wareHouseId","code",cost) values(@name,@price,@quantity,@chassis,@licensePlate,@taxId,@providerId,@wareHouseId,@code,@cost) RETURNING *'''),
+              '''insert into public."Products"(name, price, quantity,chassis,"licensePlate","taxId","providerId","wareHouseId","code",cost,"categoryId") values(@name,@price,@quantity,@chassis,@licensePlate,@taxId,@providerId,@wareHouseId,@code,@cost,@categoryId) RETURNING *'''),
           parameters: {
             'name': name,
             'price': price,
@@ -61,7 +63,8 @@ class Products implements SaleElement {
             'providerId': providerId,
             'wareHouseId': wareHouseId,
             'code': code,
-            'cost': cost
+            'cost': cost,
+            'categoryId': categoryId
           });
 
       return Products.fromMap(result!.first.toColumnMap());
@@ -75,7 +78,7 @@ class Products implements SaleElement {
       final conne = SqlConector.connection;
       var result = await conne?.execute(
           Sql.named(
-              '''update public."Products" set name = @name, price = @price, quantity = @quantity, chassis = @chassis, "licensePlate" = @licensePlate, "taxId" = @taxId, "providerId" = @providerId, "wareHouseId" = @wareHouseId, "code" = @code, cost = @cost where id = @id RETURNING *'''),
+              '''update public."Products" set name = @name, price = @price, quantity = @quantity, chassis = @chassis, "licensePlate" = @licensePlate, "taxId" = @taxId, "providerId" = @providerId, "wareHouseId" = @wareHouseId, "code" = @code, cost = @cost, "categoryId" = @categoryId where id = @id RETURNING *'''),
           parameters: {
             'id': id,
             'name': name,
@@ -87,7 +90,8 @@ class Products implements SaleElement {
             'providerId': providerId,
             'wareHouseId': wareHouseId,
             'code': code,
-            'cost': cost
+            'cost': cost,
+            'categoryId': categoryId
           });
 
       return Products.fromMap(result!.first.toColumnMap());
@@ -211,7 +215,9 @@ class Products implements SaleElement {
         wareHouseId: map['wareHouseId'],
         wareHouseName: map['wareHouseName'],
         code: map['code'],
-        cost: map['cost'] != null ? double.parse(map['cost']) : null);
+        cost: map['cost'] != null ? double.parse(map['cost']) : null,
+        categoryId: map['categoryId'],
+        categoryName: map['categoryName']);
   }
 
   String toJson() => json.encode(toMap());
@@ -274,4 +280,10 @@ class Products implements SaleElement {
 
   @override
   double? cost;
+
+  @override
+  int? categoryId;
+
+  @override
+  String? categoryName;
 }

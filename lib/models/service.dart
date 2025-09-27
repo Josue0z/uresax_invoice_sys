@@ -168,4 +168,10 @@ class Services implements SaleElement {
 
   @override
   double? cost;
+
+  @override
+  int? categoryId;
+
+  @override
+  String? categoryName;
 }

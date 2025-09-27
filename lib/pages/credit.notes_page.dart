@@ -31,9 +31,7 @@ class _CreditNotesPageState extends State<CreditNotesPage> {
     DateTime(startDate.year, startDate.month, startDate.day, 23, 59, 59)
   ];
 
-  List<Map<String, dynamic>> salesOptions = [
-    {'id': 1, 'name': 'Ver Factura'},
-  ];
+  List<Map<String, dynamic>> salesOptions = [];
 
   _showInvoice(Sale sale) async {
     try {
@@ -65,10 +63,28 @@ class _CreditNotesPageState extends State<CreditNotesPage> {
     }
   }
 
+  _generateXmlFile(Sale sale) async {
+    try {
+      var dir = await getUresaxInvoiceDir();
+      var file = File(path.join(dir.path, 'VENTAS',
+          sale.createdAt?.format(payload: 'YYYYMM'), 'XML', '${sale.ncf}.xml'));
+      await file.create(recursive: true);
+      await file.writeAsString(sale.ecfXmlFirmado ?? '');
+
+      await OpenFile.open(file.path);
+    } catch (e) {
+      showTopSnackBar(context, message: e.toString(), color: Colors.red);
+    }
+  }
+
   _onSelectedSaleOption(int? option, Sale sale) {
     switch (option) {
       case 1:
         _showInvoice(sale);
+        break;
+
+      case 2:
+        _generateXmlFile(sale);
         break;
 
       default:
@@ -105,6 +121,14 @@ class _CreditNotesPageState extends State<CreditNotesPage> {
         itemCount: creditNotes.length,
         itemBuilder: (ctx, index) {
           var item = creditNotes[index];
+          salesOptions = [
+            {'id': 1, 'name': 'Ver Factura'},
+          ];
+
+          if (item.ecfXmlFirmado != null) {
+            salesOptions
+                .add({'id': 2, 'name': 'Generar Archivo XML del ${item.ncf}'});
+          }
           return ListTile(
             minVerticalPadding: kDefaultPadding,
             leading: Container(
@@ -139,6 +163,7 @@ class _CreditNotesPageState extends State<CreditNotesPage> {
                     itemBuilder: (ctx) {
                       return List.generate(salesOptions.length, (index) {
                         var option = salesOptions[index];
+
                         return PopupMenuItem(
                             value: option['id'], child: Text(option['name']));
                       });

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:moment_dart/moment_dart.dart';
 import 'package:postgres/postgres.dart';
 import 'package:uresax_invoice_sys/apis/sql.dart';
+import 'package:uresax_invoice_sys/models/product.dart';
 import 'package:uresax_invoice_sys/models/sale.abs.dart';
 import 'package:uresax_invoice_sys/models/sale.item.abs.dart';
 import 'package:uresax_invoice_sys/models/sale.item.product.dart';
@@ -370,11 +371,12 @@ class SaleProduct implements Sale {
 
         var result = await conne?.execute(
             Sql.named(
-                '''select * from public."Products" where id = @id and quantity > 0'''),
+                '''select * from public."Products" where id = @id and quantity < ${item.quantity}'''),
             parameters: {'id': item.productId});
 
-        if (result != null && result.isEmpty) {
-          throw 'EL PRODUCTO ${item.productName} NO ESTA DISPONIBLE';
+        if (result != null && result.isNotEmpty) {
+          var product = Products.fromMap(result.first.toColumnMap());
+          throw 'EL PRODUCTO ${item.productName} TIENE ${product.quantity} Y SE ESTA COMPRANDO ${item.quantity}';
         }
       }
 

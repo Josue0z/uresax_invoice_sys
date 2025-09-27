@@ -99,7 +99,9 @@ class _RncQueryWidgetState extends State<RncQueryWidget> {
               ? 'CAMPO OBLIGATORIO'
               : !(val.length == 9 || val.length == 11)
                   ? 'LA CANTIDAD DE DIGITOS DEBE SER 9 O 11'
-                  : null,
+                  : val == company!.rncOrId!.replaceAll('-', '')
+                      ? 'EL RNC/CEDULA DEL CLIENTE ES IGUAL AL EMISOR DE LA FACTURA'
+                      : null,
           decoration: InputDecoration(
               labelText: 'RNC/CEDULA',
               hintText: 'IDENTIFICACION',

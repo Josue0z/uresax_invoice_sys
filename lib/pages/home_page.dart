@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:uresax_invoice_sys/modals/company.editor.modal.dart';
@@ -12,6 +14,7 @@ import 'package:uresax_invoice_sys/models/sale.item.product.dart';
 import 'package:uresax_invoice_sys/models/sale.item.service.dart';
 import 'package:uresax_invoice_sys/models/sale.product.dart';
 import 'package:uresax_invoice_sys/models/sale.service.dart';
+import 'package:uresax_invoice_sys/pages/categories_page.dart';
 import 'package:uresax_invoice_sys/pages/clients_page.dart';
 import 'package:uresax_invoice_sys/pages/credit.notes_page.dart';
 import 'package:uresax_invoice_sys/pages/invoice_generator_page.dart';
@@ -68,6 +71,11 @@ class _HomePageState extends State<HomePage> {
       'svg': 'assets/svgs/undraw_groceries_4via.svg'
     },
     {
+      'id': 16,
+      'title': 'VER CATEGORIAS',
+      'svg': 'assets/svgs/undraw_logistics_xpdj.svg'
+    },
+    {
       'id': 13,
       'title': 'PROVEEDORES',
       'svg': 'assets/svgs/undraw_order-delivered_puaw.svg'
@@ -111,7 +119,7 @@ class _HomePageState extends State<HomePage> {
       'id': 12,
       'title': 'LISTA NCFS AGREGADOS',
       'svg': 'assets/svgs/undraw_timeline_2gfy.svg'
-    }
+    },
   ];
 
   late List<Map<String, dynamic>> defaultOptions = [];
@@ -194,6 +202,11 @@ class _HomePageState extends State<HomePage> {
         context, MaterialPageRoute(builder: (ctx) => OrdensPurchasesPage()));
   }
 
+  _showCategoriesPage() async {
+    await Navigator.push(
+        context, MaterialPageRoute(builder: (ctx) => CategoriesPage()));
+  }
+
   _showPage(int id) {
     switch (id) {
       case 1:
@@ -246,6 +259,10 @@ class _HomePageState extends State<HomePage> {
 
       case 15:
         _showOrdensPurchasesPage();
+        break;
+
+      case 16:
+        _showCategoriesPage();
         break;
       default:
     }
@@ -455,35 +472,66 @@ class _HomePageState extends State<HomePage> {
                       crossAxisCount: 4),
                   itemBuilder: (ctx, i) {
                     var option = options[i];
-                    return GestureDetector(
-                      onTap: () {
-                        _showPage(option['id']);
-                      },
-                      child: Card(
-                        shape: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(30),
-                            borderSide: BorderSide(style: BorderStyle.none)),
-                        child: Center(
-                            child: Padding(
-                                padding: EdgeInsets.all(kDefaultPadding),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    SvgPicture.asset(option['svg'], width: 100),
-                                    SizedBox(height: kDefaultPadding),
-                                    Text(option['title'],
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodySmall,
-                                        textAlign: TextAlign.center)
-                                  ],
-                                ))),
-                      ),
-                    );
+                    return _CardHover(
+                        option: option,
+                        onTap: () {
+                          _showPage(option['id']);
+                        });
                   }),
             )
           ],
         ));
+  }
+}
+
+class _CardHover extends StatefulWidget {
+  final Map<String, dynamic> option;
+  VoidCallback onTap;
+
+  _CardHover({required this.option, required this.onTap});
+
+  @override
+  State<_CardHover> createState() => __CardHoverState();
+}
+
+class __CardHoverState extends State<_CardHover> {
+  bool _isHovered = false;
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+          duration: Duration(seconds: 1),
+          child: Card(
+              clipBehavior: Clip.hardEdge,
+              shape: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30),
+                  borderSide: BorderSide(
+                      style: BorderStyle.solid,
+                      color: _isHovered
+                          ? Theme.of(context).primaryColor
+                          : Colors.transparent)),
+              child: Ink(
+                child: InkWell(
+                  onTap: widget.onTap,
+                  child: Center(
+                      child: Padding(
+                    padding: EdgeInsets.all(kDefaultPadding),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SvgPicture.asset(widget.option['svg'], width: 100),
+                        SizedBox(height: kDefaultPadding),
+                        Text(widget.option['title'],
+                            style: Theme.of(context).textTheme.bodySmall,
+                            textAlign: TextAlign.center)
+                      ],
+                    ),
+                  )),
+                ),
+              ))),
+    );
   }
 }

@@ -83,12 +83,14 @@ class _CompanyEditorModalState extends State<CompanyEditorModal> {
             ),
             TextFormField(
               controller: name,
+              readOnly: true,
               decoration: InputDecoration(
-                  labelText: 'NOMBRE', hintText: 'Escribir algo...'),
+                  labelText: 'RAZON SOCIAL', hintText: 'Escribir algo...'),
             ),
             SizedBox(height: kDefaultPadding),
             TextFormField(
               controller: identification,
+              readOnly: true,
               decoration: InputDecoration(
                   labelText: 'RNC/CEDULA', hintText: 'Escribir algo...'),
             ),

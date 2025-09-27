@@ -32,12 +32,24 @@ void showTopSnackBar(BuildContext context,
           borderRadius: BorderRadius.circular(10),
           color: color,
           child: Padding(
-            padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-            child: Text(
-              message,
-              style: TextStyle(color: fontColor, fontSize: 16),
-            ),
-          ),
+              padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+              child: Row(
+                children: [
+                  Expanded(
+                      child: Text(
+                    message,
+                    style: TextStyle(color: fontColor, fontSize: 16),
+                  )),
+                  IconButton(
+                      onPressed: () {
+                        animationController.reverse().then((_) {
+                          overlayEntry.remove();
+                          animationController.dispose();
+                        });
+                      },
+                      icon: Icon(Icons.close, color: Colors.white))
+                ],
+              )),
         ),
       ),
     ),
@@ -49,11 +61,14 @@ void showTopSnackBar(BuildContext context,
   animationController.forward();
 
   // Remover el SnackBar después de unos segundos
-  Future.delayed(Duration(seconds: 2), () {
-    animationController.reverse().then((_) {
-      overlayEntry.remove();
-      animationController.dispose();
-    });
+
+  Future.delayed(Duration(seconds: 5), () {
+    if (animationController.isForwardOrCompleted) {
+      animationController.reverse().then((_) {
+        overlayEntry.remove();
+        animationController.dispose();
+      });
+    }
   });
 }
 

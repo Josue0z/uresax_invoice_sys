@@ -1,7 +1,9 @@
 import 'package:amount_input_formatter/amount_input_formatter.dart';
 import 'package:flutter/material.dart';
+import 'package:uresax_invoice_sys/models/categorie.dart';
 import 'package:uresax_invoice_sys/models/product.dart';
 import 'package:uresax_invoice_sys/models/provider.dart';
+import 'package:uresax_invoice_sys/pages/categories_page.dart';
 import 'package:uresax_invoice_sys/pages/providers_page.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/utils/functions.dart';
@@ -36,7 +38,9 @@ class _ProductEditorModalState extends State<ProductEditorModal> {
 
   int? currentTaxId;
   int? currentWareHouseId;
+  int? currentCategoryId;
   Providers? currentProvider;
+  Category? currentCategory;
   int? currentProviderId;
   int? xxquantity = 1;
 
@@ -65,6 +69,7 @@ class _ProductEditorModalState extends State<ProductEditorModal> {
         widget.product.wareHouseId = currentWareHouseId;
         widget.product.providerId = currentProviderId;
         widget.product.code = code.text.trim();
+        widget.product.categoryId = currentCategoryId;
         if (!widget.editing) {
           await widget.product.create();
           Navigator.pop(context, 'CREATE');
@@ -91,9 +96,6 @@ class _ProductEditorModalState extends State<ProductEditorModal> {
 
   @override
   void initState() {
-    if (!eCommerceMode) {
-      widget.product.quantity = 1;
-    }
     name.value = TextEditingValue(text: widget.product.name ?? '');
 
     currentWareHouseId = widget.product.wareHouseId;
@@ -102,7 +104,12 @@ class _ProductEditorModalState extends State<ProductEditorModal> {
     currentProvider =
         Providers(id: currentProviderId, name: widget.product.providerName);
 
+    currentCategoryId = widget.product.categoryId;
+    currentCategory = Category(
+        id: widget.product.categoryId, name: widget.product.categoryName);
+
     if (widget.editing) {
+      xxquantity = widget.product.quantity;
       amount.value = amountInputFormatter.formatEditUpdate(
           TextEditingValue.empty,
           TextEditingValue(
@@ -115,10 +122,7 @@ class _ProductEditorModalState extends State<ProductEditorModal> {
     }
     code.value = TextEditingValue(text: widget.product.code ?? '');
 
-    xxquantity = widget.product.quantity;
-
-    quantity.value =
-        TextEditingValue(text: widget.product.quantity?.toString() ?? '');
+    quantity.value = TextEditingValue(text: xxquantity.toString());
     chassis.value = TextEditingValue(text: widget.product.chassis ?? '');
     licensePlate.value =
         TextEditingValue(text: widget.product.licensePlate ?? '');
@@ -190,6 +194,20 @@ class _ProductEditorModalState extends State<ProductEditorModal> {
                               },
                               screen: ProvidersPage(selectorMode: true),
                               title: 'SELECCIONA PROVEEDOR',
+                            )),
+                        Container(
+                            margin: EdgeInsets.only(bottom: kDefaultPadding),
+                            child: SelectorItemWidget<Category>(
+                              context: context,
+                              initialValue: currentCategory,
+                              validator: (val) =>
+                                  val?.id == null ? 'CAMPO OBLIGATORIO' : null,
+                              onChanged: (xcategory) {
+                                currentCategory = xcategory;
+                                currentCategoryId = xcategory?.id;
+                              },
+                              screen: CategoriesPage(selectorMode: true),
+                              title: 'SELECCIONA CATEGORIA',
                             )),
                         Container(
                           margin: EdgeInsets.only(bottom: kDefaultPadding),
@@ -280,6 +298,7 @@ class _ProductEditorModalState extends State<ProductEditorModal> {
                                     EdgeInsets.only(bottom: kDefaultPadding),
                                 child: TextFormField(
                                   controller: quantity,
+                                  readOnly: !eCommerceMode,
                                   onChanged: (val) {
                                     widget.product.quantity =
                                         int.tryParse(quantity.text) ?? 0;
