@@ -949,14 +949,6 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
   }
 
   _initAsync() async {
-    if (widget.sale is SaleService) {
-      elements = [Services(name: 'SERVICIO'), ...await Services.get()];
-    }
-
-    if (widget.sale is SaleProduct) {
-      elements = [Products(name: 'PRODUCTO'), ...await Products.get()];
-    }
-
     taxes = [Taxes(name: 'ITBIS'), ...await Taxes.get()];
     retentionsTaxes = [
       RetentionTax(name: 'RETENCION ITBIS'),
@@ -972,8 +964,11 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
     if (currentNcfTypeId != null) {
       var ncfList = await NcfsList(ncfTypeId: currentNcfTypeId).findNcf();
 
+  
       if (ncfList != null) {
         fechaVencimiento = ncfList.expirationDate!;
+        fechaVencimientoController.text =
+            fechaVencimiento.format(payload: 'DD/MM/YYYY');
       }
     }
 
