@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:localstorage/localstorage.dart';
 import 'package:moment_dart/moment_dart.dart';
+import 'package:open_file/open_file.dart';
+import 'package:path/path.dart' as path;
 import 'package:uresax_invoice_sys/apis/printers.handler.dart';
 import 'package:uresax_invoice_sys/modals/ncfs.selector.modal.dart';
 import 'package:uresax_invoice_sys/models/credit.note.item.product.dart';
@@ -25,7 +27,6 @@ import 'package:uresax_invoice_sys/models/sale.item.product.dart';
 import 'package:uresax_invoice_sys/models/sale.item.service.dart';
 import 'package:uresax_invoice_sys/models/sale.product.dart';
 import 'package:uresax_invoice_sys/models/sale.service.dart';
-import 'package:uresax_invoice_sys/models/service.dart';
 import 'package:uresax_invoice_sys/models/taxes.dart';
 import 'package:uresax_invoice_sys/models/taxpayer.dart';
 import 'package:uresax_invoice_sys/pages/printers_page.dart';
@@ -302,12 +303,15 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
 
           Navigator.pop(context);
 
-          await PrinterHandler.showPdfView(
-              context: context, bytes: await doc.save(), sale: sale);
+          var fileName='${sale.ncf}_${company?.name}.PDF';
 
-          /* await Printing.layoutPdf(
-            onLayout: (format) async => await doc.save(),
-          );*/
+         var dir = await getUresaxInvoiceDir();
+         var filePath = path.join(dir.path,'VENTAS',sale.createdAt!.format(payload:'YYYYMM'),'PDFS',fileName);  
+         var file=File(filePath);
+         await file.create(recursive: true);
+         await file.writeAsBytes(await doc.save());
+         await OpenFile.open(file.path);
+
         }
 
         showLoader(context);
@@ -822,8 +826,8 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
           direccionEmisor: company?.address ?? '',
           municipio: '',
           provincia: '',
-          telefonoEmisor1: company?.phone1 ?? '',
-          telefonoEmisor2: company?.phone2 ?? '',
+          telefonoEmisor1: '',
+          telefonoEmisor2: '',
           telefonoEmisor3: '',
           totalPaginas: '',
           rncEmisor: company?.rncOrId?.trim().replaceAll('-', '') ?? '',

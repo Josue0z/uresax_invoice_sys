@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:pdf/widgets.dart';
 import 'package:uresax_invoice_sys/models/sale.abs.dart';
 import 'package:uresax_invoice_sys/pages/pdf.view_page.dart';
 import 'package:uresax_invoice_sys/settings.dart';
@@ -52,10 +53,10 @@ class PrinterHandler {
     } else if (Platform.isWindows) {
       // Usa Adobe Reader si está disponible
       final adobePath =
-          Platform.environment['URESAX_INVOICE_ADOBE_READER_PATH'] ?? 'C:\\xxx';
+          Platform.environment['URESAX_INVOICE_ADOBE_READER_PATH'] ?? 'C:\\xxx.txt';
       if (await File(adobePath).exists()) {
         final result =
-            await Process.run(adobePath, ['/t', tempFile.path, printerName]);
+            await Process.run(adobePath, ['/p', tempFile.path]);
         if (result.exitCode != 0) {
           stderr
               .writeln('Error al imprimir con Adobe Reader: ${result.stderr}');
@@ -97,13 +98,16 @@ class PrinterHandler {
   static Future<void> showPdfView(
       {required BuildContext context,
       required List<int> bytes,
+      required Document document,
       required Sale sale}) async {
     try {
+    
       await Navigator.push(
           context,
           MaterialPageRoute(
               builder: (ctx) => PDFScreen(
                     bytes: bytes,
+                    document: document,
                     fileName: '${sale.ncf}_${company?.name}.PDF',
                   )));
     } catch (e) {
