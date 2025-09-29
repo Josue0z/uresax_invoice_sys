@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:uresax_invoice_sys/modals/warehouses.editor.modal.dart';
 import 'package:uresax_invoice_sys/models/warehouse.dart';
 import 'package:uresax_invoice_sys/settings.dart';
@@ -13,6 +14,84 @@ class WareHousesPage extends StatefulWidget {
 
 class _WareHousesPageState extends State<WareHousesPage> {
   List<WareHouses> wareHouses = [];
+  Future? future;
+
+  Widget get contentFilled {
+    return ListView.separated(
+        itemCount: wareHouses.length,
+        separatorBuilder: (ctx, i) => const Divider(),
+        itemBuilder: (ctx, index) {
+          var wareHouse = wareHouses[index];
+          return ListTile(
+            minVerticalPadding: kDefaultPadding,
+            leading: Container(
+              width: 80,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(90),
+                color: Theme.of(context).primaryColor.withOpacity(0.04),
+              ),
+              child: Center(
+                child: Icon(
+                  Icons.inventory_2_outlined,
+                  color: Theme.of(context).primaryColor,
+                  size: 24,
+                ),
+              ),
+            ),
+            title: Text(wareHouse.name ?? ''),
+            onTap: widget.selectorMode
+                ? () {
+                    _onSelected(wareHouse);
+                  }
+                : null,
+            trailing: Wrap(
+              children: [
+                widget.selectorMode
+                    ? IconButton(
+                        onPressed: () {
+                          _onSelected(wareHouse);
+                        },
+                        icon: Icon(Icons.arrow_right_outlined))
+                    : SizedBox(),
+                IconButton(
+                    onPressed: () {
+                      _showWareHousesEditorModal(context,
+                          wareHouse: wareHouse, editing: true);
+                    },
+                    icon: Icon(Icons.edit))
+              ],
+            ),
+          );
+        });
+  }
+
+  Widget get contentEmpty {
+    return Center(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SvgPicture.asset('assets/svgs/undraw_terms_sx63.svg', width: 250)
+        ],
+      ),
+    );
+  }
+
+  Widget get contentLoading {
+    return Center(
+      child: CircularProgressIndicator(),
+    );
+  }
+
+  Widget contentError(dynamic error) {
+    return Center(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [Text(error.toString())],
+      ),
+    );
+  }
 
   _onSelected(WareHouses wareHouse) {
     Navigator.pop(context, wareHouse);
@@ -30,17 +109,16 @@ class _WareHousesPageState extends State<WareHousesPage> {
       },
     ).then((event) async {
       if (event != null) {
-        if (event != null) {
-          wareHouses = await WareHouses.get();
-          setState(() {});
-        }
+        setState(() {
+          future = _initAsync();
+        });
       }
     });
   }
 
-  _initAsync() async {
+  _initAsync([String? words]) async {
     try {
-      wareHouses = await WareHouses.get();
+      wareHouses = await WareHouses.get(search: words);
 
       setState(() {});
     } catch (e) {
@@ -50,7 +128,9 @@ class _WareHousesPageState extends State<WareHousesPage> {
 
   @override
   void initState() {
-    _initAsync();
+    setState(() {
+      future = _initAsync();
+    });
     super.initState();
   }
 
@@ -70,8 +150,9 @@ class _WareHousesPageState extends State<WareHousesPage> {
                 height: 50,
                 child: TextFormField(
                   onChanged: (words) async {
-                    wareHouses = await WareHouses.get(search: words);
-                    setState(() {});
+                    setState(() {
+                      future = _initAsync(words);
+                    });
                   },
                   decoration: InputDecoration(
                       hintText: 'Nombre...',
@@ -85,51 +166,22 @@ class _WareHousesPageState extends State<WareHousesPage> {
           )
         ],
       ),
-      body: ListView.separated(
-          itemCount: wareHouses.length,
-          separatorBuilder: (ctx, i) => const Divider(),
-          itemBuilder: (ctx, index) {
-            var wareHouse = wareHouses[index];
-            return ListTile(
-              minVerticalPadding: kDefaultPadding,
-              leading: Container(
-                width: 80,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(90),
-                  color: Theme.of(context).primaryColor.withOpacity(0.04),
-                ),
-                child: Center(
-                  child: Icon(
-                    Icons.inventory_2_outlined,
-                    color: Theme.of(context).primaryColor,
-                    size: 24,
-                  ),
-                ),
-              ),
-              title: Text(wareHouse.name ?? ''),
-              onTap: widget.selectorMode
-                  ? () {
-                      _onSelected(wareHouse);
-                    }
-                  : null,
-              trailing: Wrap(
-                children: [
-                  widget.selectorMode
-                      ? IconButton(
-                          onPressed: () {
-                            _onSelected(wareHouse);
-                          },
-                          icon: Icon(Icons.arrow_right_outlined))
-                      : SizedBox(),
-                  IconButton(
-                      onPressed: () {
-                        _showWareHousesEditorModal(context,
-                            wareHouse: wareHouse, editing: true);
-                      },
-                      icon: Icon(Icons.edit))
-                ],
-              ),
-            );
+      body: FutureBuilder(
+          future: future,
+          builder: (ctx, s) {
+            if (s.connectionState == ConnectionState.waiting) {
+              return contentLoading;
+            }
+
+            if (s.hasError) {
+              return contentError(s.error);
+            }
+            if (s.connectionState == ConnectionState.done &&
+                wareHouses.isNotEmpty) {
+              return contentFilled;
+            }
+
+            return contentEmpty;
           }),
       floatingActionButton: FloatingActionButton(
           onPressed: () {

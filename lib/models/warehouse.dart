@@ -23,8 +23,9 @@ class WareHouses {
         parameters.addAll({'search': '%$search%'});
       }
 
-      var result = await conne
-          ?.execute('select * from public."WareHouses" $params order by name');
+      var result = await conne?.execute(
+          Sql.named('select * from public."WareHouses" $params order by name'),
+          parameters: parameters);
       return [
         WareHouses(name: 'SELECCIONAR ALMACEN'),
         ...result!.map((e) => WareHouses.fromMap(e.toColumnMap()))

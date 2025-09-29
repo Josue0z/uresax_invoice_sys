@@ -158,9 +158,6 @@ class _InvoiceItemGeneratorWidgetState
         (el?.price ?? widget.saleItem.net!) * (widget.saleItem.quantity ?? 1);
     double d = 0;
 
-    discountEl = discounts.firstWhere((e) => e.id == discountId,
-        orElse: () => Discount());
-
     if (widget.saleItem is SaleItemService ||
         widget.saleItem is SaleItemProduct) {
       widget.saleItem.discount = 0;

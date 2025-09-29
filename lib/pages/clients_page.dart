@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:uresax_invoice_sys/modals/client.editor.modal.dart';
 import 'package:uresax_invoice_sys/models/client.dart';
 import 'package:uresax_invoice_sys/settings.dart';
+import 'package:uresax_invoice_sys/utils/functions.dart';
 
 class ClientsPage extends StatefulWidget {
   bool selectorMode;
@@ -16,9 +18,10 @@ class ClientsPage extends StatefulWidget {
 
 class _ClientsPageState extends State<ClientsPage> {
   List<Client> clients = [];
-  _initAsync() async {
+  Future? future;
+  _initAsync([String? words]) async {
     try {
-      clients = await Client.get();
+      clients = await Client.get(search: words);
       setState(() {});
     } catch (e) {
       print(e);
@@ -35,9 +38,86 @@ class _ClientsPageState extends State<ClientsPage> {
     Navigator.pop(context, client);
   }
 
+  Widget get contentFilled {
+    return ListView.separated(
+        separatorBuilder: (ctx, i) => const Divider(),
+        itemCount: clients.length,
+        itemBuilder: (ctx, index) {
+          var client = clients[index];
+          return ListTile(
+            minVerticalPadding: kDefaultPadding,
+            onTap: widget.selectorMode ? () => _selectedClient(client) : null,
+            leading: Container(
+              width: 80,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(90),
+                color: Theme.of(context).primaryColor.withOpacity(0.04),
+              ),
+              child: Center(
+                child: Icon(
+                  Icons.person_2,
+                  color: Theme.of(context).primaryColor,
+                  size: 24,
+                ),
+              ),
+            ),
+            title: Text(client.name ?? ''),
+            subtitle: Text(client.identification ?? ''),
+            trailing: Wrap(
+              children: [
+                IconButton(
+                    onPressed: () async {
+                      var res =
+                          await _showClientModal(client: client, editing: true);
+                      if (res == 'UPDATE') {
+                        setState(() {
+                          future = _initAsync();
+                        });
+                        showTopSnackBar(context,
+                            message: 'SE ACTUALIZO EL CLIENTE',
+                            color: Colors.green);
+                      }
+                    },
+                    icon: Icon(Icons.edit))
+              ],
+            ),
+          );
+        });
+  }
+
+  Widget get contentEmpty {
+    return Center(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SvgPicture.asset('assets/svgs/undraw_terms_sx63.svg', width: 250)
+        ],
+      ),
+    );
+  }
+
+  Widget get contentLoading {
+    return Center(
+      child: CircularProgressIndicator(),
+    );
+  }
+
+  Widget contentError(dynamic error) {
+    return Center(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [Text(error.toString())],
+      ),
+    );
+  }
+
   @override
   void initState() {
-    _initAsync();
+    setState(() {
+      future = _initAsync();
+    });
     super.initState();
   }
 
@@ -56,8 +136,9 @@ class _ClientsPageState extends State<ClientsPage> {
                 height: 50,
                 child: TextFormField(
                   onChanged: (words) async {
-                    clients = await Client.get(search: words);
-                    setState(() {});
+                    setState(() {
+                      future = _initAsync(words);
+                    });
                   },
                   decoration: InputDecoration(
                       hintText: 'Nombre...',
@@ -71,45 +152,22 @@ class _ClientsPageState extends State<ClientsPage> {
           )
         ],
       ),
-      body: ListView.separated(
-          separatorBuilder: (ctx, i) => const Divider(),
-          itemCount: clients.length,
-          itemBuilder: (ctx, index) {
-            var client = clients[index];
-            return ListTile(
-              minVerticalPadding: kDefaultPadding,
-              onTap: widget.selectorMode ? () => _selectedClient(client) : null,
-              leading: Container(
-                width: 80,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(90),
-                  color: Theme.of(context).primaryColor.withOpacity(0.04),
-                ),
-                child: Center(
-                  child: Icon(
-                    Icons.person_2,
-                    color: Theme.of(context).primaryColor,
-                    size: 24,
-                  ),
-                ),
-              ),
-              title: Text(client.name ?? ''),
-              subtitle: Text(client.identification ?? ''),
-              trailing: Wrap(
-                children: [
-                  IconButton(
-                      onPressed: () async {
-                        var res = await _showClientModal(
-                            client: client, editing: true);
-                        if (res == 'UPDATE') {
-                          clients = await Client.get();
-                          setState(() {});
-                        }
-                      },
-                      icon: Icon(Icons.edit))
-                ],
-              ),
-            );
+      body: FutureBuilder(
+          future: future,
+          builder: (ctx, s) {
+            if (s.connectionState == ConnectionState.waiting) {
+              return contentLoading;
+            }
+
+            if (s.hasError) {
+              return contentError(s.error);
+            }
+            if (s.connectionState == ConnectionState.done &&
+                clients.isNotEmpty) {
+              return contentFilled;
+            }
+
+            return contentEmpty;
           }),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
@@ -117,10 +175,11 @@ class _ClientsPageState extends State<ClientsPage> {
               client:
                   Client(identification: widget.client?.identification ?? ''));
           if (res == 'CREATE') {
-            clients = await Client.get();
-            setState(() {});
-            ScaffoldMessenger.of(context)
-                .showSnackBar(SnackBar(content: Text('SE CREO UN CLIENTE')));
+            setState(() {
+              future = _initAsync();
+            });
+            showTopSnackBar(context,
+                message: 'SE CREO UN CLIENTE', color: Colors.green);
           }
         },
         child: Icon(Icons.add),

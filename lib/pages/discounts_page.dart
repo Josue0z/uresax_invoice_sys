@@ -13,6 +13,7 @@ class DiscountsPage extends StatefulWidget {
 
 class _DiscountsPageState extends State<DiscountsPage> {
   List<Discount> discounts = [];
+  Future? future;
 
   _showModal({bool editing = false, required Discount discount}) async {
     var res = await showDialog(
@@ -21,13 +22,15 @@ class _DiscountsPageState extends State<DiscountsPage> {
             DiscountEditorModal(editing: editing, discount: discount));
 
     if (res == 'CREATE') {
-      discounts = await Discount.get();
-      setState(() {});
+      setState(() {
+        future = _initAsync();
+      });
     }
 
     if (res == 'UPDATE') {
-      discounts = await Discount.get();
-      setState(() {});
+      setState(() {
+        future = _initAsync();
+      });
     }
   }
 
@@ -81,19 +84,37 @@ class _DiscountsPageState extends State<DiscountsPage> {
     );
   }
 
-  Widget get content {
-    if (discounts.isEmpty) return contentEmpty;
-    return contentFilled;
+  Widget get contentLoading {
+    return Center(
+      child: CircularProgressIndicator(),
+    );
   }
 
-  _initAsync() async {
-    discounts = await Discount.get();
+  Widget contentError(dynamic error) {
+    return Center(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [Text(error.toString())],
+      ),
+    );
+  }
+
+  _initAsync([String? words]) async {
+    discounts = [
+      Discount(
+        name: 'DESCUENTO',
+      ),
+      ...await Discount.get()
+    ];
     setState(() {});
   }
 
   @override
   void initState() {
-    _initAsync();
+    setState(() {
+      future = _initAsync();
+    });
     super.initState();
   }
 
@@ -103,7 +124,23 @@ class _DiscountsPageState extends State<DiscountsPage> {
       appBar: AppBar(
         title: Text('DESCUENTOS (${discounts.length})'),
       ),
-      body: content,
+      body: FutureBuilder(
+          future: future,
+          builder: (ctx, s) {
+            if (s.connectionState == ConnectionState.waiting) {
+              return contentLoading;
+            }
+
+            if (s.hasError) {
+              return contentError(s.error);
+            }
+            if (s.connectionState == ConnectionState.done &&
+                discounts.isNotEmpty) {
+              return contentFilled;
+            }
+
+            return contentEmpty;
+          }),
       floatingActionButton: FloatingActionButton(
           onPressed: () {
             _showModal(discount: Discount());

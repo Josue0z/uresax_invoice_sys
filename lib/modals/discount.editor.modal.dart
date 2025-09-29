@@ -46,6 +46,15 @@ class _DiscountEditorModalState extends State<DiscountEditorModal> {
   }
 
   @override
+  void initState() {
+    name.text = widget.discount.name ?? '';
+    rate.text = widget.discount.rate?.toStringAsFixed(2) ?? '';
+    currentSymbolId = widget.discount.symbolId;
+    setState(() {});
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Dialog(
       child: Form(
@@ -97,6 +106,7 @@ class _DiscountEditorModalState extends State<DiscountEditorModal> {
                   ),
                   DropdownButtonFormField(
                       initialValue: currentSymbolId,
+                      decoration: InputDecoration(labelText: 'SIMBOLO'),
                       validator: (val) =>
                           val == null ? 'CAMPO OBLIGATORIO' : null,
                       items: List.generate(symbols.length, (index) {

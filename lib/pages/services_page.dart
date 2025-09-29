@@ -15,6 +15,7 @@ class ServicesPage extends StatefulWidget {
 
 class _ServicesPageState extends State<ServicesPage> {
   List<Services> services = [];
+  Future? future;
 
   _showModal({bool editing = false, required Services service}) async {
     var res = await showDialog(
@@ -25,21 +26,26 @@ class _ServicesPageState extends State<ServicesPage> {
             ));
 
     if (res == 'CREATE') {
-      services = await Services.get();
-      setState(() {});
+      setState(() {
+        future = _initAsync();
+      });
     }
 
     if (res == 'UPDATE') {
-      services = await Services.get();
-      setState(() {});
+      setState(() {
+        future = _initAsync();
+      });
     }
   }
 
-  _initAsync() async {
+  _initAsync([String? words]) async {
     try {
-      services = await Services.get();
+      services = await Services.get(search: words);
+    } catch (e) {
+      print(e);
+    } finally {
       setState(() {});
-    } catch (e) {}
+    }
   }
 
   Widget get contentFilled {
@@ -99,14 +105,27 @@ class _ServicesPageState extends State<ServicesPage> {
     );
   }
 
-  Widget get content {
-    if (services.isEmpty) return contentEmpty;
-    return contentFilled;
+  Widget get contentLoading {
+    return Center(
+      child: CircularProgressIndicator(),
+    );
+  }
+
+  Widget contentError(dynamic error) {
+    return Center(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [Text(error.toString())],
+      ),
+    );
   }
 
   @override
   void initState() {
-    _initAsync();
+    setState(() {
+      future = _initAsync();
+    });
     super.initState();
   }
 
@@ -125,8 +144,9 @@ class _ServicesPageState extends State<ServicesPage> {
                 height: 50,
                 child: TextFormField(
                   onChanged: (words) async {
-                    services = await Services.get(search: words);
-                    setState(() {});
+                    setState(() {
+                      future = _initAsync(words);
+                    });
                   },
                   decoration: InputDecoration(
                       hintText: 'Nombre...',
@@ -140,7 +160,23 @@ class _ServicesPageState extends State<ServicesPage> {
           )
         ],
       ),
-      body: content,
+      body: FutureBuilder(
+          future: future,
+          builder: (ctx, s) {
+            if (s.connectionState == ConnectionState.waiting) {
+              return contentLoading;
+            }
+
+            if (s.hasError) {
+              return contentError(s.error);
+            }
+            if (s.connectionState == ConnectionState.done &&
+                services.isNotEmpty) {
+              return contentFilled;
+            }
+
+            return contentEmpty;
+          }),
       floatingActionButton: FloatingActionButton(
           onPressed: () => _showModal(service: Services()),
           child: Icon(Icons.add)),

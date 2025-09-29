@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:uresax_invoice_sys/modals/product.editor.modal.dart';
 import 'package:uresax_invoice_sys/models/product.dart';
-import 'package:uresax_invoice_sys/models/warehouse.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/utils/extensions.dart';
 import 'package:uresax_invoice_sys/utils/functions.dart';
@@ -19,6 +18,7 @@ class ProductsPage extends StatefulWidget {
 
 class _ProductsPageState extends State<ProductsPage> {
   List<Products> products = [];
+  Future? future;
 
   _showModal({bool editing = false, required Products product}) async {
     var res = await showDialog(
@@ -29,23 +29,25 @@ class _ProductsPageState extends State<ProductsPage> {
             ));
 
     if (res == 'CREATE') {
-      products = await Products.get();
-      setState(() {});
+      setState(() {
+        future = _initAsync();
+      });
     }
 
     if (res == 'UPDATE') {
-      products = await Products.get();
-      setState(() {});
+      setState(() {
+        future = _initAsync();
+      });
     }
   }
 
-  _initAsync() async {
+  _initAsync([String? words]) async {
     try {
-      products = await Products.get();
-      wareHouses = await WareHouses.get();
-      setState(() {});
+      products = await Products.get(search: words);
     } catch (e) {
       print(e);
+    } finally {
+      setState(() {});
     }
   }
 
@@ -133,14 +135,27 @@ class _ProductsPageState extends State<ProductsPage> {
     );
   }
 
-  Widget get content {
-    if (products.isEmpty) return contentEmpty;
-    return contentFilled;
+  Widget get contentLoading {
+    return Center(
+      child: CircularProgressIndicator(),
+    );
+  }
+
+  Widget contentError(dynamic error) {
+    return Center(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [Text(error.toString())],
+      ),
+    );
   }
 
   @override
   void initState() {
-    _initAsync();
+    setState(() {
+      future = _initAsync();
+    });
     super.initState();
   }
 
@@ -159,8 +174,9 @@ class _ProductsPageState extends State<ProductsPage> {
                 height: 50,
                 child: TextFormField(
                   onChanged: (words) async {
-                    products = await Products.get(search: words);
-                    setState(() {});
+                    setState(() {
+                      future = _initAsync(words);
+                    });
                   },
                   decoration: InputDecoration(
                       hintText: 'Nombre...',
@@ -174,7 +190,23 @@ class _ProductsPageState extends State<ProductsPage> {
           )
         ],
       ),
-      body: content,
+      body: FutureBuilder(
+          future: future,
+          builder: (ctx, s) {
+            if (s.connectionState == ConnectionState.waiting) {
+              return contentLoading;
+            }
+
+            if (s.hasError) {
+              return contentError(s.error);
+            }
+            if (s.connectionState == ConnectionState.done &&
+                products.isNotEmpty) {
+              return contentFilled;
+            }
+
+            return contentEmpty;
+          }),
       floatingActionButton: FloatingActionButton(
           onPressed: () {
             _showModal(product: Products());
