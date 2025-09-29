@@ -52,7 +52,7 @@ class PrinterHandler {
     } else if (Platform.isWindows) {
       // Usa Adobe Reader si está disponible
       final adobePath =
-          Platform.environment['URESAX_INVOICE_ADOBE_READER_PATH'] ?? '</Path>';
+          Platform.environment['URESAX_INVOICE_ADOBE_READER_PATH'] ?? 'C:\\xxx';
       if (await File(adobePath).exists()) {
         final result =
             await Process.run(adobePath, ['/t', tempFile.path, printerName]);

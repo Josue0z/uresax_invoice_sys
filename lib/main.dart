@@ -17,6 +17,7 @@ import 'package:uresax_invoice_sys/models/payment.method.dart';
 import 'package:uresax_invoice_sys/models/payment.type.dart';
 import 'package:uresax_invoice_sys/models/permission.dart';
 import 'package:uresax_invoice_sys/models/role.dart';
+import 'package:uresax_invoice_sys/models/symbol.dart';
 import 'package:uresax_invoice_sys/models/taxes.dart';
 import 'package:uresax_invoice_sys/models/type.income.dart';
 import 'package:uresax_invoice_sys/models/warehouse.dart';
@@ -133,6 +134,8 @@ class _MyAppState extends State<MyApp> {
       ),
       ...await Discount.get()
     ];
+
+    symbols = [SymbolModel(name: 'SIMBOLO'), ...await SymbolModel.get()];
 
     await isValidCertFilePath();
 

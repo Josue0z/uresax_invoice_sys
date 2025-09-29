@@ -8,7 +8,7 @@ class SelectorItemWidget<T> extends FormField<T> {
       required BuildContext context,
       required String title,
       required Widget screen,
-      required void Function(T?) onChanged,
+      required void Function(T?)? onChanged,
       super.initialValue,
       super.validator,
       super.autovalidateMode = AutovalidateMode.disabled,
@@ -45,7 +45,9 @@ class SelectorItemWidget<T> extends FormField<T> {
                                       state.didChange(res);
                                       state.save();
                                       state.validate();
-                                      onChanged(res);
+                                      if (onChanged != null) {
+                                        onChanged(res);
+                                      }
                                     }
                                   },
                             child: Padding(

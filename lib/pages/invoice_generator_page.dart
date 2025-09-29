@@ -964,7 +964,6 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
     if (currentNcfTypeId != null) {
       var ncfList = await NcfsList(ncfTypeId: currentNcfTypeId).findNcf();
 
-  
       if (ncfList != null) {
         fechaVencimiento = ncfList.expirationDate!;
         fechaVencimientoController.text =
@@ -1205,17 +1204,18 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                   const SizedBox(
                     width: kDefaultPadding,
                   ),
-                  IconButton(
-                      onPressed: () async {
-                        await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (ctx) => PrintersPage()));
-                      },
-                      icon: Icon(Icons.print)),
-                  SizedBox(
-                    width: kDefaultPadding,
-                  ),
+                  eCommerceMode
+                      ? IconButton(
+                          onPressed: () async {
+                            await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (ctx) => PrintersPage()));
+                          },
+                          icon: Icon(Icons.print))
+                      : SizedBox(
+                          width: kDefaultPadding,
+                        ),
                 ],
               )
             ],

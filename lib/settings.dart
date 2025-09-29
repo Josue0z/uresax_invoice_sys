@@ -15,6 +15,7 @@ import 'package:uresax_invoice_sys/models/retention.isr.dart';
 import 'package:uresax_invoice_sys/models/retention.tax.dart';
 import 'package:uresax_invoice_sys/models/role.dart';
 import 'package:uresax_invoice_sys/models/sale.element.abs.dart';
+import 'package:uresax_invoice_sys/models/symbol.dart';
 import 'package:uresax_invoice_sys/models/taxes.dart';
 import 'package:uresax_invoice_sys/models/type.income.dart';
 import 'package:uresax_invoice_sys/models/user.dart';
@@ -47,6 +48,8 @@ List<Providers> providers = [];
 List<WareHouses> wareHouses = [];
 
 List<Discount> discounts = [];
+
+List<SymbolModel> symbols = [];
 
 const double kDefaultPadding = 20;
 

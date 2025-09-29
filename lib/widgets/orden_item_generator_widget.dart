@@ -8,10 +8,14 @@ import 'package:uresax_invoice_sys/widgets/selector.item.widget.dart';
 
 class OrdenItemGeneratorWidget extends StatefulWidget {
   final WareHouseElementItem ordenItemModel;
+  int index;
 
   Function(WareHouseElementItem) onChanged;
   OrdenItemGeneratorWidget(
-      {super.key, required this.ordenItemModel, required this.onChanged});
+      {super.key,
+      required this.ordenItemModel,
+      required this.index,
+      required this.onChanged});
 
   @override
   State<OrdenItemGeneratorWidget> createState() =>
@@ -90,6 +94,7 @@ class _OrdenItemGeneratorWidgetState extends State<OrdenItemGeneratorWidget> {
             child: TextFormField(
               controller: quantity,
               readOnly: !isOrdenItem,
+              validator: (val) => val!.isEmpty ? 'CAMPO OBLIGATORIO' : null,
               onChanged: (val) {
                 var xquantity = int.tryParse(val) ?? 1;
                 widget.ordenItemModel.quantity = xquantity;
@@ -103,6 +108,7 @@ class _OrdenItemGeneratorWidgetState extends State<OrdenItemGeneratorWidget> {
             width: 150,
             child: TextFormField(
               controller: units,
+              validator: (val) => val!.isEmpty ? 'CAMPO OBLIGATORIO' : null,
               readOnly: true,
               decoration: InputDecoration(labelText: 'UNIDADES', hintText: '0'),
             ),
@@ -115,6 +121,8 @@ class _OrdenItemGeneratorWidgetState extends State<OrdenItemGeneratorWidget> {
                 title: 'SELECCIONAR PRODUCTO',
                 initialValue: selectedProduct,
                 enabled: isOrdenItem,
+                validator: (val) =>
+                    val?.id == null ? 'CAMPO OBLIGATORIO' : null,
                 screen:
                     ProductsPage(selectedMode: true, isOrdenGenerator: true),
                 onChanged: (xproduct) {
@@ -124,18 +132,17 @@ class _OrdenItemGeneratorWidgetState extends State<OrdenItemGeneratorWidget> {
           ),
           Container(
             width: 150,
-            height: 50,
             margin: EdgeInsets.only(right: kDefaultPadding),
             child: TextFormField(
               controller: price,
               readOnly: true,
+              validator: (val) => val!.isEmpty ? 'CAMPO OBLIGATORIO' : null,
               decoration:
                   InputDecoration(labelText: 'PRECIO', hintText: '0.00'),
             ),
           ),
           Container(
             width: 150,
-            height: 50,
             child: TextFormField(
               controller: totalAmount,
               readOnly: true,

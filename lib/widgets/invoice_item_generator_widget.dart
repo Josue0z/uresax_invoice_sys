@@ -15,6 +15,7 @@ import 'package:uresax_invoice_sys/models/sale.item.service.dart';
 import 'package:uresax_invoice_sys/models/sale.product.dart';
 import 'package:uresax_invoice_sys/models/service.dart';
 import 'package:uresax_invoice_sys/models/taxes.dart';
+import 'package:uresax_invoice_sys/pages/discounts_page.dart';
 import 'package:uresax_invoice_sys/pages/products_page.dart';
 import 'package:uresax_invoice_sys/pages/services_page.dart';
 import 'package:uresax_invoice_sys/settings.dart';
@@ -298,6 +299,9 @@ class _InvoiceItemGeneratorWidgetState
 
     discountId = widget.saleItem.discountId;
 
+    discountEl = Discount(
+        id: widget.saleItem.discountId, name: widget.saleItem.discountName);
+
     currentTaxId = widget.saleItem.taxId;
     currentRetentionIsrId = widget.saleItem.retentionIsrId;
     currentRetentionTaxId = widget.saleItem.retentionTaxId;
@@ -449,24 +453,18 @@ class _InvoiceItemGeneratorWidgetState
           ),
           SizedBox(
             width: 250,
-            child: DropdownButtonFormField<int>(
-                initialValue: discountId,
-                isExpanded: true,
-                decoration: InputDecoration(
-                    labelText: 'DESCUENTO',
-                    suffixIcon:
-                        IconButton(onPressed: () {}, icon: Icon(Icons.add))),
-                items: List.generate(discounts.length, (index) {
-                  var discount = discounts[index];
-                  return DropdownMenuItem(
-                      value: discount.id, child: Text(discount.name ?? ''));
-                }),
+            child: SelectorItemWidget<Discount>(
+                context: context,
+                initialValue: discountEl,
+                title: 'DESCUENTO',
+                screen: DiscountsPage(selectorMode: true),
                 onChanged: widget.saleItem is CreditNoteProduct ||
                         widget.saleItem is CreditNoteService
                     ? null
-                    : (id) {
-                        discountId = id;
-                        widget.saleItem.discountId = discountId;
+                    : (xdiscount) {
+                        discountEl = xdiscount;
+                        discountId = xdiscount?.id;
+                        widget.saleItem.discountId = discountEl?.id;
                         _calc();
                       }),
           ),

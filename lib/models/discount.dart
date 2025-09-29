@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:postgres/postgres.dart';
 import 'package:uresax_invoice_sys/apis/sql.dart';
 
 class Discount {
@@ -21,6 +22,39 @@ class Discount {
       var result = await conne?.execute('select * from public."DiscountsView"');
       return result?.map((e) => Discount.fromMap(e.toColumnMap())).toList() ??
           [];
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<Discount> create() async {
+    try {
+      final conne = SqlConector.connection;
+      var result = await conne?.execute(
+          Sql.named(
+              '''insert into public."Discounts"(name,rate,"symbolId") values(@name,@rate,@symbolId) RETURNING *'''),
+          parameters: {'name': name, 'rate': rate, 'symbolId': symbolId});
+
+      return Discount.fromMap(result!.first.toColumnMap());
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<Discount> update() async {
+    try {
+      final conne = SqlConector.connection;
+      var result = await conne?.execute(
+          Sql.named(
+              '''update public."Discounts" set name = @name, rate = @rate, symbolId = @symbolId where id = @id RETURNING *'''),
+          parameters: {
+            'id': id,
+            'name': name,
+            'rate': rate,
+            'symbolId': symbolId
+          });
+
+      return Discount.fromMap(result!.first.toColumnMap());
     } catch (e) {
       rethrow;
     }

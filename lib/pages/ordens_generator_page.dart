@@ -24,6 +24,8 @@ class OrdensGeneratorPage extends StatefulWidget {
 class _OrdensGeneratorPageState extends State<OrdensGeneratorPage> {
   Drivers? driver;
 
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
   bool get isOrden {
     return widget.ordenModel is OrdenModel;
   }
@@ -43,25 +45,27 @@ class _OrdensGeneratorPageState extends State<OrdensGeneratorPage> {
   }
 
   _onSubmit() async {
-    try {
-      widget.ordenModel.net = totalAmount;
-      widget.ordenModel.tax = 0;
-      widget.ordenModel.total = totalAmount;
-      widget.ordenModel.amountPaid = 0;
-      widget.ordenModel.authorId = currentUser?.id;
-      widget.ordenModel.driverId = driver?.id;
+    if (_formKey.currentState!.validate()) {
+      try {
+        widget.ordenModel.net = totalAmount;
+        widget.ordenModel.tax = 0;
+        widget.ordenModel.total = totalAmount;
+        widget.ordenModel.amountPaid = 0;
+        widget.ordenModel.authorId = currentUser?.id;
+        widget.ordenModel.driverId = driver?.id;
 
-      var orden = await widget.ordenModel.create();
+        var orden = await widget.ordenModel.create();
 
-      if (orden != null) {
-        var printer = localStorage.getItem('printer') ?? '';
-        var bytes = await createDefaultOrdenTicket(entry: orden);
-        await PrinterHandler.printBytes(printer, bytes);
+        if (orden != null) {
+          var printer = localStorage.getItem('printer') ?? '';
+          var bytes = await createDefaultOrdenTicket(entry: orden);
+          await PrinterHandler.printBytes(printer, bytes);
+        }
+
+        Navigator.pop(context, 'CREATE');
+      } catch (e) {
+        showTopSnackBar(context, message: e.toString(), color: Colors.red);
       }
-
-      Navigator.pop(context, 'CREATE');
-    } catch (e) {
-      showTopSnackBar(context, message: e.toString(), color: Colors.red);
     }
   }
 
@@ -93,109 +97,118 @@ class _OrdensGeneratorPageState extends State<OrdensGeneratorPage> {
         appBar: AppBar(
           title: Text(title),
         ),
-        body: Padding(
-            padding: EdgeInsets.all(kDefaultPadding),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SingleChildScrollView(
-                    child: Column(
+        body: Form(
+            key: _formKey,
+            child: Padding(
+                padding: EdgeInsets.all(kDefaultPadding),
+                child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                        width: MediaQuery.of(context).size.width * 0.60,
-                        height: (widget.ordenModel.items!.length * 100),
+                    SingleChildScrollView(
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: Column(
-                                children: [
-                                  ...List.generate(
-                                      widget.ordenModel.items?.length ?? 0,
-                                      (index) {
-                                    var item = widget.ordenModel.items![index];
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                            width: MediaQuery.of(context).size.width * 0.60,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  child: Column(
+                                    children: [
+                                      ...List.generate(
+                                          widget.ordenModel.items?.length ?? 0,
+                                          (index) {
+                                        var item =
+                                            widget.ordenModel.items![index];
 
-                                    return OrdenItemGeneratorWidget(
-                                      ordenItemModel: item,
-                                      onChanged: (ordenItem) {
-                                        setState(() {});
-                                      },
-                                    );
-                                  }),
+                                        return OrdenItemGeneratorWidget(
+                                          ordenItemModel: item,
+                                          index: index,
+                                          onChanged: (ordenItem) {
+                                            setState(() {});
+                                          },
+                                        );
+                                      }),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            )),
+                        isOrden
+                            ? SizedBox(
+                                width: 250,
+                                height: 50,
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    widget.ordenModel.items
+                                        ?.add(OrdenItemModel());
+                                    setState(() {});
+                                  },
+                                  child: Text('AGREGAR PRODUCTO'),
+                                ),
+                              )
+                            : SizedBox(),
+                      ],
+                    )),
+                    const Divider(),
+                    Expanded(
+                        child: Container(
+                      child: Column(
+                        children: [
+                          Container(
+                            width: double.infinity,
+                            margin:
+                                EdgeInsets.symmetric(vertical: kDefaultPadding),
+                            child: SelectorItemWidget<Drivers>(
+                                context: context,
+                                initialValue: driver,
+                                title: 'SELECCIONAR CONDUCTOR',
+                                validator: (val) => val?.id == null
+                                    ? 'CAMPO OBLIGATORIO'
+                                    : null,
+                                screen: DriversPage(selectedMode: true),
+                                onChanged: (xdriver) {
+                                  driver = xdriver;
+                                  print(driver);
+                                }),
+                          ),
+                          Container(
+                              margin: EdgeInsets.only(bottom: kDefaultPadding),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                      flex: 2,
+                                      child: Text('MONTO TOTAL',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium
+                                              ?.copyWith(
+                                                  color: Theme.of(context)
+                                                      .primaryColor))),
+                                  Expanded(
+                                      child: Text(totalAmount.toDop() ?? '0.00',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium,
+                                          textAlign: TextAlign.right))
                                 ],
-                              ),
-                            ),
-                          ],
-                        )),
-                    isOrden
-                        ? SizedBox(
-                            width: 250,
+                              )),
+                          const Divider(),
+                          Container(
+                            width: double.infinity,
                             height: 50,
+                            margin:
+                                EdgeInsets.symmetric(vertical: kDefaultPadding),
                             child: ElevatedButton(
-                              onPressed: () {
-                                widget.ordenModel.items?.add(OrdenItemModel());
-                                setState(() {});
-                              },
-                              child: Text('AGREGAR PRODUCTO'),
-                            ),
+                                onPressed: _onSubmit, child: Text(btnText)),
                           )
-                        : SizedBox(),
-                  ],
-                )),
-                const Divider(),
-                Expanded(
-                    child: Container(
-                  child: Column(
-                    children: [
-                      Container(
-                        width: double.infinity,
-                        margin: EdgeInsets.symmetric(vertical: kDefaultPadding),
-                        child: SelectorItemWidget<Drivers>(
-                            context: context,
-                            initialValue: driver,
-                            title: 'SELECCIONAR CONDUCTOR',
-                            screen: DriversPage(selectedMode: true),
-                            onChanged: (xdriver) {
-                              driver = xdriver;
-                              print(driver);
-                            }),
+                        ],
                       ),
-                      Container(
-                          margin: EdgeInsets.only(bottom: kDefaultPadding),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                  flex: 2,
-                                  child: Text('MONTO TOTAL',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium
-                                          ?.copyWith(
-                                              color: Theme.of(context)
-                                                  .primaryColor))),
-                              Expanded(
-                                  child: Text(totalAmount.toDop() ?? '0.00',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium,
-                                      textAlign: TextAlign.right))
-                            ],
-                          )),
-                      const Divider(),
-                      Container(
-                        width: double.infinity,
-                        height: 50,
-                        margin: EdgeInsets.symmetric(vertical: kDefaultPadding),
-                        child: ElevatedButton(
-                            onPressed: _onSubmit, child: Text(btnText)),
-                      )
-                    ],
-                  ),
-                ))
-              ],
-            )));
+                    ))
+                  ],
+                ))));
   }
 }

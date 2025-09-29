@@ -5,6 +5,7 @@ import 'package:uresax_invoice_sys/settings.dart';
 
 class DriversPage extends StatefulWidget {
   bool selectedMode;
+
   DriversPage({super.key, this.selectedMode = false});
 
   @override
@@ -83,8 +84,10 @@ class _DriversPageState extends State<DriversPage> {
                       onPressed: () async {
                         var res = await showDialog(
                             context: context,
-                            builder: (ctx) =>
-                                DriversEditorModal(driver: driver));
+                            builder: (ctx) => DriversEditorModal(
+                                  driver: driver,
+                                  editing: true,
+                                ));
                         if (res != null) {
                           drivers = await Drivers.get();
                           setState(() {});

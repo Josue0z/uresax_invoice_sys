@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:uresax_invoice_sys/modals/product.editor.modal.dart';
 import 'package:uresax_invoice_sys/models/product.dart';
 import 'package:uresax_invoice_sys/models/warehouse.dart';
@@ -48,6 +49,95 @@ class _ProductsPageState extends State<ProductsPage> {
     }
   }
 
+  Widget get contentFilled {
+    return ListView.separated(
+        separatorBuilder: (ctx, i) => const Divider(),
+        itemCount: products.length,
+        itemBuilder: (ctx, index) {
+          var product = products[index];
+          return ListTile(
+            minVerticalPadding: kDefaultPadding,
+            onTap: widget.selectedMode
+                ? () {
+                    try {
+                      if (product.quantity == 0 && !widget.isOrdenGenerator) {
+                        throw 'NO EXISTEN ${product.name} EN EL INVENTARIO';
+                      }
+                      Navigator.pop(context, product);
+                    } catch (e) {
+                      showTopSnackBar(context,
+                          message: e.toString(), color: Colors.red);
+                    }
+                  }
+                : null,
+            leading: Container(
+              width: 80,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(90),
+                color: Theme.of(context).primaryColor.withOpacity(0.04),
+              ),
+              child: Center(
+                child: Icon(
+                  Icons.inventory_2_outlined,
+                  color: Theme.of(context).primaryColor,
+                  size: 24,
+                ),
+              ),
+            ),
+            title: Text(
+              product.name ?? '',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            subtitle: Text(
+                '${product.wareHouseName} - ${product.providerName} - ${product.categoryName} / ${product.price?.toCoin()}'),
+            trailing: Wrap(
+              runAlignment: WrapAlignment.center,
+              alignment: WrapAlignment.center,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                Container(
+                  padding: EdgeInsets.all(kDefaultPadding / 2),
+                  decoration: BoxDecoration(
+                      color: product.color.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(50)),
+                  child: Text(
+                    product.quantity.toString(),
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium
+                        ?.copyWith(color: product.color),
+                  ),
+                ),
+                SizedBox(width: kDefaultPadding),
+                IconButton(
+                    onPressed: () {
+                      _showModal(product: product, editing: true);
+                    },
+                    icon: Icon(Icons.edit))
+              ],
+            ),
+          );
+        });
+  }
+
+  Widget get contentEmpty {
+    return Center(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SvgPicture.asset('assets/svgs/undraw_product-iteration_r2wg.svg',
+              width: 250)
+        ],
+      ),
+    );
+  }
+
+  Widget get content {
+    if (products.isEmpty) return contentEmpty;
+    return contentFilled;
+  }
+
   @override
   void initState() {
     _initAsync();
@@ -84,74 +174,7 @@ class _ProductsPageState extends State<ProductsPage> {
           )
         ],
       ),
-      body: ListView.separated(
-          separatorBuilder: (ctx, i) => const Divider(),
-          itemCount: products.length,
-          itemBuilder: (ctx, index) {
-            var product = products[index];
-            return ListTile(
-              minVerticalPadding: kDefaultPadding,
-              onTap: widget.selectedMode
-                  ? () {
-                      try {
-                        if (product.quantity == 0 && !widget.isOrdenGenerator) {
-                          throw 'NO EXISTEN ${product.name} EN EL INVENTARIO';
-                        }
-                        Navigator.pop(context, product);
-                      } catch (e) {
-                        showTopSnackBar(context,
-                            message: e.toString(), color: Colors.red);
-                      }
-                    }
-                  : null,
-              leading: Container(
-                width: 80,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(90),
-                  color: Theme.of(context).primaryColor.withOpacity(0.04),
-                ),
-                child: Center(
-                  child: Icon(
-                    Icons.inventory_2_outlined,
-                    color: Theme.of(context).primaryColor,
-                    size: 24,
-                  ),
-                ),
-              ),
-              title: Text(
-                product.name ?? '',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              subtitle: Text(
-                  '${product.wareHouseName} - ${product.providerName} - ${product.categoryName} / ${product.price?.toCoin()}'),
-              trailing: Wrap(
-                runAlignment: WrapAlignment.center,
-                alignment: WrapAlignment.center,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  Container(
-                    padding: EdgeInsets.all(kDefaultPadding / 2),
-                    decoration: BoxDecoration(
-                        color: product.color.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(50)),
-                    child: Text(
-                      product.quantity.toString(),
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyMedium
-                          ?.copyWith(color: product.color),
-                    ),
-                  ),
-                  SizedBox(width: kDefaultPadding),
-                  IconButton(
-                      onPressed: () {
-                        _showModal(product: product, editing: true);
-                      },
-                      icon: Icon(Icons.edit))
-                ],
-              ),
-            );
-          }),
+      body: content,
       floatingActionButton: FloatingActionButton(
           onPressed: () {
             _showModal(product: Products());
