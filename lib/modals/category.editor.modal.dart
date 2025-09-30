@@ -56,8 +56,8 @@ class _CategoryEditorModalState extends State<CategoryEditorModal> {
             child: Container(
               padding: EdgeInsets.all(kDefaultPadding),
               width: 350,
-              height: 360,
-              child: Column(
+              child: ListView(
+                shrinkWrap: true,
                 children: [
                   Row(
                     children: [
@@ -75,23 +75,16 @@ class _CategoryEditorModalState extends State<CategoryEditorModal> {
                           icon: Icon(Icons.close))
                     ],
                   ),
-                  Expanded(
-                      child: SingleChildScrollView(
-                          child: Column(
-                    children: [
-                      Container(
-                        margin: EdgeInsets.symmetric(vertical: kDefaultPadding),
-                        child: TextFormField(
-                          controller: name,
-                          validator: (val) =>
-                              val!.isEmpty ? 'CAMPO OBLIGATORIO' : null,
-                          decoration: InputDecoration(
-                              labelText: 'NOMBRE',
-                              hintText: 'Escribir algo...'),
-                        ),
-                      ),
-                    ],
-                  ))),
+                  Container(
+                    margin: EdgeInsets.symmetric(vertical: kDefaultPadding),
+                    child: TextFormField(
+                      controller: name,
+                      validator: (val) =>
+                          val!.isEmpty ? 'CAMPO OBLIGATORIO' : null,
+                      decoration: InputDecoration(
+                          labelText: 'NOMBRE', hintText: 'Escribir algo...'),
+                    ),
+                  ),
                   SizedBox(
                     width: double.infinity,
                     height: 50,

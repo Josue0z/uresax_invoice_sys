@@ -29,8 +29,9 @@ class _SalesPageState extends State<SalesPage> {
   List<Sale> sales = [];
   DateTime startDate = DateTime.now();
   late List<DateTime?> dates = [
-    startDate,
+    startDate.startOfMonth(),
     DateTime(startDate.year, startDate.month, startDate.day, 23, 59, 59)
+        .endOfMonth()
   ];
 
   List<Map<String, dynamic>> options = [
@@ -43,21 +44,22 @@ class _SalesPageState extends State<SalesPage> {
 
   TextEditingController searchController = TextEditingController();
 
-  _renderInvoices() async {
-    sales = await getSales(
-        startDate: dates.first!,
-        endDate: dates.last!,
-        ncfTypeId: ncfTypeId,
-        saleStatus: saleStatus,
-        search: search);
-    setState(() {});
-  }
+  Future? future;
 
-  _initAsync() async {
+  Future<void> _initAsync() async {
     try {
-      _renderInvoices();
+      sales = await getSales(
+          startDate: dates.first!,
+          endDate: dates.last!,
+          ncfTypeId: ncfTypeId,
+          saleStatus: saleStatus,
+          search: search);
+
+      setState(() {});
     } catch (e) {
       print(e);
+      setState(() {});
+      rethrow;
     }
   }
 
@@ -96,7 +98,9 @@ class _SalesPageState extends State<SalesPage> {
     var res = await showDialog(
         context: context, builder: (ctx) => PaymentEditorModal(sale: sale));
     if (res == 'UPDATE') {
-      _renderInvoices();
+      setState(() {
+        future = _initAsync();
+      });
     }
   }
 
@@ -109,7 +113,9 @@ class _SalesPageState extends State<SalesPage> {
       ncfTypeId = res['ncfTypeId'];
       saleStatus = res['saleStatus'];
 
-      _renderInvoices();
+      setState(() {
+        future = _initAsync();
+      });
     }
   }
 
@@ -147,7 +153,9 @@ class _SalesPageState extends State<SalesPage> {
                     : SaleMode.product)));
 
     if (res == 'UPDATE') {
-      _renderInvoices();
+      setState(() {
+        future = _initAsync();
+      });
     }
   }
 
@@ -274,6 +282,12 @@ class _SalesPageState extends State<SalesPage> {
         });
   }
 
+  Widget get contentLoading {
+    return Center(
+      child: CircularProgressIndicator(),
+    );
+  }
+
   Widget get contentEmpty {
     return Center(
       child: Column(
@@ -287,16 +301,14 @@ class _SalesPageState extends State<SalesPage> {
     );
   }
 
-  Widget get content {
-    if (sales.isEmpty) return contentEmpty;
-
-    return contentFilled;
-  }
-
-  @override
-  void initState() {
-    _initAsync();
-    super.initState();
+  Widget contentError(dynamic error) {
+    return Center(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [Text(error.toString())],
+      ),
+    );
   }
 
   @override
@@ -316,7 +328,9 @@ class _SalesPageState extends State<SalesPage> {
                     controller: searchController,
                     onFieldSubmitted: (words) {
                       search = words;
-                      _renderInvoices();
+                      setState(() {
+                        future = _initAsync();
+                      });
                     },
                     decoration: InputDecoration(
                         border: OutlineInputBorder(
@@ -350,7 +364,10 @@ class _SalesPageState extends State<SalesPage> {
                             second: 59,
                           )
                         ];
-                        _renderInvoices();
+
+                        setState(() {
+                          future = _initAsync();
+                        });
                       }),
                 ),
                 SizedBox(
@@ -378,7 +395,22 @@ class _SalesPageState extends State<SalesPage> {
             )
           ],
         ),
-        body: content,
+        body: FutureBuilder(
+            future: future,
+            builder: (ctx, s) {
+              if (s.connectionState == ConnectionState.waiting) {
+                return contentLoading;
+              }
+
+              if (s.hasError) {
+                return contentError(s.error);
+              }
+              if (sales.isNotEmpty) {
+                return contentFilled;
+              }
+
+              return contentEmpty;
+            }),
         floatingActionButton: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
@@ -387,11 +419,15 @@ class _SalesPageState extends State<SalesPage> {
               children: [
                 FloatingActionButton(
                   onPressed: () {
-                    search = '';
                     ncfTypeId = null;
                     saleStatus = SaleStatus.all;
+                    search = null;
+
+                    setState(() {
+                      future = _initAsync();
+                    });
+
                     searchController.clear();
-                    _renderInvoices();
                   },
                   child: Icon(Icons.restore),
                 ),

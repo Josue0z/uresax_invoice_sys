@@ -188,10 +188,10 @@ Future<List<Sale>> getSales(
     }
 
     final conne = SqlConector.connection;
-    var result = await conne?.execute(
-        Sql.named(
-            'select * from public."SalesView" where "createdAt" between @date1 and @date2 $params order by "ncf"'),
-        parameters: parameters);
+    var qr =
+        'select * from public."SalesView" where "createdAt" between @date1 and @date2 $params order by "ncf"';
+
+    var result = await conne?.execute(Sql.named(qr), parameters: parameters);
     return result
             ?.map((e) => e.toColumnMap()['invoiceTypeId'] == 1
                 ? SaleService.fromMap(e.toColumnMap())
@@ -215,8 +215,6 @@ Future<List<Sale>> getCreditNotes(
       'date1': startDate.toIso8601String(),
       'date2': endDate.toIso8601String()
     };
-
-    print(parameters);
 
     if (search != null) {
       params +=

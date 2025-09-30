@@ -13,11 +13,21 @@ class Category {
     this.createdAt,
   });
 
-  static Future<List<Category>> get() async {
+  static Future<List<Category>> get({String? search}) async {
     try {
+      var params = '';
+      var parameters = {};
+
+      if (search != null) {
+        params = 'where lower(name) like lower(@name)';
+        parameters = {'name': '%$search%'};
+      }
+
       final conne = SqlConector.connection;
-      var res = await conne
-          ?.execute(Sql.named(''' select * from public."Categories" '''));
+      var res = await conne?.execute(
+          Sql.named(
+              ''' select * from public."Categories"  $params order by name'''),
+          parameters: parameters);
       return res?.map((e) => Category.fromMap(e.toColumnMap())).toList() ?? [];
     } catch (e) {
       rethrow;

@@ -330,6 +330,10 @@ class _HomePageState extends State<HomePage> {
     if (!currentUser!.permissions!.contains('ALLOW_VIEW_ORDENS_PURCHASES')) {
       options.removeWhere((e) => e['id'] == 15);
     }
+
+    if (!currentUser!.permissions!.contains('ALLOW_VIEW_CATEGORIES')) {
+      options.removeWhere((e) => e['id'] == 16);
+    }
     return Scaffold(
         appBar: AppBar(
           title: Column(

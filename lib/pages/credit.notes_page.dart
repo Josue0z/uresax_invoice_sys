@@ -27,11 +27,14 @@ class _CreditNotesPageState extends State<CreditNotesPage> {
   List<Sale> creditNotes = [];
   DateTime startDate = DateTime.now();
   late List<DateTime?> dates = [
-    startDate,
+    startDate.startOfMonth(),
     DateTime(startDate.year, startDate.month, startDate.day, 23, 59, 59)
+        .endOfMonth()
   ];
 
   List<Map<String, dynamic>> salesOptions = [];
+
+  Future? future;
 
   _showInvoice(Sale sale) async {
     try {
@@ -99,6 +102,8 @@ class _CreditNotesPageState extends State<CreditNotesPage> {
       setState(() {});
     } catch (e) {
       print(e);
+      setState(() {});
+      rethrow;
     }
   }
 
@@ -175,16 +180,20 @@ class _CreditNotesPageState extends State<CreditNotesPage> {
         });
   }
 
-  Widget get content {
-    if (creditNotes.isEmpty) return contentEmpty;
-
-    return contentFilled;
+  Widget get contentLoading {
+    return Center(
+      child: CircularProgressIndicator(),
+    );
   }
 
-  @override
-  void initState() {
-    _initAsync();
-    super.initState();
+  Widget contentError(dynamic error) {
+    return Center(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [Text(error.toString())],
+      ),
+    );
   }
 
   @override
@@ -203,7 +212,9 @@ class _CreditNotesPageState extends State<CreditNotesPage> {
                   controller: searchController,
                   onFieldSubmitted: (words) {
                     search = words;
-                    _initAsync();
+                    setState(() {
+                      future = _initAsync();
+                    });
                   },
                   decoration: InputDecoration(
                       border: OutlineInputBorder(
@@ -236,7 +247,9 @@ class _CreditNotesPageState extends State<CreditNotesPage> {
                           second: 59,
                         )
                       ];
-                      _initAsync();
+                      setState(() {
+                        future = _initAsync();
+                      });
                     }),
               ),
               SizedBox(
@@ -246,7 +259,23 @@ class _CreditNotesPageState extends State<CreditNotesPage> {
           )
         ],
       ),
-      body: content,
+      body: FutureBuilder(
+          future: future,
+          builder: (ctx, s) {
+            if (s.connectionState == ConnectionState.waiting) {
+              return contentLoading;
+            }
+
+            if (s.hasError) {
+              return contentError(s.error);
+            }
+            if (s.connectionState == ConnectionState.done &&
+                creditNotes.isNotEmpty) {
+              return contentFilled;
+            }
+
+            return contentEmpty;
+          }),
       floatingActionButton: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
@@ -255,9 +284,12 @@ class _CreditNotesPageState extends State<CreditNotesPage> {
             children: [
               FloatingActionButton(
                 onPressed: () {
-                  search = '';
+                  search = null;
+
                   searchController.clear();
-                  _initAsync();
+                  setState(() {
+                    future = _initAsync();
+                  });
                 },
                 child: Icon(Icons.restore),
               ),

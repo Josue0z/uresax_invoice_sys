@@ -303,15 +303,15 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
 
           Navigator.pop(context);
 
-          var fileName='${sale.ncf}_${company?.name}.PDF';
+          var fileName = '${sale.ncf}_${company?.name}.PDF';
 
-         var dir = await getUresaxInvoiceDir();
-         var filePath = path.join(dir.path,'VENTAS',sale.createdAt!.format(payload:'YYYYMM'),'PDFS',fileName);  
-         var file=File(filePath);
-         await file.create(recursive: true);
-         await file.writeAsBytes(await doc.save());
-         await OpenFile.open(file.path);
-
+          var dir = await getUresaxInvoiceDir();
+          var filePath = path.join(dir.path, 'VENTAS',
+              sale.createdAt!.format(payload: 'YYYYMM'), 'PDFS', fileName);
+          var file = File(filePath);
+          await file.create(recursive: true);
+          await file.writeAsBytes(await doc.save());
+          await OpenFile.open(file.path);
         }
 
         showLoader(context);
@@ -981,6 +981,11 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
   @override
   void initState() {
     _ncfs = [...ncfs];
+
+    if (electronicNcfEnabled) {
+      _ncfs.removeWhere(
+          (e) => e.id == '01' || e.id == '02' || e.id == '15' || e.id == '04');
+    }
 
     if (!isSale) {
       _ncfs.removeWhere((e) =>

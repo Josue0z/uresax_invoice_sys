@@ -4,8 +4,8 @@ import 'package:moment_dart/moment_dart.dart';
 
 class DateRangeWidget extends StatefulWidget {
   Function(List<DateTime?>) onChanged;
-  DateRangeWidget(
-      {super.key, required List<DateTime?> dates, required this.onChanged});
+  List<DateTime?> dates;
+  DateRangeWidget({super.key, required this.dates, required this.onChanged});
 
   @override
   State<DateRangeWidget> createState() => _DateRangeWidgetState();
@@ -13,10 +13,6 @@ class DateRangeWidget extends StatefulWidget {
 
 class _DateRangeWidgetState extends State<DateRangeWidget> {
   TextEditingController date = TextEditingController();
-  List<DateTime?> _dates = [
-    DateTime.now().startOfMonth(),
-    DateTime.now().endOfMonth()
-  ];
 
   _showDateRanges() async {
     var res = await showCalendarDatePicker2Dialog(
@@ -25,14 +21,14 @@ class _DateRangeWidgetState extends State<DateRangeWidget> {
           calendarType: CalendarDatePicker2Type.range,
           firstDate: DateTime(1999),
           lastDate: DateTime(3000)),
-      dialogSize: const Size(325, 400),
-      value: _dates,
+      dialogSize: const Size(350, 400),
+      value: widget.dates,
       borderRadius: BorderRadius.circular(15),
     );
 
     if (res != null) {
-      _dates = res;
-      widget.onChanged(_dates);
+      widget.dates = res;
+      widget.onChanged(widget.dates);
       _renderDates();
     }
   }
@@ -40,13 +36,16 @@ class _DateRangeWidgetState extends State<DateRangeWidget> {
   _renderDates() {
     date.value = TextEditingValue(
         text:
-            '${_dates.first?.format(payload: 'DD/MM/YYYY')} - ${_dates.last?.format(payload: 'DD/MM/YYYY')}');
+            '${widget.dates.first?.format(payload: 'DD/MM/YYYY')} - ${widget.dates.last?.format(payload: 'DD/MM/YYYY')}');
   }
 
   @override
   void initState() {
-    _renderDates();
-    widget.onChanged(_dates);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _renderDates();
+      widget.onChanged(widget.dates);
+    });
+
     super.initState();
   }
 

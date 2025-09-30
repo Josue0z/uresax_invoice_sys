@@ -167,8 +167,8 @@ class _ProductEditorModalState extends State<ProductEditorModal> {
                         Container(
                           margin:
                               EdgeInsets.symmetric(vertical: kDefaultPadding),
-                          child: DropdownButtonFormField(
-                              value: currentWareHouseId,
+                          child: DropdownButtonFormField<int>(
+                              initialValue: currentWareHouseId,
                               validator: (val) =>
                                   val == null ? 'CAMPO OBLIGATORIO' : null,
                               items: List.generate(wareHouses.length, (index) {
@@ -282,7 +282,7 @@ class _ProductEditorModalState extends State<ProductEditorModal> {
                         Container(
                           margin: EdgeInsets.only(bottom: kDefaultPadding),
                           child: DropdownButtonFormField<int>(
-                              value: currentTaxId,
+                              initialValue: currentTaxId,
                               items: List.generate(taxes.length, (index) {
                                 var tax = taxes[index];
                                 return DropdownMenuItem(

@@ -124,10 +124,8 @@ class _MyAppState extends State<MyApp> {
       ...await OverrideCode.get()
     ];
 
-    wareHouses = [
-      WareHouses(name: 'ELEGIR ALMACEN'),
-      ...await WareHouses.get()
-    ];
+    wareHouses = await WareHouses.get();
+
     discounts = [
       Discount(
         name: 'DESCUENTO',
