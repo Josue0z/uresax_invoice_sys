@@ -73,7 +73,7 @@ class NcfSecuencia {
       if (result!.isEmpty) {
         return null;
       }
-      var ob = result![0].toColumnMap();
+      var ob = result[0].toColumnMap();
       return {'check': check, 'dif': ob['dif'], 'name': ob['name']};
     } catch (e) {
       rethrow;

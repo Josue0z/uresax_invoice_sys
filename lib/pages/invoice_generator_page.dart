@@ -966,6 +966,17 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
     loading = false;
 
     if (currentNcfTypeId != null) {
+      int umbral = 12;
+      var checkObj =
+          await NcfSecuencia(id: currentNcfTypeId).checkNcfs(umbral: umbral);
+
+      if (checkObj != null) {
+        int dif = checkObj['dif'];
+        String name = checkObj['name'];
+        showTopSnackBar(context,
+            message: 'QUEDAN $dif $name', color: Colors.red);
+      }
+
       var ncfList = await NcfsList(ncfTypeId: currentNcfTypeId).findNcf();
 
       if (ncfList != null) {
