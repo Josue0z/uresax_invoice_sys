@@ -865,14 +865,16 @@ class SaleService implements Sale {
     try {
       final conne = SqlConector.connection;
       await conne?.runTx((conne) async {
-        await conne.execute(Sql.named('''update public."Sale" 
-                  set 
-                  "signatureDate" = @signatureDate,
-                  "securityCode" = @securityCode,
-                  "dgiiURL" = @dgiiURL,
-                  "ecfXmlFirmado" = @ecfXmlFirmado,
-                  "estadoDgii" = @estadoDgii
-                  where id = @id'''), parameters: {
+        await conne.execute(Sql.named('''
+    update public."Sale" 
+    set 
+      "signatureDate" = @signatureDate,
+      "securityCode" = @securityCode,
+      "dgiiURL" = @dgiiURL,
+      "ecfXmlFirmado" = @ecfXmlFirmado,
+      "estadoDgii" = @estadoDgii
+    where id = @id
+  '''), parameters: {
           'id': id,
           'signatureDate': signatureDate,
           'securityCode': securityCode,
@@ -880,6 +882,15 @@ class SaleService implements Sale {
           'ecfXmlFirmado': ecfXmlFirmado,
           'estadoDgii': estadoDgii
         });
+
+        final result = await conne.execute(Sql.named('''
+        select "estadoDgiiNombre" from public."SalesView" where id = @id
+         '''), parameters: {'id': id});
+
+        if (result.isNotEmpty) {
+          estadoDgiiNombre =
+              result.first.toColumnMap()['estadoDgiiNombre'] as String?;
+        }
       });
     } catch (e) {
       rethrow;

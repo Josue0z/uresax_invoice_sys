@@ -1202,6 +1202,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                                   .map((e) => e is SaleItemService
                                       ? CreditNoteService(
                                           serviceId: e.serviceId,
+                                          serviceName: e.serviceName,
                                           saleId: e.saleId,
                                           productId: e.productId,
                                           productName: e.productName,

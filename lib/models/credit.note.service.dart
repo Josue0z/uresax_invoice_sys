@@ -688,6 +688,15 @@ class CreditNoteAsService implements Sale {
           'ecfXmlFirmado': ecfXmlFirmado,
           'estadoDgii': estadoDgii
         });
+
+        final result = await conne.execute(Sql.named('''
+        select "estadoDgiiNombre" from public."CreditNotesView" where id = @id
+         '''), parameters: {'id': id});
+
+        if (result.isNotEmpty) {
+          estadoDgiiNombre =
+              result.first.toColumnMap()['estadoDgiiNombre'] as String?;
+        }
       });
     } catch (e) {
       rethrow;

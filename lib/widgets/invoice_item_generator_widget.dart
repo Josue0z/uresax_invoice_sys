@@ -296,6 +296,8 @@ class _InvoiceItemGeneratorWidgetState
 
     discountId = widget.saleItem.discountId;
 
+    print(el);
+
     discountEl = Discount(
         id: widget.saleItem.discountId, name: widget.saleItem.discountName);
 
@@ -454,6 +456,8 @@ class _InvoiceItemGeneratorWidgetState
                 context: context,
                 initialValue: discountEl,
                 title: 'DESCUENTO',
+                enabled: widget.saleItem is SaleItemProduct ||
+                    widget.saleItem is SaleItemService,
                 screen: DiscountsPage(selectorMode: true),
                 onChanged: widget.saleItem is CreditNoteProduct ||
                         widget.saleItem is CreditNoteService
