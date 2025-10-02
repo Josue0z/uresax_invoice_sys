@@ -97,6 +97,10 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
     return currentNcfTypeId == '45' || currentNcfTypeId == '15';
   }
 
+  bool get esNotaCredito {
+    return currentNcfTypeId == '34' || currentNcfTypeId == '04';
+  }
+
   bool get onlyEcommerce {
     return (eCommerceMode && widget.sale is SaleProduct);
   }
@@ -306,8 +310,12 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
           var fileName = '${sale.ncf}_${company?.name}.PDF';
 
           var dir = await getUresaxInvoiceDir();
-          var filePath = path.join(dir.path, 'VENTAS',
-              sale.createdAt!.format(payload: 'YYYYMM'), 'PDFS', fileName);
+          var filePath = path.join(
+              dir.path,
+              esNotaCredito ? 'NOTAS DE CREDITO' : 'VENTAS',
+              sale.createdAt!.format(payload: 'YYYYMM'),
+              'PDFS',
+              fileName);
           var file = File(filePath);
           await file.create(recursive: true);
           await file.writeAsBytes(await doc.save());
