@@ -273,7 +273,20 @@ pw.Document createDefaultInvoice(Sale sale) {
                         pw.Text(sale.authorName ?? '',
                             style: pw.TextStyle(fontSize: 9)),
                       ]))
-                  : pw.SizedBox()
+                  : pw.SizedBox(),
+              sale.estadoDgiiNombre != null
+                  ? pw.Container(
+                      margin: pw.EdgeInsets.symmetric(
+                          vertical: kDefaultPadding / 4),
+                      child: pw.Row(children: [
+                        pw.Text('Estado DGII:',
+                            style: pw.TextStyle(
+                                fontSize: 9, fontWeight: pw.FontWeight.bold)),
+                        pw.SizedBox(width: 5),
+                        pw.Text(sale.estadoDgiiNombre ?? '',
+                            style: pw.TextStyle(fontSize: 9)),
+                      ]))
+                  : pw.SizedBox(),
             ])),
         pw.Expanded(
             child: pw.Column(children: [

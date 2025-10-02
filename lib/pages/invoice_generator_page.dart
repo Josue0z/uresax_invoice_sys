@@ -408,6 +408,12 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
     }
   }
 
+  bool get canOverrideTaxes {
+    if (_currentSale == null) return false;
+    var days = DateTime.now().difference(_currentSale!.createdAt!).inDays;
+    return days > 30;
+  }
+
   List<double> get calcs {
     double subtotal = 0;
     double discount = 0;
@@ -428,18 +434,23 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
 
       subtotal += item.enabled == true ? widget.items[i].net ?? 0 : 0;
       discount += item.enabled == true ? widget.items[i].discount ?? 0 : 0;
-      tax += item.enabled == true ? widget.items[i].tax ?? 0 : 0;
+
+      if (!canOverrideTaxes) {
+        tax += item.enabled == true ? widget.items[i].tax ?? 0 : 0;
+      }
       total += item.enabled == true ? widget.items[i].total ?? 0 : 0;
       retentionIsr +=
           item.enabled == true ? widget.items[i].retentionIsr ?? 0 : 0;
       retentionTax +=
           item.enabled == true ? widget.items[i].retentionTax ?? 0 : 0;
 
-      tax18 += item.enabled == true ? widget.items[i].tax18 ?? 0 : 0;
+      if (!canOverrideTaxes) {
+        tax18 += item.enabled == true ? widget.items[i].tax18 ?? 0 : 0;
 
-      tax16 += item.enabled == true ? widget.items[i].tax16 ?? 0 : 0;
+        tax16 += item.enabled == true ? widget.items[i].tax16 ?? 0 : 0;
 
-      tax3 += item.enabled == true ? widget.items[i].tax3 ?? 0 : 0;
+        tax3 += item.enabled == true ? widget.items[i].tax3 ?? 0 : 0;
+      }
 
       net18 += item.enabled == true ? widget.items[i].net18 ?? 0 : 0;
 
@@ -698,6 +709,36 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
 
   String ncfLabel = '';
 
+  String getItbisCode({
+    required bool esNotaCredito,
+    required bool canOverrideTaxes,
+    required double gravado18,
+    required double gravado16,
+    required double originalGravado18,
+    required double originalGravado16,
+  }) {
+    if (esNotaCredito) {
+      if (!canOverrideTaxes) {
+        return originalGravado18 > 0
+            ? '18'
+            : originalGravado16 > 0
+                ? '16'
+                : '';
+      } else {
+        return originalGravado18 > 0
+            ? '0'
+            : originalGravado16 > 0
+                ? '0'
+                : '';
+      }
+    }
+    return gravado18 > 0
+        ? '18'
+        : gravado16 > 0
+            ? '16'
+            : '';
+  }
+
   Future<void> _enviarDgii(Sale sale) async {
     try {
       bool enabledEcfProduction = bool.parse(
@@ -760,6 +801,10 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
       final dateFormat = DateFormat('dd-MM-yyyy');
 
       final fechaEmision = dateFormat.format(now);
+
+      String rncEmisor = company?.rncOrId?.trim().replaceAll('-', '') ?? '';
+
+      String rncComprador = rncOrId.text.replaceAll('-', '');
       List<EcfDetailsModel> items = [];
 
       items = sale.items.map((item) {
@@ -830,7 +875,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
           telefonoEmisor2: '',
           telefonoEmisor3: '',
           totalPaginas: '',
-          rncEmisor: company?.rncOrId?.trim().replaceAll('-', '') ?? '',
+          rncEmisor: rncEmisor,
           razonSocialEmisor: company?.name ?? '',
           nombreComercial: '',
           correoEmisor: company?.email ?? '',
@@ -838,7 +883,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
           actividadEconomica: '',
           codigoVendedor: '',
           informacionAdicionalEmisor: '',
-          rncComprador: rncOrId.text.replaceAll('-', ''),
+          rncComprador: rncComprador,
           identificadorExtranjero: '',
           razonSocialComprador: clientName.text.trim(),
           nombreComprador: '',
@@ -877,8 +922,22 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
           totalItbis16:
               itbisGravado16 > 0 ? itbisGravado16.toStringAsFixed(2) : '',
           totalItbisTasa0: '',
-          itbis1: totalGravado18 > 0 ? '18' : '',
-          itbis2: totalGravado16 > 0 ? '16' : '',
+          itbis1: getItbisCode(
+            esNotaCredito: esNotaCredito,
+            canOverrideTaxes: canOverrideTaxes,
+            gravado18: itbisGravado18,
+            gravado16: 0,
+            originalGravado18: _currentSale?.tax18 ?? 0,
+            originalGravado16: 0,
+          ),
+          itbis2: getItbisCode(
+            esNotaCredito: esNotaCredito,
+            canOverrideTaxes: canOverrideTaxes,
+            gravado18: 0,
+            gravado16: itbisGravado16,
+            originalGravado18: 0,
+            originalGravado16: _currentSale?.tax16 ?? 0,
+          ),
           itbis3: '',
           montoTotal:
               totalFacturado > 0 ? totalFacturado.toStringAsFixed(2) : '',
@@ -901,12 +960,12 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
               ? ''
               : totalRetencionItbis > 0
                   ? totalRetencionItbis.toStringAsFixed(2)
-                  : '',
+                  : '0.00',
           totalIsrRetencion: esEspecial
               ? ''
               : totalRetencionIsr > 0
                   ? totalRetencionIsr.toStringAsFixed(2)
-                  : '',
+                  : '0.00',
           montoImpuestoAdicional: '',
           impuestosAdicionales: [],
           terminoPago: '',
@@ -927,6 +986,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
       print(ecf.token);
 
       if (ecf.trackId != '') {
+        await Future.delayed(const Duration(milliseconds: 600));
         estado = await ecf.obtenerEcfEstadoDatos();
       }
 

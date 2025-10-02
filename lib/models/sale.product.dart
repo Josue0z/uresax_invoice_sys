@@ -104,6 +104,7 @@ class SaleProduct implements Sale {
       this.dgiiURL,
       this.ecfXmlFirmado,
       this.estadoDgii,
+      this.estadoDgiiNombre,
       this.expirationDate,
       this.securityCode,
       this.signatureDate,
@@ -291,7 +292,8 @@ class SaleProduct implements Sale {
         tipoPago: map['tipoPago'],
         authorId: map['authorId'],
         authorName: map['authorName'],
-        ncfSeq: map['ncfSeq']);
+        ncfSeq: map['ncfSeq'],
+        estadoDgiiNombre: map['estadoDgiiNombre']);
   }
 
   String toJson() => json.encode(toMap());
@@ -906,4 +908,7 @@ class SaleProduct implements Sale {
 
   @override
   int? ncfSeq;
+
+  @override
+  String? estadoDgiiNombre;
 }

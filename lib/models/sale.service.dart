@@ -104,6 +104,7 @@ class SaleService implements Sale {
       this.dgiiURL,
       this.ecfXmlFirmado,
       this.estadoDgii,
+      this.estadoDgiiNombre,
       this.expirationDate,
       this.securityCode,
       this.signatureDate,
@@ -318,6 +319,7 @@ class SaleService implements Sale {
         dgiiURL: map['dgiiURL'],
         ecfXmlFirmado: map['ecfXmlFirmado'],
         estadoDgii: map['estadoDgii'],
+        estadoDgiiNombre: map['estadoDgiiNombre'],
         securityCode: map['securityCode'],
         signatureDate: map['signatureDate'],
         tipoPago: map['tipoPago'],
@@ -886,4 +888,7 @@ class SaleService implements Sale {
 
   @override
   int? ncfSeq;
+
+  @override
+  String? estadoDgiiNombre;
 }

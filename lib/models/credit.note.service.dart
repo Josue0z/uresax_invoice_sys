@@ -134,6 +134,7 @@ class CreditNoteAsService implements Sale {
       this.exemptAmount,
       this.authorId,
       this.dgiiURL,
+      this.estadoDgiiNombre,
       this.ecfXmlFirmado,
       this.estadoDgii,
       this.expirationDate,
@@ -445,6 +446,7 @@ class CreditNoteAsService implements Sale {
         dgiiURL: map['dgiiURL'],
         ecfXmlFirmado: map['ecfXmlFirmado'],
         estadoDgii: map['estadoDgii'],
+        estadoDgiiNombre: map['estadoDgiiNombre'],
         securityCode: map['securityCode'],
         signatureDate: map['signatureDate'],
         tipoPago: map['tipoPago'],
@@ -694,4 +696,7 @@ class CreditNoteAsService implements Sale {
 
   @override
   int? ncfSeq;
+
+  @override
+  String? estadoDgiiNombre;
 }

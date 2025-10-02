@@ -88,6 +88,8 @@ abstract class Sale {
 
   int? ncfSeq;
 
+  String? estadoDgiiNombre;
+
   bool get isPaid {
     throw UnimplementedError();
   }
