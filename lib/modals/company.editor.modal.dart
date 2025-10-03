@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:uresax_invoice_sys/apis/log.handler.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 
 class CompanyEditorModal extends StatefulWidget {
@@ -30,6 +31,8 @@ class _CompanyEditorModalState extends State<CompanyEditorModal> {
       company?.email = email.text;
       company?.address = address.text;
       company = await company?.update();
+      await LogHandler.printEvent(
+          'LOS DATOS DE ${company?.name} FUERON ACTUALIZADOS');
       Navigator.pop(context, 'UPDATE');
     } catch (e) {
       rethrow;

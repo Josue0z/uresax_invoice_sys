@@ -1,5 +1,6 @@
 import 'package:amount_input_formatter/amount_input_formatter.dart';
 import 'package:flutter/material.dart';
+import 'package:uresax_invoice_sys/apis/log.handler.dart';
 import 'package:uresax_invoice_sys/models/categorie.dart';
 import 'package:uresax_invoice_sys/models/product.dart';
 import 'package:uresax_invoice_sys/models/provider.dart';
@@ -72,15 +73,20 @@ class _ProductEditorModalState extends State<ProductEditorModal> {
         widget.product.categoryId = currentCategoryId;
         if (!widget.editing) {
           await widget.product.create();
+          await LogHandler.printEvent(
+              'PRODUCTO: ${widget.product.name} CREADO');
           Navigator.pop(context, 'CREATE');
         } else {
           await widget.product.update();
+          await LogHandler.printEvent(
+              'PRODUCTO: ${widget.product.name} ACTUALIZADO');
           Navigator.pop(context, 'UPDATE');
           showTopSnackBar(context,
               message: widget.editing ? 'PRODUCTO EDITADO' : 'PRODUCTO CREADO',
               color: Colors.green);
         }
       } catch (e) {
+        await LogHandler.printError(e.toString());
         showTopSnackBar(context, message: e.toString(), color: Colors.red);
       }
     }

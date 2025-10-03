@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:multi_masked_formatter/multi_masked_formatter.dart';
+import 'package:uresax_invoice_sys/apis/log.handler.dart';
 import 'package:uresax_invoice_sys/models/client.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/utils/functions.dart';
@@ -39,15 +40,19 @@ class _ClientEditorModalState extends State<ClientEditorModal> {
 
         if (!widget.editing) {
           await widget.client.create();
+          await LogHandler.printEvent('CLIENTE: ${widget.client.name} CREADO');
           Navigator.pop(context, 'CREATE');
         } else {
           await widget.client.update();
+          await LogHandler.printEvent(
+              'CLIENTE: ${widget.client.name} ACTUALIZADO');
           Navigator.pop(context, 'UPDATE');
           showTopSnackBar(context,
               message: widget.editing ? 'CLIENTE EDITADO' : 'CLIENTE CREADO',
               color: Colors.green);
         }
       } catch (e) {
+        await LogHandler.printError(e.toString());
         showTopSnackBar(context, message: e.toString(), color: Colors.red);
       }
     }

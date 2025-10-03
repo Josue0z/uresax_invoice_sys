@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uresax_invoice_sys/apis/log.handler.dart';
 import 'package:uresax_invoice_sys/models/categorie.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/utils/functions.dart';
@@ -32,11 +33,16 @@ class _CategoryEditorModalState extends State<CategoryEditorModal> {
 
         if (!widget.editing) {
           await widget.category.create();
+          await LogHandler.printEvent(
+              'CATEGORIA: ${widget.category.name} CREADA');
         } else {
           await widget.category.update();
+          await LogHandler.printEvent(
+              'CATEGORIA: ${widget.category.name} ACTUALIZADA');
         }
         Navigator.pop(context, widget.editing ? 'UPDATE' : 'CREATE');
       } catch (e) {
+        await LogHandler.printError(e.toString());
         showTopSnackBar(context, message: e.toString(), color: Colors.red);
       }
     }

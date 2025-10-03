@@ -9,6 +9,7 @@ import 'package:localstorage/localstorage.dart';
 import 'package:moment_dart/moment_dart.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path/path.dart' as path;
+import 'package:uresax_invoice_sys/apis/log.handler.dart';
 import 'package:uresax_invoice_sys/apis/printers.handler.dart';
 import 'package:uresax_invoice_sys/modals/ncfs.selector.modal.dart';
 import 'package:uresax_invoice_sys/models/credit.note.item.product.dart';
@@ -283,8 +284,13 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
 
         if (!widget.editing) {
           sale = await widget.sale.create();
+
+          await LogHandler.printEvent(
+              '${sale?.ncfTypeName} ${sale?.ncf} FUE CREADA, RNC/CEDULA: ${sale?.clientId}, EL CLIENTE: ${sale?.clientName}');
         } else {
           sale = await widget.sale.update();
+          await LogHandler.printEvent(
+              '${sale?.ncfTypeName} ${sale?.ncf} FUE ACTUALIZADA, RNC/CEDULA: ${sale?.clientId}, EL CLIENTE: ${sale?.clientName}');
         }
 
         if (!widget.editing &&
@@ -292,6 +298,9 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
             widget.sale.prefix == 'E' &&
             sale != null) {
           await _enviarDgii(sale);
+
+          await LogHandler.printEvent(
+              '${sale.ncfTypeName} ${sale.ncf} FUE ENVIADA A DGII, RNC/CEDULA: ${sale.clientId}, EL CLIENTE: ${sale.clientName}');
         }
 
         if (eCommerceMode && widget.sale is SaleProduct) {
@@ -318,8 +327,12 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
               fileName);
           var file = File(filePath);
           await file.create(recursive: true);
+          await LogHandler.printEvent('SE CREO EL ARCHIVO: ${file.path}');
           await file.writeAsBytes(await doc.save());
+          await LogHandler.printEvent('SE ESCRIBIO EL ARCHIVO: ${file.path}');
           await OpenFile.open(file.path);
+
+          await LogHandler.printEvent('SE ABRIO EL ARCHIVO: ${file.path}');
         }
 
         showLoader(context);
@@ -336,6 +349,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
             color: Colors.green);
       } catch (e) {
         print(e);
+        await LogHandler.printEvent(e.toString());
         Navigator.pop(context);
         showTopSnackBar(context, message: e.toString(), color: Colors.red);
       }
@@ -1059,6 +1073,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
 
   @override
   void initState() {
+    if (!mounted) return;
     _ncfs = [...ncfs];
 
     if (electronicNcfEnabled) {

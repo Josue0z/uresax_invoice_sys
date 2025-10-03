@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:uresax_invoice_sys/apis/log.handler.dart';
 import 'package:uresax_invoice_sys/modals/company.editor.modal.dart';
 import 'package:uresax_invoice_sys/modals/electronic.ncf.settings.modal.dart';
 import 'package:uresax_invoice_sys/models/credit.note.item.product.dart';
@@ -425,8 +426,11 @@ class _HomePageState extends State<HomePage> {
                 CircleAvatar(
                   child: IconButton(
                       tooltip: 'CERRAR CUENTA',
-                      onPressed: () {
+                      onPressed: () async {
+                        await LogHandler.printEvent(
+                            '${currentUser?.name} CERRO SESION');
                         currentUser = null;
+
                         Navigator.pushAndRemoveUntil(
                             context,
                             MaterialPageRoute(builder: (ctx) => LoginPage()),

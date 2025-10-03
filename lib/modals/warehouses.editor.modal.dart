@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uresax_invoice_sys/apis/log.handler.dart';
 import 'package:uresax_invoice_sys/models/warehouse.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/utils/functions.dart';
@@ -34,11 +35,16 @@ class _WareHousesEditorModalState extends State<WareHousesEditorModal> {
 
         if (widget.editing) {
           await widget.wareHouse.update();
+          await LogHandler.printEvent(
+              'ALMACEN: ${widget.wareHouse.name} ACTUALIZADO');
         } else {
           wareHouse = await widget.wareHouse.create();
+          await LogHandler.printEvent(
+              'ALMACEN: ${widget.wareHouse.name} CREADO');
         }
         Navigator.pop(context, widget.editing ? 'UPDATE' : 'CREATE');
       } catch (e) {
+        await LogHandler.printError(e.toString());
         showTopSnackBar(context, message: e.toString(), color: Colors.red);
       }
     }

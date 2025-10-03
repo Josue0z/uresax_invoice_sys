@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uresax_invoice_sys/apis/log.handler.dart' show LogHandler;
 import 'package:uresax_invoice_sys/models/user.dart';
 import 'package:uresax_invoice_sys/pages/home_page.dart';
 import 'package:uresax_invoice_sys/settings.dart';
@@ -20,9 +21,11 @@ class _LoginPageState extends State<LoginPage> {
     if (_formKey.currentState!.validate()) {
       try {
         currentUser = await User.login(username.text, password.text);
-        Navigator.pushAndRemoveUntil(context,
+        LogHandler.printEvent('EL USUARIO: ${currentUser?.name} INICIO SESION');
+        await Navigator.pushAndRemoveUntil(context,
             MaterialPageRoute(builder: (ctx) => HomePage()), (_) => false);
       } catch (e) {
+        LogHandler.printError(e.toString());
         showTopSnackBar(context, message: e.toString(), color: Colors.red);
       }
     }

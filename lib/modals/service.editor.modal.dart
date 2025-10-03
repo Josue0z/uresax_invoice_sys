@@ -1,5 +1,6 @@
 import 'package:amount_input_formatter/amount_input_formatter.dart';
 import 'package:flutter/material.dart';
+import 'package:uresax_invoice_sys/apis/log.handler.dart';
 import 'package:uresax_invoice_sys/models/service.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/utils/functions.dart';
@@ -33,15 +34,20 @@ class _ServiceEditorModalState extends State<ServiceEditorModal> {
         widget.service.taxId = currentTaxId;
         if (!widget.editing) {
           await widget.service.create();
+          await LogHandler.printEvent(
+              'SERVICIO: ${widget.service.name} CREADO');
           Navigator.pop(context, 'CREATE');
         } else {
           await widget.service.update();
+          await LogHandler.printEvent(
+              'SERVICIO: ${widget.service.name} ACTUALIZADO');
           Navigator.pop(context, 'UPDATE');
           showTopSnackBar(context,
               message: widget.editing ? 'SERVICIO EDITADO' : 'SERVICIO CREADO',
               color: Colors.green);
         }
       } catch (e) {
+        await LogHandler.printError(e.toString());
         showTopSnackBar(context, message: e.toString(), color: Colors.red);
       }
     }

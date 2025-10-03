@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:moment_dart/moment_dart.dart';
+import 'package:uresax_invoice_sys/apis/log.handler.dart';
 import 'package:uresax_invoice_sys/models/ncf.secuencia.dart';
 import 'package:uresax_invoice_sys/models/ncfList.dart';
 import 'package:uresax_invoice_sys/settings.dart';
@@ -39,10 +40,15 @@ class _NcfListEditorModalState extends State<NcfListEditorModal> {
             minValue: xstart,
             maxValue: xend);
         await ncfList.create();
+        await LogHandler.printEvent(
+            'LISTA DE NCFS: ${ncfList.ncfTypeName} CREADA');
         await secuecia.update();
+        await LogHandler.printEvent(
+            'SECUENCIA DE NCFS: ${ncfList.ncfTypeName} ACTUALIZADA');
 
         Navigator.pop(context, 'CREATE');
       } catch (e) {
+        await LogHandler.printError(e.toString());
         showTopSnackBar(context, message: e.toString(), color: Colors.red);
       }
     }

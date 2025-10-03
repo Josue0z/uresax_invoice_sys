@@ -296,8 +296,6 @@ class _InvoiceItemGeneratorWidgetState
 
     discountId = widget.saleItem.discountId;
 
-    print(el);
-
     discountEl = Discount(
         id: widget.saleItem.discountId, name: widget.saleItem.discountName);
 

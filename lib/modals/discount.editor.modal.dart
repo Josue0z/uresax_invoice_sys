@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uresax_invoice_sys/apis/log.handler.dart';
 import 'package:uresax_invoice_sys/models/discount.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/utils/functions.dart';
@@ -35,11 +36,16 @@ class _DiscountEditorModalState extends State<DiscountEditorModal> {
         widget.discount.symbolId = currentSymbolId;
         if (!widget.editing) {
           await widget.discount.create();
+          await LogHandler.printEvent(
+              'DESCUENTO: ${widget.discount.name} CREADO');
         } else {
           await widget.discount.update();
+          await LogHandler.printEvent(
+              'DESCUENTO: ${widget.discount.name} ACTUALIZADO');
         }
         Navigator.pop(context, widget.editing ? 'UPDATE' : 'CREATE');
       } catch (e) {
+        await LogHandler.printError(e.toString());
         showTopSnackBar(context, message: e.toString(), color: Colors.red);
       }
     }

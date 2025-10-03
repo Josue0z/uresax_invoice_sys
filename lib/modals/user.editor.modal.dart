@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uresax_invoice_sys/apis/log.handler.dart';
 import 'package:uresax_invoice_sys/models/user.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/utils/functions.dart';
@@ -102,8 +103,11 @@ class _UserEditorModalState extends State<UserEditorModal> {
         widget.user.permissions = _userPermissions;
         if (!widget.editing) {
           await widget.user.create();
+          await LogHandler.printEvent('USUARIO: ${widget.user.name} CREADO');
         } else {
           await widget.user.update();
+          await LogHandler.printEvent(
+              'USUARIO: ${widget.user.name} ACTUALIZADO');
           if (currentUser?.id == widget.user.id) {
             currentUser?.name = widget.user.name;
             currentUser?.username = widget.user.username;
@@ -117,6 +121,7 @@ class _UserEditorModalState extends State<UserEditorModal> {
             message: widget.editing ? 'USUARIO EDITADO' : 'USUARIO CREADO',
             color: Colors.green);
       } catch (e) {
+        await LogHandler.printError(e.toString());
         showTopSnackBar(context, message: e.toString(), color: Colors.red);
       }
     }

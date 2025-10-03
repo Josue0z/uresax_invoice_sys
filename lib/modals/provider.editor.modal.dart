@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uresax_invoice_sys/apis/log.handler.dart';
 import 'package:uresax_invoice_sys/models/provider.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/utils/functions.dart';
@@ -34,11 +35,16 @@ class _ProviderEditorModalState extends State<ProviderEditorModal> {
         widget.provider.rncOrId = rncOrId.text;
         if (widget.editing) {
           await widget.provider.update();
+          await LogHandler.printEvent(
+              'PROVEEDOR: ${widget.provider.name} ACTUALIZADO');
         } else {
           provider = await widget.provider.create();
+          await LogHandler.printEvent(
+              'PROVEEDOR: ${widget.provider.name} CREADO');
         }
         Navigator.pop(context, widget.editing ? 'UPDATE' : 'CREATE');
       } catch (e) {
+        await LogHandler.printError(e.toString());
         showTopSnackBar(context, message: e.toString(), color: Colors.red);
       }
     }
