@@ -1,13 +1,40 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:moment_dart/moment_dart.dart';
+import 'package:open_file/open_file.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:uresax_invoice_sys/apis/log.handler.dart';
 import 'package:uresax_invoice_sys/settings.dart';
+import 'package:uresax_invoice_sys/utils/functions.dart';
+import 'package:path/path.dart' as path;
 
 class ReportSalesPage extends StatefulWidget {
   String title;
 
+  int reportTypeId;
+
   List<Map<String, dynamic>> data;
 
-  ReportSalesPage({super.key, required this.title, required this.data});
+  DateTime startDate;
+
+  DateTime endDate;
+
+  pw.Document document;
+
+  Uint8List bytes;
+
+  ReportSalesPage(
+      {super.key,
+      required this.title,
+      required this.reportTypeId,
+      required this.data,
+      required this.startDate,
+      required this.endDate,
+      required this.document,
+      required this.bytes});
 
   @override
   State<ReportSalesPage> createState() => _ReportSalesPageState();
@@ -88,11 +115,47 @@ class _ReportSalesPageState extends State<ReportSalesPage> {
     return contentFilled;
   }
 
+  String get reportLabel {
+    return widget.reportTypeId == 1
+        ? 'REPORTE_POR_TIPO_NCF'
+        : 'REPORTE_POR_TIPO_INGRESO';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
           title: Text('${company?.name} - ${widget.title}'),
+          actions: [
+            IconButton(
+                onPressed: () async {
+                  try {
+                    var dir = await getUresaxInvoiceDir();
+                    var period = widget.endDate.format(payload: 'YYYYMM');
+                    var start = widget.startDate.format(payload: 'DD-MM-YYYY');
+                    var end = widget.endDate.format(payload: 'DD-MM-YYYY');
+                    var file = File(path.join(
+                        dir.path,
+                        'REPORTES',
+                        'PDFS',
+                        period,
+                        '${reportLabel}_${company?.name}_$start - $end.PDF'));
+
+                    await file.create(recursive: true);
+
+                    await file.writeAsBytes(widget.bytes);
+
+                    await OpenFile.open(file.path);
+                  } catch (e) {
+                    await LogHandler.printError(e.toString());
+                    showTopSnackBar(context, message: e.toString());
+                  }
+                },
+                icon: Icon(Icons.picture_as_pdf)),
+            SizedBox(
+              width: kDefaultPadding,
+            )
+          ],
         ),
         body: SelectableRegion(
             focusNode: FocusNode(),

@@ -10,6 +10,7 @@ import 'package:uresax_invoice_sys/apis/sql.dart';
 import 'package:uresax_invoice_sys/models/bank.dart';
 import 'package:uresax_invoice_sys/models/company.dart';
 import 'package:uresax_invoice_sys/models/currency.dart';
+import 'package:uresax_invoice_sys/models/dgiiStates.dart';
 import 'package:uresax_invoice_sys/models/discount.dart';
 import 'package:uresax_invoice_sys/models/ncftype.dart';
 import 'package:uresax_invoice_sys/models/override.codes.dart';
@@ -134,6 +135,8 @@ class _MyAppState extends State<MyApp> {
     ];
 
     symbols = [SymbolModel(name: 'SIMBOLO'), ...await SymbolModel.get()];
+
+    dgiiStates = [DgiiState(name: 'ESTADO DGII'), ...await DgiiState.get()];
 
     await isValidCertFilePath();
 

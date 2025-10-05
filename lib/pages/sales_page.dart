@@ -35,12 +35,15 @@ class _SalesPageState extends State<SalesPage> {
   ];
 
   List<Map<String, dynamic>> options = [
-    {'id': 1, 'name': 'Ver Reporte de Ingresos'}
+    {'id': 1, 'name': 'Ver Reporte Por Tipo de Ncf'},
+    {'id': 2, 'name': 'Ver Reporte Por Tipo de Ingreso'}
   ];
 
   String? ncfTypeId;
   String? search;
   SaleStatus? saleStatus = SaleStatus.all;
+
+  int? estadoDgii;
 
   TextEditingController searchController = TextEditingController();
 
@@ -53,6 +56,7 @@ class _SalesPageState extends State<SalesPage> {
           endDate: dates.last!,
           ncfTypeId: ncfTypeId,
           saleStatus: saleStatus,
+          estadoDgii: estadoDgii,
           search: search);
 
       setState(() {});
@@ -107,11 +111,14 @@ class _SalesPageState extends State<SalesPage> {
   _showFiltersModal() async {
     var res = await showDialog(
         context: context,
-        builder: (ctx) =>
-            FilterSalesModal(ncfTypeId: ncfTypeId, saleStatus: saleStatus));
+        builder: (ctx) => FilterSalesModal(
+            ncfTypeId: ncfTypeId,
+            saleStatus: saleStatus,
+            dgiiState: estadoDgii));
     if (res is Map) {
       ncfTypeId = res['ncfTypeId'];
       saleStatus = res['saleStatus'];
+      estadoDgii = res['dgiiState'];
 
       setState(() {
         future = _initAsync();
@@ -119,15 +126,61 @@ class _SalesPageState extends State<SalesPage> {
     }
   }
 
-  _showTypeIncomesReport() async {
+  _showReportByTypeNcf() async {
     try {
-      var data = await getSalesTypeIncomesReport(
-          startDate: dates.first!, endDate: dates.last!, ncfTypeId: ncfTypeId);
+      var data = await getSalesReportByTypeNcf(
+          startDate: dates.first!,
+          endDate: dates.last!,
+          ncfTypeId: ncfTypeId,
+          estadoDgii: estadoDgii);
+
+      var list = data['list'];
+
+      var doc = data['document'];
+
+      var bytes = data['bytes'];
+
       Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (ctx) =>
-                  ReportSalesPage(title: 'REPORTE DE INGRESOS', data: data)));
+              builder: (ctx) => ReportSalesPage(
+                  title: 'REPORTE POR TIPO DE NCF',
+                  reportTypeId: 1,
+                  data: list,
+                  startDate: dates.first!,
+                  endDate: dates.last!,
+                  document: doc,
+                  bytes: bytes)));
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  _showReportByTypeIncome() async {
+    try {
+      var data = await getSalesTypeIncomesReport(
+          startDate: dates.first!,
+          endDate: dates.last!,
+          ncfTypeId: ncfTypeId,
+          estadoDgii: estadoDgii);
+
+      var list = data['list'];
+
+      var doc = data['document'];
+
+      var bytes = data['bytes'];
+
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (ctx) => ReportSalesPage(
+                  title: 'REPORTE POR TIPO DE INGRESO',
+                  reportTypeId: 2,
+                  data: list,
+                  startDate: dates.first!,
+                  endDate: dates.last!,
+                  document: doc,
+                  bytes: bytes)));
     } catch (e) {
       print(e);
     }
@@ -162,7 +215,10 @@ class _SalesPageState extends State<SalesPage> {
   _onSelectedOption(int? option) async {
     switch (option) {
       case 1:
-        _showTypeIncomesReport();
+        _showReportByTypeNcf();
+        break;
+      case 2:
+        _showReportByTypeIncome();
         break;
       default:
     }

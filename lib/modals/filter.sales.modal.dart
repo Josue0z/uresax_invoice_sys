@@ -4,8 +4,12 @@ import 'package:uresax_invoice_sys/settings.dart';
 class FilterSalesModal extends StatefulWidget {
   String? ncfTypeId;
   SaleStatus? saleStatus;
+  int? dgiiState;
   FilterSalesModal(
-      {super.key, required this.saleStatus, required this.ncfTypeId});
+      {super.key,
+      required this.saleStatus,
+      required this.ncfTypeId,
+      required this.dgiiState});
 
   @override
   State<FilterSalesModal> createState() => _FilterSalesModalState();
@@ -19,8 +23,11 @@ class _FilterSalesModalState extends State<FilterSalesModal> {
   ];
 
   _onSaved() async {
-    Navigator.pop(context,
-        {'ncfTypeId': widget.ncfTypeId, 'saleStatus': widget.saleStatus});
+    Navigator.pop(context, {
+      'ncfTypeId': widget.ncfTypeId,
+      'saleStatus': widget.saleStatus,
+      'dgiiState': widget.dgiiState
+    });
   }
 
   @override
@@ -52,7 +59,7 @@ class _FilterSalesModalState extends State<FilterSalesModal> {
               height: kDefaultPadding,
             ),
             DropdownButtonFormField<String>(
-                value: widget.ncfTypeId,
+                initialValue: widget.ncfTypeId,
                 isExpanded: true,
                 decoration: InputDecoration(labelText: 'TIPO DE COMPROBANTE'),
                 items: ncfs
@@ -64,7 +71,7 @@ class _FilterSalesModalState extends State<FilterSalesModal> {
                 }),
             SizedBox(height: kDefaultPadding),
             DropdownButtonFormField<SaleStatus>(
-                value: widget.saleStatus,
+                initialValue: widget.saleStatus,
                 isExpanded: true,
                 decoration: InputDecoration(labelText: 'ESTADO'),
                 items: options
@@ -74,6 +81,18 @@ class _FilterSalesModalState extends State<FilterSalesModal> {
                     .toList(),
                 onChanged: (option) {
                   widget.saleStatus = option;
+                }),
+            SizedBox(height: kDefaultPadding),
+            DropdownButtonFormField<int>(
+                initialValue: widget.dgiiState,
+                isExpanded: true,
+                decoration: InputDecoration(labelText: 'ESTADO DGII'),
+                items: dgiiStates
+                    .map((e) => DropdownMenuItem(
+                        value: e.id, child: Text(e.name ?? '')))
+                    .toList(),
+                onChanged: (option) {
+                  widget.dgiiState = option;
                 }),
             SizedBox(height: kDefaultPadding),
             SizedBox(

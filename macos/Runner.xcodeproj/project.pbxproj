@@ -139,6 +139,7 @@
 				D73912EC22F37F3D000D13A0 /* Frameworks */,
 				5E135B2B93B02CEE1F28DAE8 /* Pods */,
 			);
+			indentWidth = 3;
 			sourceTree = "<group>";
 		};
 		33CC10EE2044A3C60003C045 /* Products */ = {

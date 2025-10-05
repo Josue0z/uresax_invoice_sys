@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:moment_dart/moment_dart.dart';
+import 'package:pdf/pdf.dart';
 import 'package:postgres/postgres.dart';
 import 'package:uresax_invoice_sys/apis/sql.dart';
 import 'package:uresax_invoice_sys/models/credit.note.product.dart';
@@ -9,6 +10,7 @@ import 'package:uresax_invoice_sys/models/sale.item.abs.dart';
 import 'package:uresax_invoice_sys/models/sale.product.dart';
 import 'package:uresax_invoice_sys/models/sale.service.dart';
 import 'package:uresax_invoice_sys/settings.dart';
+import 'package:pdf/widgets.dart' as pw;
 
 abstract class Sale {
   String? id;
@@ -160,6 +162,7 @@ Future<List<Sale>> getSales(
     {String? ncfTypeId,
     String? search,
     SaleStatus? saleStatus,
+    int? estadoDgii,
     required DateTime startDate,
     required DateTime endDate}) async {
   try {
@@ -171,8 +174,12 @@ Future<List<Sale>> getSales(
     };
 
     if (ncfTypeId != null) {
-      params = 'and "ncfTypeId" = @ncfTypeId';
+      params += ' and "ncfTypeId" = @ncfTypeId';
       parameters.addAll({'ncfTypeId': ncfTypeId});
+    }
+    if (estadoDgii != null) {
+      params += ' and "estadoDgii" = @estadoDgii';
+      parameters.addAll({'estadoDgii': estadoDgii.toString()});
     }
 
     if (search != null) {
@@ -245,8 +252,176 @@ Future<List<Sale>> getCreditNotes(
   }
 }
 
-Future<List<Map<String, dynamic>>> getSalesTypeIncomesReport(
+Future<Map<String, dynamic>> getSalesTypeIncomesReport({
+  String? ncfTypeId,
+  int? estadoDgii,
+  required DateTime startDate,
+  required DateTime endDate,
+}) async {
+  try {
+    String params = '';
+    var parameters = {
+      'startDate': startDate.toIso8601String(),
+      'endDate': endDate.toIso8601String()
+    };
+
+    if (ncfTypeId != null) {
+      params += ' and "ncfTypeId" = @ncfTypeId';
+      parameters['ncfTypeId'] = ncfTypeId;
+    }
+
+    if (estadoDgii != null) {
+      params += ' and "estadoDgii" = @estadoDgii';
+      parameters['estadoDgii'] = estadoDgii.toString();
+    }
+
+    final conne = SqlConector.connection;
+
+    var res = await conne?.execute(Sql.named('''
+      WITH Movimientos AS (
+        SELECT
+          "typeIncomeId",
+          "typeIncomeName",
+          net, tax, total, effective,
+          "creditCard", "checkOrTransf", "saleToCredit",
+          law10, "retentionTax", "retentionIsr",
+          1 AS signo
+        FROM public."SalesView"
+        WHERE "createdAt" BETWEEN @startDate AND @endDate $params
+
+        UNION ALL
+
+        SELECT
+          "typeIncomeId",
+          "typeIncomeName",
+          net, tax, total, effective,
+          "creditCard", "checkOrTransf", "saleToCredit",
+          law10, "retentionTax", "retentionIsr",
+          -1 AS signo
+        FROM public."CreditNotesView"
+        WHERE "createdAt" BETWEEN @startDate AND @endDate $params
+      )
+
+      SELECT * FROM (
+        SELECT
+          "typeIncomeName" AS "TIPO DE INGRESO",
+          COUNT(*) AS "TOTAL NCFS",
+          COALESCE(SUM(net * signo), 0)::money::text AS "TOTAL NETO",
+          COALESCE(SUM(tax * signo), 0)::money::text AS "ITBIS FACTURADO",
+          COALESCE(SUM(total * signo), 0)::money::text AS "TOTAL FACTURADO",
+          COALESCE(SUM(effective * signo), 0)::money::text AS "EFECTIVO",
+          COALESCE(SUM("creditCard" * signo), 0)::money::text AS "TARJETA DE CREDITO O DEBITO",
+          COALESCE(SUM("checkOrTransf" * signo), 0)::money::text AS "CHEQUE O TRANSFERENCIA",
+          COALESCE(SUM("saleToCredit" * signo), 0)::money::text AS "VENTA A CREDITO",
+          COALESCE(SUM(law10 * signo), 0)::money::text AS "MONTO PROPINA LEGAL",
+          COALESCE(SUM("retentionTax" * signo), 0)::money::text AS "RETENCION ITBIS",
+          COALESCE(SUM("retentionIsr" * signo), 0)::money::text AS "RETENCION ISR"
+        FROM Movimientos
+        GROUP BY "typeIncomeId", "typeIncomeName"
+
+        UNION ALL
+
+        SELECT
+          'TOTAL GENERAL',
+          COUNT(*) AS "TOTAL NCFS",
+          COALESCE(SUM(net * signo), 0)::money::text,
+          COALESCE(SUM(tax * signo), 0)::money::text,
+          COALESCE(SUM(total * signo), 0)::money::text,
+          COALESCE(SUM(effective * signo), 0)::money::text,
+          COALESCE(SUM("creditCard" * signo), 0)::money::text,
+          COALESCE(SUM("checkOrTransf" * signo), 0)::money::text,
+          COALESCE(SUM("saleToCredit" * signo), 0)::money::text,
+          COALESCE(SUM(law10 * signo), 0)::money::text,
+          COALESCE(SUM("retentionTax" * signo), 0)::money::text,
+          COALESCE(SUM("retentionIsr" * signo), 0)::money::text
+        FROM Movimientos
+      ) AS reporte
+      ORDER BY "TIPO DE INGRESO"
+    '''), parameters: parameters);
+
+    var list = res?.map((e) => e.toColumnMap()).toList() ?? [];
+    var columns = list.first.keys.where((k) => k != 'typeIncomeId').toList();
+
+    var doc = pw.Document();
+    PdfColor color = PdfColor.fromHex('#CECECE');
+
+    doc.addPage(pw.MultiPage(
+      pageFormat: PdfPageFormat.a4,
+      orientation: pw.PageOrientation.landscape,
+      margin: pw.EdgeInsets.all(8),
+      theme: pw.ThemeData(defaultTextStyle: pw.TextStyle(fontSize: 5)),
+      header: (ctx) => pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Text(company?.name ?? '',
+              style:
+                  pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+          pw.Text('REPORTE POR TIPO DE INGRESO',
+              style:
+                  pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
+          pw.Text(
+              'FECHAS: ${startDate.format(payload: 'DD/MM/YYYY')} - ${endDate.format(payload: 'DD/MM/YYYY')}',
+              style:
+                  pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
+          pw.Table(
+            defaultColumnWidth: pw.FixedColumnWidth(40),
+            children: [
+              pw.TableRow(
+                decoration: pw.BoxDecoration(
+                    border: pw.Border(bottom: pw.BorderSide(color: color))),
+                children: columns
+                    .map((col) => pw.Padding(
+                          padding: pw.EdgeInsets.all(kDefaultPadding / 3),
+                          child: pw.Text(col,
+                              textAlign: pw.TextAlign.left,
+                              style:
+                                  pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                        ))
+                    .toList(),
+              )
+            ],
+          )
+        ],
+      ),
+      build: (ctx) => [
+        pw.Table(
+          defaultVerticalAlignment: pw.TableCellVerticalAlignment.bottom,
+          defaultColumnWidth: pw.FixedColumnWidth(40),
+          children: list.map((item) {
+            var values = columns.map((k) => item[k]).toList();
+            bool isTotal = item['TIPO DE INGRESO'] == 'TOTAL GENERAL';
+            return pw.TableRow(
+              decoration: pw.BoxDecoration(
+                color: isTotal ? PdfColor.fromHex('#F0F0F0') : null,
+                border: pw.Border(bottom: pw.BorderSide(color: color)),
+              ),
+              children: values
+                  .map((el) => pw.Padding(
+                        padding: pw.EdgeInsets.all(kDefaultPadding / 2),
+                        child: pw.Text(el.toString(),
+                            style: pw.TextStyle(
+                              fontWeight: isTotal
+                                  ? pw.FontWeight.bold
+                                  : pw.FontWeight.normal,
+                            ),
+                            textAlign: pw.TextAlign.left),
+                      ))
+                  .toList(),
+            );
+          }).toList(),
+        )
+      ],
+    ));
+
+    return {'list': list, 'document': doc, 'bytes': await doc.save()};
+  } catch (e) {
+    rethrow;
+  }
+}
+
+Future<Map<String, dynamic>> getSalesReportByTypeNcf(
     {String? ncfTypeId,
+    int? estadoDgii,
     required DateTime startDate,
     required DateTime endDate}) async {
   try {
@@ -258,10 +433,15 @@ Future<List<Map<String, dynamic>>> getSalesTypeIncomesReport(
     };
 
     if (ncfTypeId != null) {
-      params = 'and "ncfTypeId" = @ncfTypeId';
+      params += ' and "ncfTypeId" = @ncfTypeId';
       parameters.addAll({
         'ncfTypeId': ncfTypeId,
       });
+    }
+
+    if (estadoDgii != null) {
+      params += ' and "estadoDgii" = @estadoDgii';
+      parameters.addAll({'estadoDgii': estadoDgii.toString()});
     }
     final conne = SqlConector.connection;
 
@@ -354,7 +534,87 @@ SELECT
 FROM Totales;
  '''), parameters: parameters);
 
-    return res?.map((e) => e.toColumnMap()).toList() ?? [];
+    var list = res?.map((e) => e.toColumnMap()).toList() ?? [];
+
+    var columns = list.first.keys.toList();
+
+    var doc = pw.Document();
+    PdfColor color = PdfColor.fromHex('#CECECE');
+    doc.addPage(pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        orientation: pw.PageOrientation.landscape,
+        margin: pw.EdgeInsets.all(8),
+        theme: pw.ThemeData(defaultTextStyle: pw.TextStyle(fontSize: 5)),
+        header: (ctx) {
+          return pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Container(
+                  margin: pw.EdgeInsets.symmetric(
+                    vertical: kDefaultPadding / 2,
+                  ),
+                  child: pw.Text(company?.name ?? '',
+                      style: pw.TextStyle(
+                          fontSize: 14, fontWeight: pw.FontWeight.bold)),
+                ),
+                pw.Container(
+                  margin: pw.EdgeInsets.symmetric(
+                    vertical: kDefaultPadding / 2,
+                  ),
+                  child: pw.Text('REPORTE POR TIPO DE NCF',
+                      style: pw.TextStyle(
+                          fontSize: 10, fontWeight: pw.FontWeight.bold)),
+                ),
+                pw.Container(
+                  margin: pw.EdgeInsets.symmetric(
+                    vertical: kDefaultPadding / 2,
+                  ),
+                  child: pw.Text(
+                      'FECHAS: ${startDate.format(payload: 'DD/MM/YYYY')} - ${endDate.format(payload: 'DD/MM/YYYY')}',
+                      style: pw.TextStyle(
+                          fontSize: 10, fontWeight: pw.FontWeight.bold)),
+                ),
+                pw.Table(
+                    defaultColumnWidth: pw.FixedColumnWidth(40),
+                    children: [
+                      pw.TableRow(
+                          decoration: pw.BoxDecoration(
+                              border: pw.Border(
+                                  bottom: pw.BorderSide(color: color))),
+                          children: List.generate(columns.length, (index) {
+                            var col = columns[index];
+                            return pw.Padding(
+                                padding: pw.EdgeInsets.all(kDefaultPadding / 3),
+                                child:
+                                    pw.Text(col, textAlign: pw.TextAlign.left));
+                          }))
+                    ])
+              ]);
+        },
+        build: (ctx) {
+          return [
+            pw.Table(
+                defaultVerticalAlignment: pw.TableCellVerticalAlignment.bottom,
+                defaultColumnWidth: pw.FixedColumnWidth(40),
+                children: List.generate(list.length, (i) {
+                  var item = list[i];
+                  var values = item.values.toList();
+                  return pw.TableRow(
+                      decoration: pw.BoxDecoration(
+                          border:
+                              pw.Border(bottom: pw.BorderSide(color: color))),
+                      children: List.generate(values.length, (j) {
+                        var el = values[j];
+                        return pw.Padding(
+                            padding: pw.EdgeInsets.all(kDefaultPadding / 2),
+                            child: pw.Text(el.toString(),
+                                textAlign: pw.TextAlign.left));
+                      }));
+                }))
+          ];
+        }));
+
+    return {'list': list, 'document': doc, 'bytes': await doc.save()};
   } catch (e) {
     rethrow;
   }
