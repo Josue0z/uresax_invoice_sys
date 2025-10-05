@@ -76,6 +76,8 @@ Future<Directory> getUresaxInvoiceDir() async {
   var dir = Directory(path.join(
       Platform.environment['URESAX_INVOICE_STATIC_LOCAL_SERVER_PATH'] ?? 'x',
       'URESAX-INVOICE'));
+
+  print(dir.path);
   return await dir.create(recursive: true);
 }
 

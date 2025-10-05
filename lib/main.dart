@@ -120,7 +120,7 @@ class _MyAppState extends State<MyApp> {
     ];
 
     overrideCodes = [
-      OverrideCode(name: 'TIPO DE PAGO'),
+      OverrideCode(name: 'CODIGO DE MODIFICACION'),
       ...await OverrideCode.get()
     ];
 

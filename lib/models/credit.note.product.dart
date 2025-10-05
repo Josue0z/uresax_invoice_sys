@@ -167,7 +167,8 @@ class CreditNoteAsProduct implements Sale {
       this.signatureDate,
       this.tipoPago,
       this.authorName,
-      this.ncfSeq});
+      this.ncfSeq,
+      this.ncfAffectedCreatedAt});
 
   @override
   // TODO: implement color
@@ -182,7 +183,7 @@ class CreditNoteAsProduct implements Sale {
       var seqParams = '';
       final conne = SqlConector.connection;
 
-      await calcDifOfNetsNcfs(ncf ?? '');
+      await calcDifOfNetsNcfs(ncf: ncf ?? '', createdAt: ncfAffectedCreatedAt!);
 
       if (ncfTypeId == '04') {
         seqParams = '''nextval('04_seq')''';
@@ -805,4 +806,7 @@ class CreditNoteAsProduct implements Sale {
 
   @override
   String? estadoDgiiNombre;
+
+  @override
+  DateTime? ncfAffectedCreatedAt;
 }

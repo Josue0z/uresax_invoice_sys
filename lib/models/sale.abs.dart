@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:moment_dart/moment_dart.dart';
 import 'package:postgres/postgres.dart';
 import 'package:uresax_invoice_sys/apis/sql.dart';
 import 'package:uresax_invoice_sys/models/credit.note.product.dart';
@@ -89,6 +90,8 @@ abstract class Sale {
   int? ncfSeq;
 
   String? estadoDgiiNombre;
+
+  DateTime? ncfAffectedCreatedAt;
 
   bool get isPaid {
     throw UnimplementedError();
@@ -423,15 +426,17 @@ Future<List<Sale>> getSalesListByIdAndNcf(
   }
 }
 
-Future<void> calcDifOfNetsNcfs(String ncf) async {
+Future<void> calcDifOfNetsNcfs(
+    {required String ncf, required DateTime createdAt}) async {
   try {
     final conne = SqlConector.connection;
+    String date = createdAt.format(payload: 'YYYY-MM-DD');
     var res = await conne?.execute(Sql.named('''
-         select * from public."Sales607Form" where "ncfAffected" = @ncf
-    '''), parameters: {'ncf': ncf});
+         select * from public."CreditNotesView" where "ncfAffected" = @ncf and to_char("ncfAffectedCreatedAt",'YYYY-MM-DD') = @createdAt
+    '''), parameters: {'ncf': ncf, 'createdAt': date});
 
     if (res != null && res.isNotEmpty) {
-      throw 'EL COMPROBANTE $ncf YA FUE ANULADO';
+      throw 'EL COMPROBANTE $ncf DE LA FECHA $date YA FUE ANULADO';
     }
   } catch (e) {
     rethrow;

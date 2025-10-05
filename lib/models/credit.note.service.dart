@@ -142,7 +142,8 @@ class CreditNoteAsService implements Sale {
       this.signatureDate,
       this.tipoPago,
       this.authorName,
-      this.ncfSeq});
+      this.ncfSeq,
+      this.ncfAffectedCreatedAt});
 
   @override
   Future<CreditNoteAsService?> create() async {
@@ -152,7 +153,7 @@ class CreditNoteAsService implements Sale {
       map['id'] = id;
       var seqParams = '';
       final conne = SqlConector.connection;
-      await calcDifOfNetsNcfs(ncf ?? '');
+      await calcDifOfNetsNcfs(ncf: ncf ?? '', createdAt: ncfAffectedCreatedAt!);
 
       if (ncfTypeId == '04') {
         seqParams = '''nextval('04_seq')''';
@@ -708,4 +709,7 @@ class CreditNoteAsService implements Sale {
 
   @override
   String? estadoDgiiNombre;
+
+  @override
+  DateTime? ncfAffectedCreatedAt;
 }

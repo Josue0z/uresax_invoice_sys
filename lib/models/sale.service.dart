@@ -110,7 +110,8 @@ class SaleService implements Sale {
       this.signatureDate,
       this.tipoPago,
       this.authorName,
-      this.ncfSeq});
+      this.ncfSeq,
+      this.ncfAffectedCreatedAt});
 
   SaleService copyWith({
     String? id,
@@ -902,4 +903,7 @@ class SaleService implements Sale {
 
   @override
   String? estadoDgiiNombre;
+
+  @override
+  DateTime? ncfAffectedCreatedAt;
 }
