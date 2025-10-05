@@ -871,7 +871,8 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
           tempDirName: 'temp_7',
           indicadorMontoGravado: '0',
           indicadorNotaCredito: esNotaCredito
-              ? calcularCodigoModificacion(widget.sale.createdAt!, now)
+              ? calcularCodigoModificacion(
+                  _currentSale!.createdAt!, widget.sale.createdAt!)
               : '',
           numeroComprobante: sale.ncf ?? '',
           numeroComprobanteModificado: _currentSale?.ncf ?? '',
@@ -1378,7 +1379,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                             Container(
                               margin: EdgeInsets.only(bottom: kDefaultPadding),
                               child: DropdownButtonFormField(
-                                  value: currentTypeIncomeId,
+                                  initialValue: currentTypeIncomeId,
                                   isExpanded: true,
                                   validator: (val) =>
                                       val == null ? 'CAMPO OBLIGATORIO' : null,
