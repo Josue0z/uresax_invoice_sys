@@ -676,7 +676,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
   _showDatePicker() async {
     var result = await showDatePicker(
         context: context,
-        firstDate: DateTime.now().subtract(const Duration(days: 365)),
+        firstDate: DateTime.now(),
         lastDate: DateTime.now().add(const Duration(days: 365 * 25)));
 
     retentionDate = result;
@@ -1445,7 +1445,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                                           labelText: 'FECHA DE RETENCION',
                                           hintText: 'DD/MM/YYYY',
                                           suffixIcon: IconButton(
-                                              onPressed: null,
+                                              onPressed: _showDatePicker,
                                               icon:
                                                   Icon(Icons.calendar_month))),
                                     ),
