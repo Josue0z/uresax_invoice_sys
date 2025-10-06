@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:localstorage/localstorage.dart';
 import 'package:path/path.dart' as path;
 import 'package:uresax_invoice_sys/apis/electronic.ncf.api.request.dart';
+import 'package:uresax_invoice_sys/apis/log.handler.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 import 'package:http/http.dart' as http;
 
@@ -108,7 +109,7 @@ Future<bool> isValidCertFilePath() async {
       return false;
     }
   } catch (e) {
-    print(e);
+    await LogHandler.printError(e.toString());    
     isValid = false;
     currentElectronicNcfOption = 2;
     electronicNcfEnabled = false;

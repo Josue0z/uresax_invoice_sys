@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:localstorage/localstorage.dart';
+import 'package:uresax_invoice_sys/apis/log.handler.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/utils/functions.dart';
 import 'package:path/path.dart' as path;
@@ -54,7 +55,11 @@ class _ElectronicNcfSettingsModalState
         throw 'No valido';
       }
     } catch (e) {
+
+      await LogHandler.printError(e.toString());
       setState(() {});
+
+
       showTopSnackBar(context,
           message: 'CERTIFICADO NO VALIDO', color: Colors.red);
     } finally {
