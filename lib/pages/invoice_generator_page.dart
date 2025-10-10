@@ -396,9 +396,11 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
           await NcfSecuencia(id: currentNcfTypeId).checkNcfs(umbral: umbral);
 
       if (checkObj != null) {
-        int dif = checkObj['dif'];
-        String name = checkObj['name'];
-        throw 'QUEDAN $dif $name';
+        for (var item in checkObj) {
+          int dif = item['dif'];
+          String name = item['name'];
+          throw 'QUEDAN $dif $name';
+        }
       }
 
       var ncfList = await NcfsList(ncfTypeId: currentNcfTypeId).findNcf();
@@ -716,10 +718,10 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
 
   double get debt {
     if (widget.sale.amountPaid != null && widget.editing) {
-      return (calcs[6] - (widget.sale.amountPaid!));
+      return (calcs[6].ceilToDouble() - (widget.sale.amountPaid!));
     }
 
-    return (calcs[6] - (amountInputFormatter.doubleValue));
+    return (calcs[6].ceilToDouble() - (amountInputFormatter.doubleValue));
   }
 
   String calcularCodigoModificacion(
@@ -1058,10 +1060,12 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
           await NcfSecuencia(id: currentNcfTypeId).checkNcfs(umbral: umbral);
 
       if (checkObj != null) {
-        int dif = checkObj['dif'];
-        String name = checkObj['name'];
-        showTopSnackBar(context,
-            message: 'QUEDAN $dif $name', color: Colors.red);
+        for (var item in checkObj) {
+          int dif = item['dif'];
+          String name = item['name'];
+          showTopSnackBar(context,
+              message: 'QUEDAN $dif $name', color: Colors.red);
+        }
       }
 
       var ncfList = await NcfsList(ncfTypeId: currentNcfTypeId).findNcf();
@@ -1909,12 +1913,12 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                                         : !isSale &&
                                                 amountInputFormatter
                                                         .doubleValue !=
-                                                    calcs[6]
+                                                    calcs[6].ceilToDouble()
                                             ? 'EL MONTO DEBE SER IGUAL'
                                             : !widget.editing &&
                                                     amountInputFormatter
                                                             .doubleValue >
-                                                        calcs[6]
+                                                        calcs[6].ceilToDouble()
                                                 ? isSale
                                                     ? 'EL MONTO ES MAYOR QUE EL TOTAL A PAGAR'
                                                     : 'EL MONTO ES MAYOR QUE EL TOTAL A DEVOLVER'

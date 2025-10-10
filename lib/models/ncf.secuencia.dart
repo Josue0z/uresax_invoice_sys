@@ -60,7 +60,7 @@ class NcfSecuencia {
     }
   }
 
-  Future<Map<String, dynamic>?> checkNcfs({int umbral = 10}) async {
+  Future<List<Map<String, dynamic>>?> checkNcfs({int umbral = 10}) async {
     try {
       final conne = SqlConector.connection;
       var result = await conne?.execute('''
@@ -69,12 +69,17 @@ class NcfSecuencia {
       WHERE id = '$id' AND ("maxValue" - "lastValue") <= $umbral;
       ''');
 
-      var check = result != null && result.isNotEmpty;
       if (result!.isEmpty) {
         return null;
       }
-      var ob = result[0].toColumnMap();
-      return {'check': check, 'dif': ob['dif'], 'name': ob['name']};
+
+      List<Map<String, dynamic>> events = [];
+
+      for (var item in result) {
+        var ob = item.toColumnMap();
+        events.add({'dif': ob['dif'], 'name': ob['name']});
+      }
+      return events;
     } catch (e) {
       rethrow;
     }

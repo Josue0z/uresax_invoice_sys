@@ -170,3 +170,4 @@ https://fc.dgii.gov.do/Ecf/ConsultaTimbreFC?RncEmisor=101675489&ENCF=E3200000000
 https://ecf.dgii.gov.do/Ecf/ConsultaTimbre?RncEmisor=101675489&RncComprador=40200465546&ENCF=E340000000003&FechaEmision=02-10-2025&MontoTotal=1180.00&FechaFirma=02-10-2025%2012:56:29&CodigoSeguridad=AyVxSE
 https://ecf.dgii.gov.do/Ecf/ConsultaTimbre?RncEmisor=101675489&RncComprador=40200465546&ENCF=E340000000004&FechaEmision=04-10-2025&MontoTotal=1180.00&FechaFirma=04-10-2025%2020:30:59&CodigoSeguridad=AUggAd
 https://ecf.dgii.gov.do/Ecf/ConsultaTimbre?RncEmisor=101675489&RncComprador=40200465546&ENCF=E340000000005&FechaEmision=04-10-2025&MontoTotal=1180.00&FechaFirma=04-10-2025%2020:42:15&CodigoSeguridad=JgzzJB
+https://ecf.dgii.gov.do/Ecf/ConsultaTimbre?RncEmisor=101675489&RncComprador=131837743&ENCF=E310000000006&FechaEmision=10-10-2025&MontoTotal=180000.00&FechaFirma=10-10-2025%2010:33:08&CodigoSeguridad=GVNaOb
