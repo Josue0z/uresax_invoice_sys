@@ -1,9 +1,13 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:amount_input_formatter/amount_input_formatter.dart';
+import 'package:dio/dio.dart';
 import 'package:ecf_dgii/ecf_dgii.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:intl/intl.dart';
 import 'package:localstorage/localstorage.dart';
 import 'package:moment_dart/moment_dart.dart';
@@ -772,10 +776,16 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
           Platform.environment['URESAX_INVOICE_ENABLED_ECF_PRODUCTION'] ??
               'false');
 
+      String endPointApi = '';
+
       if (enabledEcfProduction) {
         GeneratorEndPoint.envEcfType = EnvEcfType.ecf;
+        endPointApi =
+            'https://api.uresax.com/produccion/fe/facturaselectronicas/api/ecf';
       } else {
         GeneratorEndPoint.envEcfType = EnvEcfType.testEcf;
+        endPointApi =
+            'https://api.uresax.com/prueba/fe/facturaselectronicas/api/ecf';
       }
       final cert = certFile;
 
@@ -1008,7 +1018,24 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
       await ecf.firmar();
       dynamic estado;
 
-      estado = await ecf.enviarEcf();
+      final request = http.MultipartRequest('POST', Uri.parse(endPointApi))
+        ..headers['accept'] = 'application/json'
+        ..headers['Authorization'] = 'Bearer ${ecf.token}'
+        ..files.add(await http.MultipartFile.fromPath(
+          'xml',
+          ecf.ecfFile!.path,
+          contentType: MediaType('text', 'xml'),
+          filename: path.basename(ecf.ecfFile!.path),
+        ));
+
+      final response = await request.send();
+      final body = await response.stream.bytesToString();
+
+      print(body);
+
+      estado = jsonDecode(body);
+
+      ecf.trackId = estado['trackId'] ?? '';
 
       await LogHandler.printEvent(estado.toString());
 
