@@ -6,6 +6,7 @@ import 'package:amount_input_formatter/amount_input_formatter.dart';
 import 'package:dio/dio.dart';
 import 'package:ecf_dgii/ecf_dgii.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:intl/intl.dart';
@@ -39,6 +40,7 @@ import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/utils/extensions.dart';
 import 'package:uresax_invoice_sys/utils/functions.dart';
 import 'package:uresax_invoice_sys/utils/invoices.functions.dart';
+import 'package:uresax_invoice_sys/widgets/content.error.widget.dart';
 import 'package:uresax_invoice_sys/widgets/invoice_item_generator_widget.dart';
 import 'package:uresax_invoice_sys/widgets/listen.code.widget.dart';
 import 'package:uresax_invoice_sys/widgets/rnc.query.widget.dart';
@@ -395,7 +397,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
       }
     }
     try {
-      int umbral = 12;
+      int umbral = 1;
       var checkObj =
           await NcfSecuencia(id: currentNcfTypeId).checkNcfs(umbral: umbral);
 
@@ -720,12 +722,16 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
     return widget.sale is SaleService || widget.sale is SaleProduct;
   }
 
+  double get paidAmount {
+    return double.parse(calcs[6].toStringAsFixed(2));
+  }
+
   double get debt {
     if (widget.sale.amountPaid != null && widget.editing) {
-      return (calcs[6].ceilToDouble() - (widget.sale.amountPaid!));
+      return (paidAmount - (widget.sale.amountPaid!));
     }
 
-    return (calcs[6].ceilToDouble() - (amountInputFormatter.doubleValue));
+    return (paidAmount - (amountInputFormatter.doubleValue));
   }
 
   String calcularCodigoModificacion(
@@ -1082,7 +1088,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
     ];
 
     if (currentNcfTypeId != null) {
-      int umbral = 12;
+      int umbral = 1;
       var checkObj =
           await NcfSecuencia(id: currentNcfTypeId).checkNcfs(umbral: umbral);
 
@@ -1940,12 +1946,12 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                                         : !isSale &&
                                                 amountInputFormatter
                                                         .doubleValue !=
-                                                    calcs[6].ceilToDouble()
+                                                    paidAmount
                                             ? 'EL MONTO DEBE SER IGUAL'
                                             : !widget.editing &&
                                                     amountInputFormatter
                                                             .doubleValue >
-                                                        calcs[6].ceilToDouble()
+                                                        paidAmount
                                                 ? isSale
                                                     ? 'EL MONTO ES MAYOR QUE EL TOTAL A PAGAR'
                                                     : 'EL MONTO ES MAYOR QUE EL TOTAL A DEVOLVER'
@@ -1995,16 +2001,6 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
     return Container();
   }
 
-  Widget contentError(dynamic error) {
-    return Center(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [Text(error.toString())],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
@@ -2015,7 +2011,14 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
           }
 
           if (s.hasError) {
-            return contentError(s.error);
+            return ContentErrorWidget(
+              error: s.error.toString(),
+              onRetry: () {
+                setState(() {
+                  future = _initAsync();
+                });
+              },
+            );
           }
           if (taxes.isNotEmpty &&
               retentionsTaxes.isNotEmpty &&

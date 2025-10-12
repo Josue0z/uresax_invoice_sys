@@ -3,6 +3,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:uresax_invoice_sys/modals/warehouses.editor.modal.dart';
 import 'package:uresax_invoice_sys/models/warehouse.dart';
 import 'package:uresax_invoice_sys/settings.dart';
+import 'package:uresax_invoice_sys/widgets/content.error.widget.dart';
 
 class WareHousesPage extends StatefulWidget {
   bool selectorMode;
@@ -80,16 +81,6 @@ class _WareHousesPageState extends State<WareHousesPage> {
   Widget get contentLoading {
     return Center(
       child: CircularProgressIndicator(),
-    );
-  }
-
-  Widget contentError(dynamic error) {
-    return Center(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [Text(error.toString())],
-      ),
     );
   }
 
@@ -174,7 +165,14 @@ class _WareHousesPageState extends State<WareHousesPage> {
             }
 
             if (s.hasError) {
-              return contentError(s.error);
+              return ContentErrorWidget(
+                error: s.error.toString(),
+                onRetry: () {
+                  setState(() {
+                    future = _initAsync();
+                  });
+                },
+              );
             }
             if (s.connectionState == ConnectionState.done &&
                 wareHouses.isNotEmpty) {

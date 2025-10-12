@@ -4,6 +4,7 @@ import 'package:moment_dart/moment_dart.dart';
 import 'package:uresax_invoice_sys/modals/ncf.list.editor.modal.dart';
 import 'package:uresax_invoice_sys/models/ncfList.dart';
 import 'package:uresax_invoice_sys/settings.dart';
+import 'package:uresax_invoice_sys/widgets/content.error.widget.dart';
 
 class NcfListPage extends StatefulWidget {
   const NcfListPage({super.key});
@@ -85,16 +86,6 @@ class _NcfListPageState extends State<NcfListPage> {
     );
   }
 
-  Widget contentError(dynamic error) {
-    return Center(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [Text(error.toString())],
-      ),
-    );
-  }
-
   _initAsync() async {
     try {
       ncfsList = await NcfsList.get();
@@ -126,7 +117,14 @@ class _NcfListPageState extends State<NcfListPage> {
             }
 
             if (s.hasError) {
-              return contentError(s.error);
+              return ContentErrorWidget(
+                error: s.error.toString(),
+                onRetry: () {
+                  setState(() {
+                    future = _initAsync();
+                  });
+                },
+              );
             }
             if (s.connectionState == ConnectionState.done &&
                 ncfsList.isNotEmpty) {

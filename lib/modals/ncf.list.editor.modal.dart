@@ -3,6 +3,7 @@ import 'package:moment_dart/moment_dart.dart';
 import 'package:uresax_invoice_sys/apis/log.handler.dart';
 import 'package:uresax_invoice_sys/models/ncf.secuencia.dart';
 import 'package:uresax_invoice_sys/models/ncfList.dart';
+import 'package:uresax_invoice_sys/models/ncftype.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/utils/functions.dart';
 
@@ -16,11 +17,13 @@ class NcfListEditorModal extends StatefulWidget {
 class _NcfListEditorModalState extends State<NcfListEditorModal> {
   String? currentNcfTypeId;
   String? currentNcfTypeName;
+  NcfType? currentNcfType;
   DateTime expirationDate = DateTime.now().endOfYear();
   TextEditingController expirationDateController = TextEditingController();
   TextEditingController start = TextEditingController();
   TextEditingController end = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  NcfSecuencia? secuencia;
 
   _onSubmit() async {
     if (_formKey.currentState!.validate()) {
@@ -114,9 +117,22 @@ class _NcfListEditorModalState extends State<NcfListEditorModal> {
                   return DropdownMenuItem(
                       value: ncf.id, child: Text(ncf.name ?? ''));
                 }),
-                onChanged: (id) {
+                onChanged: (id) async {
                   currentNcfTypeId = id;
-                  currentNcfTypeName = ncfs.firstWhere((e) => e.id == id).name;
+                  currentNcfType = ncfs.firstWhere((e) => e.id == id);
+                  currentNcfTypeName = currentNcfType?.name;
+
+                  if (currentNcfTypeId != null) {
+                    secuencia = (await NcfSecuencia.get(
+                      params: 'where id=\'$currentNcfTypeId\'',
+                    ))
+                        .first;
+
+                    if (secuencia?.lastValue != null) {
+                      start.text = (secuencia!.lastValue! + 1).toString();
+                    }
+                    setState(() {});
+                  }
                 }),
             SizedBox(
               height: kDefaultPadding,
@@ -126,7 +142,13 @@ class _NcfListEditorModalState extends State<NcfListEditorModal> {
                 Expanded(
                     child: TextFormField(
                   controller: start,
-                  validator: (val) => val!.isEmpty ? 'CAMPO OBLIGATORIO' : null,
+                  maxLength:
+                      currentNcfType != null ? currentNcfType?.maxLimit : 8,
+                  validator: (val) => val!.isEmpty
+                      ? 'CAMPO OBLIGATORIO'
+                      : int.parse(val) < 1
+                          ? 'NO PUEDE SER MENOR QUE 1'
+                          : null,
                   decoration:
                       InputDecoration(labelText: 'INICIAL', hintText: '1'),
                 )),
@@ -136,9 +158,13 @@ class _NcfListEditorModalState extends State<NcfListEditorModal> {
                 Expanded(
                     child: TextFormField(
                   controller: end,
+                  maxLength:
+                      currentNcfType != null ? currentNcfType?.maxLimit : 8,
                   validator: (val) => val!.isEmpty ? 'CAMPO OBLIGATORIO' : null,
-                  decoration:
-                      InputDecoration(labelText: 'FINAL', hintText: '9999999'),
+                  decoration: InputDecoration(
+                      labelText: 'FINAL',
+                      hintText: List.generate(
+                          currentNcfType?.maxLimit ?? 8, (i) => '9').join('')),
                 )),
               ],
             ),

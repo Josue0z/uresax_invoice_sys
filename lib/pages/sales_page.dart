@@ -15,6 +15,7 @@ import 'package:uresax_invoice_sys/utils/extensions.dart';
 import 'package:uresax_invoice_sys/utils/functions.dart';
 import 'package:uresax_invoice_sys/utils/invoices.functions.dart';
 import 'package:path/path.dart' as path;
+import 'package:uresax_invoice_sys/widgets/content.error.widget.dart';
 import 'package:uresax_invoice_sys/widgets/date.range_widget.dart';
 import 'package:pdf/widgets.dart' as pw;
 
@@ -316,6 +317,20 @@ class _SalesPageState extends State<SalesPage> {
                   ),
                 ),
                 SizedBox(width: kDefaultPadding),
+                sale.estadoDgii != null
+                    ? Container(
+                        margin: EdgeInsets.only(
+                            left: kDefaultPadding / 2, right: kDefaultPadding),
+                        padding: EdgeInsets.all(kDefaultPadding / 2),
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            color: sale.statusColorDgii.withOpacity(0.04)),
+                        child: Text(
+                          sale.estadoDgiiNombre ?? '',
+                          style: TextStyle(color: sale.statusColorDgii),
+                        ),
+                      )
+                    : SizedBox(),
                 Text(
                     sale.currencyId == 1
                         ? sale.total?.toDop()
@@ -353,16 +368,6 @@ class _SalesPageState extends State<SalesPage> {
           SvgPicture.asset('assets/svgs/undraw_printing-invoices_osgs.svg',
               width: 320)
         ],
-      ),
-    );
-  }
-
-  Widget contentError(dynamic error) {
-    return Center(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [Text(error.toString())],
       ),
     );
   }
@@ -459,7 +464,14 @@ class _SalesPageState extends State<SalesPage> {
               }
 
               if (s.hasError) {
-                return contentError(s.error);
+                return ContentErrorWidget(
+                  error: s.error.toString(),
+                  onRetry: () {
+                    setState(() {
+                      future = _initAsync();
+                    });
+                  },
+                );
               }
               if (sales.isNotEmpty) {
                 return contentFilled;

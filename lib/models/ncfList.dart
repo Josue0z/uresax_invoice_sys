@@ -63,13 +63,13 @@ class NcfsList {
     try {
       final conne = SqlConector.connection;
 
-      int s = start! + 1;
+      int s = start!;
 
       final resTraslape = await conne?.execute(Sql.named('''
 SELECT *
 FROM public."NcfsList"
 WHERE "ncfTypeId" = @ncfTypeId
-  AND NOT ("end" <= @start OR "start" > @end);
+  AND NOT ("end" <= @start OR "start" > @end) and finish = false;
 '''), parameters: {'ncfTypeId': ncfTypeId, 'start': s, 'end': end});
 
       if (resTraslape != null && resTraslape.isNotEmpty) {
@@ -80,7 +80,7 @@ WHERE "ncfTypeId" = @ncfTypeId
 SELECT *
 FROM public."NcfsList"
 WHERE "ncfTypeId" = @ncfTypeId
-  AND "start" <= @start AND "end" >= @end;
+  AND "start" <= @start AND "end" >= @end and finish = false;
 '''), parameters: {'ncfTypeId': ncfTypeId, 'start': start, 'end': end});
 
       if (resContenido != null && resContenido.isNotEmpty) {
@@ -91,7 +91,7 @@ WHERE "ncfTypeId" = @ncfTypeId
 SELECT *
 FROM public."NcfsList"
 WHERE "ncfTypeId" = @ncfTypeId
-  AND "start" > @start AND "start" <= @end;
+  AND "start" > @start AND "start" <= @end and finish = false;
 '''), parameters: {'ncfTypeId': ncfTypeId, 'start': start, 'end': end});
 
       if (resInicioDentro != null && resInicioDentro.isNotEmpty) {
@@ -102,7 +102,7 @@ WHERE "ncfTypeId" = @ncfTypeId
 SELECT *
 FROM public."NcfsList"
 WHERE "ncfTypeId" = @ncfTypeId
-  AND "end" >= @start AND "end" < @end;
+  AND "end" >= @start AND "end" < @end and finish = false;
 '''), parameters: {'ncfTypeId': ncfTypeId, 'start': s, 'end': end});
 
       if (resFinalDentro != null && resFinalDentro.isNotEmpty) {
@@ -133,7 +133,7 @@ WHERE "ncfTypeId" = @ncfTypeId
       await conne?.execute(Sql.named('''
 UPDATE public."NcfsList"
 	SET   finish = true
-	WHERE "ncfTypeId" = @ncfTypeId and "end" = $currentNcf
+	WHERE "ncfTypeId" = @ncfTypeId and "end" = $currentNcf and finish = false
         '''), parameters: {'ncfTypeId': ncfTypeId});
     } catch (e) {
       rethrow;

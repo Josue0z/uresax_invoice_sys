@@ -3,6 +3,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:uresax_invoice_sys/modals/category.editor.modal.dart';
 import 'package:uresax_invoice_sys/models/categorie.dart';
 import 'package:uresax_invoice_sys/settings.dart';
+import 'package:uresax_invoice_sys/widgets/content.error.widget.dart';
 
 class CategoriesPage extends StatefulWidget {
   bool selectorMode;
@@ -114,16 +115,6 @@ class _CategoriesPageState extends State<CategoriesPage> {
     );
   }
 
-  Widget contentError(dynamic error) {
-    return Center(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [Text(error.toString())],
-      ),
-    );
-  }
-
   _initAsync([String? words]) async {
     try {
       categories = await Category.get(search: words);
@@ -181,7 +172,14 @@ class _CategoriesPageState extends State<CategoriesPage> {
             }
 
             if (s.hasError) {
-              return contentError(s.error);
+              return ContentErrorWidget(
+                error: s.error.toString(),
+                onRetry: () {
+                  setState(() {
+                    future = _initAsync();
+                  });
+                },
+              );
             }
             if (s.connectionState == ConnectionState.done &&
                 categories.isNotEmpty) {

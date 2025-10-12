@@ -4,6 +4,7 @@ import 'package:uresax_invoice_sys/modals/client.editor.modal.dart';
 import 'package:uresax_invoice_sys/models/client.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/utils/functions.dart';
+import 'package:uresax_invoice_sys/widgets/content.error.widget.dart';
 
 class ClientsPage extends StatefulWidget {
   bool selectorMode;
@@ -103,16 +104,6 @@ class _ClientsPageState extends State<ClientsPage> {
     );
   }
 
-  Widget contentError(dynamic error) {
-    return Center(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [Text(error.toString())],
-      ),
-    );
-  }
-
   @override
   void initState() {
     setState(() {
@@ -160,7 +151,14 @@ class _ClientsPageState extends State<ClientsPage> {
             }
 
             if (s.hasError) {
-              return contentError(s.error);
+              return ContentErrorWidget(
+                error: s.error.toString(),
+                onRetry: () {
+                  setState(() {
+                    future = _initAsync();
+                  });
+                },
+              );
             }
             if (s.connectionState == ConnectionState.done &&
                 clients.isNotEmpty) {

@@ -10,6 +10,7 @@ class Client {
   String? identification;
   String? phone;
   String? email;
+  String? address;
   DateTime? createdAt;
   Client({
     this.id,
@@ -17,6 +18,7 @@ class Client {
     this.identification,
     this.phone,
     this.email,
+    this.address,
     this.createdAt,
   });
 
@@ -67,7 +69,7 @@ class Client {
 
       var result = await conne?.execute(
           Sql.named(
-              '''insert into public."Clients"(id,name, identification, phone, email) values(@id,@name,@identification,@phone,@email) RETURNING *'''),
+              '''insert into public."Clients"(id,name, identification, phone, email,address) values(@id,@name,@identification,@phone,@email,@address) RETURNING *'''),
           parameters: map);
 
       return Client.fromMap(result!.first.toColumnMap());
@@ -82,7 +84,7 @@ class Client {
 
       var result = await conne?.execute(
           Sql.named(
-              '''update public."Clients" set name = @name, phone = @phone, email = @email, identification = @identification where id = @id RETURNING *'''),
+              '''update public."Clients" set name = @name, phone = @phone, email = @email, identification = @identification, address = @address where id = @id RETURNING *'''),
           parameters: toMapInsert());
 
       return Client.fromMap(result!.first.toColumnMap());
@@ -127,6 +129,7 @@ class Client {
       'identification': identification,
       'phone': phone,
       'email': email,
+      'address': address
     };
   }
 
@@ -137,6 +140,7 @@ class Client {
       identification: map['identification'],
       phone: map['phone'],
       email: map['email'],
+      address: map['address'],
       createdAt: map['createdAt'],
     );
   }
@@ -148,7 +152,7 @@ class Client {
 
   @override
   String toString() {
-    return 'Client(id: $id, name: $name, identification: $identification, phone: $phone, email: $email, createdAt: $createdAt)';
+    return 'Client(id: $id, name: $name, identification: $identification, phone: $phone, email: $email, address: $address, createdAt: $createdAt)';
   }
 
   @override

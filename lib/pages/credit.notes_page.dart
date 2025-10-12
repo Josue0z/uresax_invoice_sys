@@ -10,6 +10,7 @@ import 'package:uresax_invoice_sys/utils/extensions.dart';
 import 'package:uresax_invoice_sys/utils/functions.dart';
 import 'package:uresax_invoice_sys/utils/invoices.functions.dart';
 import 'package:path/path.dart' as path;
+import 'package:uresax_invoice_sys/widgets/content.error.widget.dart';
 import 'package:uresax_invoice_sys/widgets/date.range_widget.dart';
 import 'package:pdf/widgets.dart' as pw;
 
@@ -157,6 +158,20 @@ class _CreditNotesPageState extends State<CreditNotesPage> {
               runAlignment: WrapAlignment.center,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
+                item.estadoDgii != null
+                    ? Container(
+                        margin: EdgeInsets.only(
+                            left: kDefaultPadding / 2, right: kDefaultPadding),
+                        padding: EdgeInsets.all(kDefaultPadding / 2),
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            color: item.statusColorDgii.withOpacity(0.04)),
+                        child: Text(
+                          item.estadoDgiiNombre ?? '',
+                          style: TextStyle(color: item.statusColorDgii),
+                        ),
+                      )
+                    : SizedBox(),
                 Text(
                     item.currencyId == 1
                         ? item.total?.toDop()
@@ -183,16 +198,6 @@ class _CreditNotesPageState extends State<CreditNotesPage> {
   Widget get contentLoading {
     return Center(
       child: CircularProgressIndicator(),
-    );
-  }
-
-  Widget contentError(dynamic error) {
-    return Center(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [Text(error.toString())],
-      ),
     );
   }
 
@@ -267,7 +272,14 @@ class _CreditNotesPageState extends State<CreditNotesPage> {
             }
 
             if (s.hasError) {
-              return contentError(s.error);
+              return ContentErrorWidget(
+                error: s.error.toString(),
+                onRetry: () {
+                  setState(() {
+                    future = _initAsync();
+                  });
+                },
+              );
             }
             if (s.connectionState == ConnectionState.done &&
                 creditNotes.isNotEmpty) {

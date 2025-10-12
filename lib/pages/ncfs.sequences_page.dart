@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:uresax_invoice_sys/models/ncf.secuencia.dart';
 import 'package:uresax_invoice_sys/settings.dart';
+import 'package:uresax_invoice_sys/widgets/content.error.widget.dart';
 
 class NcfsSequencesPage extends StatefulWidget {
   const NcfsSequencesPage({super.key});
@@ -96,16 +97,6 @@ class _NcfsSequencesPageState extends State<NcfsSequencesPage> {
     );
   }
 
-  Widget contentError(dynamic error) {
-    return Center(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [Text(error.toString())],
-      ),
-    );
-  }
-
   _initAsync() async {
     ncfs = await NcfSecuencia.get();
     setState(() {});
@@ -153,7 +144,14 @@ class _NcfsSequencesPageState extends State<NcfsSequencesPage> {
             }
 
             if (s.hasError) {
-              return contentError(s.error);
+              return ContentErrorWidget(
+                error: s.error.toString(),
+                onRetry: () {
+                  setState(() {
+                    future = _initAsync();
+                  });
+                },
+              );
             }
             if (s.connectionState == ConnectionState.done && ncfs.isNotEmpty) {
               return contentFilled;

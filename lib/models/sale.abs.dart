@@ -95,6 +95,8 @@ abstract class Sale {
 
   DateTime? ncfAffectedCreatedAt;
 
+  String? clientAddress;
+
   bool get isPaid {
     throw UnimplementedError();
   }
@@ -104,6 +106,10 @@ abstract class Sale {
   }
 
   Color get color {
+    throw UnimplementedError();
+  }
+
+  Color get statusColorDgii {
     throw UnimplementedError();
   }
 

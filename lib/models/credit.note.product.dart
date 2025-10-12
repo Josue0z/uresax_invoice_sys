@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:postgres/postgres.dart';
 import 'package:uresax_invoice_sys/apis/sql.dart';
 import 'package:uresax_invoice_sys/models/credit.note.item.product.dart';
@@ -168,7 +169,8 @@ class CreditNoteAsProduct implements Sale {
       this.tipoPago,
       this.authorName,
       this.ncfSeq,
-      this.ncfAffectedCreatedAt});
+      this.ncfAffectedCreatedAt,
+      this.clientAddress});
 
   @override
   // TODO: implement color
@@ -593,7 +595,8 @@ class CreditNoteAsProduct implements Sale {
         tipoPago: map['tipoPago'],
         authorId: map['authorId'],
         authorName: map['authorName'],
-        ncfSeq: map['ncfSeq']);
+        ncfSeq: map['ncfSeq'],
+        clientAddress: map['clientAddress']);
   }
 
   String toJson() => json.encode(toMap());
@@ -603,7 +606,7 @@ class CreditNoteAsProduct implements Sale {
 
   @override
   String toString() {
-    return 'CreditNoteAsProduct(amountPaid: $amountPaid, checkOrTransf: $checkOrTransf, clientId: $clientId, clientName: $clientName, clientType: $clientType, clientTypeName: $clientTypeName, createdAt: $createdAt, creditCard: $creditCard, debt: $debt, description: $description, discount: $discount, effective: $effective, id: $id, invoiceTypeId: $invoiceTypeId, items: $items, law10: $law10, ncf: $ncf, ncfAffected: $ncfAffected, ncfTypeId: $ncfTypeId, ncfTypeName: $ncfTypeName, net: $net, paid: $paid, paymentMethodId: $paymentMethodId, paymentMethodName: $paymentMethodName, prefix: $prefix, retentionDate: $retentionDate, retentionIsr: $retentionIsr, retentionTax: $retentionTax, saleId: $saleId, saleToCredit: $saleToCredit, tax: $tax, total: $total, typeIncomeId: $typeIncomeId, typeIncomeName: $typeIncomeName)';
+    return 'CreditNoteAsProduct(amountPaid: $amountPaid, checkOrTransf: $checkOrTransf, clientId: $clientId, clientName: $clientName, clientType: $clientType, clientTypeName: $clientTypeName, createdAt: $createdAt, creditCard: $creditCard, debt: $debt, description: $description, discount: $discount, effective: $effective, id: $id, invoiceTypeId: $invoiceTypeId, items: $items, law10: $law10, ncf: $ncf, ncfAffected: $ncfAffected, ncfTypeId: $ncfTypeId, ncfTypeName: $ncfTypeName, net: $net, paid: $paid, paymentMethodId: $paymentMethodId, paymentMethodName: $paymentMethodName, prefix: $prefix, retentionDate: $retentionDate, retentionIsr: $retentionIsr, retentionTax: $retentionTax, saleId: $saleId, saleToCredit: $saleToCredit, tax: $tax, total: $total, typeIncomeId: $typeIncomeId, typeIncomeName: $typeIncomeName, clientAddress: $clientAddress)';
   }
 
   @override
@@ -809,4 +812,21 @@ class CreditNoteAsProduct implements Sale {
 
   @override
   DateTime? ncfAffectedCreatedAt;
+
+  @override
+  String? clientAddress;
+
+  @override
+  Color get statusColorDgii {
+    if (estadoDgii == 1) {
+      return const Color(0xFF368D39);
+    } else if (estadoDgii == 3) {
+      return Colors.orange;
+    } else if (estadoDgii == 2) {
+      return Colors.red;
+    } else if (estadoDgii == 4) {
+      return const Color(0xFF368D39);
+    }
+    return Colors.grey;
+  }
 }

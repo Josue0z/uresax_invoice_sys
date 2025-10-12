@@ -15,11 +15,11 @@ class NcfSecuencia {
     this.minValue,
     this.maxValue,
   });
-  static Future<List<NcfSecuencia>> get() async {
+  static Future<List<NcfSecuencia>> get({String params = ''}) async {
     try {
       final conne = SqlConector.connection;
       var result =
-          await conne?.execute('select * from public."NcfsSecuencias"');
+          await conne?.execute('select * from public."NcfsSecuencias" $params');
       return result
               ?.map((e) => NcfSecuencia.fromMap(e.toColumnMap()))
               .toList() ??

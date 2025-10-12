@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:uresax_invoice_sys/modals/discount.editor.modal.dart';
 import 'package:uresax_invoice_sys/models/discount.dart';
+import 'package:uresax_invoice_sys/widgets/content.error.widget.dart';
 
 class DiscountsPage extends StatefulWidget {
   bool selectorMode;
@@ -90,16 +91,6 @@ class _DiscountsPageState extends State<DiscountsPage> {
     );
   }
 
-  Widget contentError(dynamic error) {
-    return Center(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [Text(error.toString())],
-      ),
-    );
-  }
-
   _initAsync([String? words]) async {
     discounts = [
       Discount(
@@ -132,7 +123,14 @@ class _DiscountsPageState extends State<DiscountsPage> {
             }
 
             if (s.hasError) {
-              return contentError(s.error);
+              return ContentErrorWidget(
+                error: s.error.toString(),
+                onRetry: () {
+                  setState(() {
+                    future = _initAsync();
+                  });
+                },
+              );
             }
             if (s.connectionState == ConnectionState.done &&
                 discounts.isNotEmpty) {

@@ -111,7 +111,8 @@ class SaleService implements Sale {
       this.tipoPago,
       this.authorName,
       this.ncfSeq,
-      this.ncfAffectedCreatedAt});
+      this.ncfAffectedCreatedAt,
+      this.clientAddress});
 
   SaleService copyWith({
     String? id,
@@ -326,7 +327,8 @@ class SaleService implements Sale {
         tipoPago: map['tipoPago'],
         authorId: map['authorId'],
         authorName: map['authorName'],
-        ncfSeq: map['ncfSeq']);
+        ncfSeq: map['ncfSeq'],
+        clientAddress: map['clientAddress']);
   }
 
   String toJson() => json.encode(toMap());
@@ -336,7 +338,7 @@ class SaleService implements Sale {
 
   @override
   String toString() {
-    return 'SaleService(id: $id, clientId: $clientId, ncf: $ncf, ncfAffected: $ncfAffected, discount: $discount, net: $net, tax: $tax, total: $total, effective: $effective, creditCard: $creditCard, checkOrTransf: $checkOrTransf, saleToCredit: $saleToCredit, law10: $law10, typeIncomeId: $typeIncomeId, clientType: $clientType, createdAt: $createdAt, retentionTax: $retentionTax, retentionIsr: $retentionIsr, paymentMethodId: $paymentMethodId, ncfTypeId: $ncfTypeId, saleId: $saleId)';
+    return 'SaleService(id: $id, clientId: $clientId, ncf: $ncf, ncfAffected: $ncfAffected, discount: $discount, net: $net, tax: $tax, total: $total, effective: $effective, creditCard: $creditCard, checkOrTransf: $checkOrTransf, saleToCredit: $saleToCredit, law10: $law10, typeIncomeId: $typeIncomeId, clientType: $clientType, createdAt: $createdAt, retentionTax: $retentionTax, retentionIsr: $retentionIsr, paymentMethodId: $paymentMethodId, ncfTypeId: $ncfTypeId, saleId: $saleId, clientAddress: $clientAddress)';
   }
 
   @override
@@ -906,4 +908,21 @@ class SaleService implements Sale {
 
   @override
   DateTime? ncfAffectedCreatedAt;
+
+  @override
+  String? clientAddress;
+
+  @override
+  Color get statusColorDgii {
+    if (estadoDgii == 1) {
+      return const Color(0xFF368D39);
+    } else if (estadoDgii == 3) {
+      return Colors.orange;
+    } else if (estadoDgii == 2) {
+      return Colors.red;
+    } else if (estadoDgii == 4) {
+      return const Color(0xFF368D39);
+    }
+    return Colors.grey;
+  }
 }

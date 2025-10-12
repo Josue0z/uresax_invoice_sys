@@ -3,6 +3,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:uresax_invoice_sys/modals/provider.editor.modal.dart';
 import 'package:uresax_invoice_sys/models/provider.dart';
 import 'package:uresax_invoice_sys/settings.dart';
+import 'package:uresax_invoice_sys/widgets/content.error.widget.dart';
 
 class ProvidersPage extends StatefulWidget {
   bool selectorMode;
@@ -119,16 +120,6 @@ class _ProvidersPageState extends State<ProvidersPage> {
     );
   }
 
-  Widget contentError(dynamic error) {
-    return Center(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [Text(error.toString())],
-      ),
-    );
-  }
-
   @override
   void initState() {
     setState(() {
@@ -179,7 +170,14 @@ class _ProvidersPageState extends State<ProvidersPage> {
             }
 
             if (s.hasError) {
-              return contentError(s.error);
+              return ContentErrorWidget(
+                error: s.error.toString(),
+                onRetry: () {
+                  setState(() {
+                    future = _initAsync();
+                  });
+                },
+              );
             }
             if (s.connectionState == ConnectionState.done &&
                 providers.isNotEmpty) {

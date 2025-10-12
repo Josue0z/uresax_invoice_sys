@@ -80,14 +80,31 @@ pw.Document createDefaultInvoice(Sale sale) {
           child: pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
-                pw.Text('Facturado a:', style: pw.TextStyle(fontSize: 10)),
+                pw.Text('Facturado a:',
+                    style: pw.TextStyle(
+                        fontSize: 10, fontWeight: pw.FontWeight.bold)),
                 pw.SizedBox(height: kDefaultPadding / 2),
                 pw.Text(sale.clientName ?? '',
                     style: pw.TextStyle(fontSize: 10)),
                 pw.SizedBox(height: kDefaultPadding / 2),
-                pw.Text('Rnc/Cedula:', style: pw.TextStyle(fontSize: 10)),
+                pw.Text('Rnc/Cedula:',
+                    style: pw.TextStyle(
+                        fontSize: 10, fontWeight: pw.FontWeight.bold)),
                 pw.SizedBox(height: kDefaultPadding / 2),
                 pw.Text(sale.clientId ?? '', style: pw.TextStyle(fontSize: 10)),
+                pw.Container(
+                    margin: pw.EdgeInsets.only(top: kDefaultPadding / 2),
+                    child: pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.start,
+                        children: [
+                          pw.Text('Dirección:',
+                              style: pw.TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: pw.FontWeight.bold)),
+                          pw.SizedBox(height: kDefaultPadding / 2),
+                          pw.Text(sale.clientAddress ?? '<Sin dirección>',
+                              style: pw.TextStyle(fontSize: 10)),
+                        ]))
               ]),
         ),
         pw.Expanded(
@@ -106,7 +123,8 @@ pw.Document createDefaultInvoice(Sale sale) {
                     children: [
                       pw.Text(
                         'Factura #',
-                        style: pw.TextStyle(fontSize: 10),
+                        style: pw.TextStyle(
+                            fontSize: 10, fontWeight: pw.FontWeight.bold),
                         textAlign: pw.TextAlign.right,
                       ),
                       pw.SizedBox(width: kDefaultPadding),
@@ -197,7 +215,7 @@ pw.Document createDefaultInvoice(Sale sale) {
                   padding: pw.EdgeInsets.all(kDefaultPadding / 3),
                   child: pw.Text(col,
                       style:
-                          pw.TextStyle(color: PdfColors.white, fontSize: 9)));
+                          pw.TextStyle(color: PdfColors.white, fontSize: 7)));
             })),
         ...List.generate(sale.items.length, (index) {
           var item = sale.items[index];
@@ -211,7 +229,7 @@ pw.Document createDefaultInvoice(Sale sale) {
                 var val = values[i];
                 return pw.Padding(
                     padding: pw.EdgeInsets.all(kDefaultPadding / 2),
-                    child: pw.Text(val, style: pw.TextStyle(fontSize: 8)));
+                    child: pw.Text(val, style: pw.TextStyle(fontSize: 7)));
               }));
         })
       ]),

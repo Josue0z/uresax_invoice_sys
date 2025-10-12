@@ -5,6 +5,7 @@ import 'package:uresax_invoice_sys/models/product.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/utils/extensions.dart';
 import 'package:uresax_invoice_sys/utils/functions.dart';
+import 'package:uresax_invoice_sys/widgets/content.error.widget.dart';
 
 class ProductsPage extends StatefulWidget {
   bool selectedMode;
@@ -141,16 +142,6 @@ class _ProductsPageState extends State<ProductsPage> {
     );
   }
 
-  Widget contentError(dynamic error) {
-    return Center(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [Text(error.toString())],
-      ),
-    );
-  }
-
   @override
   void initState() {
     setState(() {
@@ -198,7 +189,14 @@ class _ProductsPageState extends State<ProductsPage> {
             }
 
             if (s.hasError) {
-              return contentError(s.error);
+              return ContentErrorWidget(
+                error: s.error.toString(),
+                onRetry: () {
+                  setState(() {
+                    future = _initAsync();
+                  });
+                },
+              );
             }
             if (s.connectionState == ConnectionState.done &&
                 products.isNotEmpty) {

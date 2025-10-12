@@ -20,6 +20,7 @@ class _ClientEditorModalState extends State<ClientEditorModal> {
   TextEditingController identification = TextEditingController();
   TextEditingController phone = TextEditingController();
   TextEditingController email = TextEditingController();
+  TextEditingController address = TextEditingController();
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   String get title {
@@ -37,6 +38,7 @@ class _ClientEditorModalState extends State<ClientEditorModal> {
         widget.client.identification = identification.text;
         widget.client.email = email.text;
         widget.client.phone = phone.text;
+        widget.client.address = address.text;
 
         if (!widget.editing) {
           await widget.client.create();
@@ -66,6 +68,7 @@ class _ClientEditorModalState extends State<ClientEditorModal> {
         TextEditingValue(text: widget.client.identification ?? '');
     email.value = TextEditingValue(text: widget.client.email ?? '');
     phone.value = TextEditingValue(text: widget.client.phone ?? '');
+    address.text = widget.client.address ?? '';
   }
 
   @override
@@ -135,6 +138,16 @@ class _ClientEditorModalState extends State<ClientEditorModal> {
                     controller: email,
                     decoration: InputDecoration(
                         labelText: 'CORREO', hintText: 'correo@example.com'),
+                  ),
+                  SizedBox(
+                    height: kDefaultPadding,
+                  ),
+                  TextFormField(
+                    controller: address,
+                    maxLines: 4,
+                    decoration: InputDecoration(
+                        labelText: 'DIRECCION',
+                        hintText: 'Escribir direccion...'),
                   ),
                   SizedBox(
                     height: kDefaultPadding,

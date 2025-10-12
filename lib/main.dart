@@ -49,11 +49,10 @@ void main() async {
     Size sizeWindow = Size(1024, 700);
 
     WindowOptions windowOptions = WindowOptions(
-      size: sizeWindow,
-      minimumSize: sizeWindow,
-      center: true,
-      backgroundColor: Colors.transparent,
-    );
+        size: sizeWindow,
+        minimumSize: sizeWindow,
+        center: true,
+        title: 'URESAX INVOICE SYS');
 
     if (hostname == null ||
         databaseName == null ||

@@ -5,19 +5,15 @@ import 'package:uresax_invoice_sys/apis/sql.dart';
 class NcfType {
   String? id;
   String? name;
-  NcfType({
-    this.id,
-    this.name,
-  });
+  int? minLimit;
+  int? maxLimit;
+  NcfType({this.id, this.name, this.minLimit, this.maxLimit});
 
   static Future<List<NcfType>> get() async {
     try {
       final conne = SqlConector.connection;
-      var result =
-          await conne?.execute('select id,name from public."NcfsTypes"');
-      return result
-              ?.map((e) => NcfType(id: e[0] as String, name: e[1] as String))
-              .toList() ??
+      var result = await conne?.execute('select * from public."NcfsTypes"');
+      return result?.map((e) => NcfType.fromMap(e.toColumnMap())).toList() ??
           [];
     } catch (e) {
       rethrow;
@@ -62,9 +58,10 @@ class NcfType {
 
   factory NcfType.fromMap(Map<String, dynamic> map) {
     return NcfType(
-      id: map['id'],
-      name: map['name'],
-    );
+        id: map['id'],
+        name: map['name'],
+        minLimit: map['minLimit'],
+        maxLimit: map['maxLimit']);
   }
 
   String toJson() => json.encode(toMap());
@@ -73,7 +70,8 @@ class NcfType {
       NcfType.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
-  String toString() => 'NcfType(id: $id, name: $name)';
+  String toString() =>
+      'NcfType(id: $id, name: $name, minLimit: $minLimit, maxLimit: $maxLimit)';
 
   @override
   bool operator ==(Object o) {
