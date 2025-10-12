@@ -513,13 +513,17 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
     ];
   }
 
-  List<double> get calcsDollarsToDop {
+  double get xrate {
     double xrate = 1;
 
     double? calcRate = double.tryParse(rate.text);
     if (calcRate != null) {
       xrate = calcRate;
     }
+    return xrate;
+  }
+
+  List<double> get calcsDollarsToDop {
     return [
       calcs[0] * xrate,
       calcs[1] * xrate,
@@ -863,7 +867,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                 ? item.serviceName ?? ''
                 : item.productName ?? '',
             descripcionItem: '',
-            precioUnitario: item.precio.toStringAsFixed(2),
+            precioUnitario: (item.precio * xrate).toStringAsFixed(2),
             descuentoMonto: '',
             subDescuentos: [],
             impuestosAdicionales: [],
@@ -874,14 +878,15 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                         indicadorAgenteRetencionoPercepcion:
                             item.indicadorAgentePercepcion.toString(),
                         montoITBISRetenido: item.retentionTax != null
-                            ? item.retentionTax?.toStringAsFixed(2) ?? ''
+                            ? (item.retentionTax! * xrate).toStringAsFixed(2)
                             : '',
                         montoISRRetenido: item.retentionIsr != null
-                            ? item.retentionIsr?.toStringAsFixed(2) ?? ''
+                            ? (item.retentionIsr! * xrate).toStringAsFixed(2)
                             : '')
                     : null,
             otraMonedaDetalles: [],
-            montoItem: item.net?.toStringAsFixed(2) ?? '');
+            montoItem:
+                item.net != null ? (item.net! * xrate).toStringAsFixed(2) : '');
       }).toList();
 
       EcfModel ecf = EcfModel(
@@ -1627,360 +1632,368 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                             )),
                         SizedBox(width: kDefaultPadding),
                         Expanded(
+                            flex: 2,
                             child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
+                              crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
-                                Expanded(
-                                    flex: 2,
-                                    child: Text('Subtotal',
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Expanded(
+                                        flex: 2,
+                                        child: Text('Subtotal',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyLarge
+                                                ?.copyWith(
+                                                    color: Theme.of(context)
+                                                        .primaryColor))),
+                                    Expanded(
+                                        child: Text(net,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyLarge,
+                                            textAlign: TextAlign.right))
+                                  ],
+                                ),
+                                const Divider(),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Expanded(
+                                        flex: 2,
+                                        child: Text('Descuento',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyLarge
+                                                ?.copyWith(
+                                                    color: Theme.of(context)
+                                                        .primaryColor))),
+                                    Expanded(
+                                        child: Text(discount,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyLarge,
+                                            textAlign: TextAlign.right))
+                                  ],
+                                ),
+                                const Divider(),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Expanded(
+                                        flex: 2,
+                                        child: Text('Itbis',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyLarge
+                                                ?.copyWith(
+                                                    color: Theme.of(context)
+                                                        .primaryColor))),
+                                    Expanded(
+                                        child: Text(tax,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyLarge,
+                                            textAlign: TextAlign.right))
+                                  ],
+                                ),
+                                const Divider(),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Expanded(
+                                        flex: 2,
+                                        child: Text('Total',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyLarge
+                                                ?.copyWith(
+                                                    color: Theme.of(context)
+                                                        .primaryColor))),
+                                    Expanded(
+                                        child: Text(total,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyLarge,
+                                            textAlign: TextAlign.right))
+                                  ],
+                                ),
+                                const Divider(),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Expanded(
+                                        flex: 2,
+                                        child: Text('Retencion Itbis',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyLarge
+                                                ?.copyWith(
+                                                    color: Theme.of(context)
+                                                        .primaryColor))),
+                                    Expanded(
+                                        child: Text(retentionTax,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyLarge,
+                                            textAlign: TextAlign.right))
+                                  ],
+                                ),
+                                const Divider(),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Expanded(
+                                        flex: 2,
+                                        child: Text('Retencion Isr',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyLarge
+                                                ?.copyWith(
+                                                    color: Theme.of(context)
+                                                        .primaryColor))),
+                                    Expanded(
+                                        child: Text(retentionIsr,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyLarge,
+                                            textAlign: TextAlign.right))
+                                  ],
+                                ),
+                                const Divider(),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Expanded(
+                                        flex: 2,
+                                        child: Text(
+                                            isSale
+                                                ? 'Total a pagar'
+                                                : 'Total a Devolver',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyLarge
+                                                ?.copyWith(
+                                                    color: Theme.of(context)
+                                                        .primaryColor))),
+                                    Expanded(
+                                        child: Text(amountPaid,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyLarge,
+                                            textAlign: TextAlign.right))
+                                  ],
+                                ),
+                                const Divider(),
+                                SizedBox(
+                                  height: kDefaultPadding,
+                                ),
+                                DropdownButtonFormField(
+                                    value: currentCurrencyId,
+                                    validator: (val) => val == null
+                                        ? 'CAMPO OBLIGATORIO'
+                                        : null,
+                                    decoration:
+                                        InputDecoration(labelText: 'MONEDA'),
+                                    items: List.generate(currencies.length,
+                                        (index) {
+                                      var currency = currencies[index];
+                                      return DropdownMenuItem(
+                                          value: currency.id,
+                                          child: Text(currency.name ?? ' '));
+                                    }),
+                                    onChanged: (option) {
+                                      currentCurrencyId = option;
+                                      setState(() {});
+                                    }),
+                                currentCurrencyId == 2
+                                    ? Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          SizedBox(height: kDefaultPadding),
+                                          TextFormField(
+                                            controller: rate,
+                                            validator: (val) => val!.isEmpty
+                                                ? 'CAMPO OBLIGATORIO'
+                                                : null,
+                                            onChanged: (_) {
+                                              setState(() {});
+                                            },
+                                            decoration: InputDecoration(
+                                                labelText: 'TASA DE CAMBIO',
+                                                hintText: '0.00'),
+                                          ),
+                                          SizedBox(height: kDefaultPadding)
+                                        ],
+                                      )
+                                    : SizedBox(
+                                        height: kDefaultPadding,
+                                      ),
+                                widget.sale.debt == 0
+                                    ? SizedBox()
+                                    : Container(
+                                        margin: EdgeInsets.symmetric(
+                                            vertical: kDefaultPadding / 2),
+                                        child: DropdownButtonFormField(
+                                            value: currentPaymentMethodId,
+                                            validator: (val) => val == null
+                                                ? 'CAMPO OBLIGATORIO'
+                                                : null,
+                                            decoration: InputDecoration(
+                                                labelText: isSale
+                                                    ? 'METODO DE PAGO'
+                                                    : 'FORMA DE PAGO'),
+                                            items: paymentsMethods
+                                                .map((e) => DropdownMenuItem(
+                                                    value: e.id,
+                                                    child: Text(e.name ?? '')))
+                                                .toList(),
+                                            onChanged: (option) {
+                                              currentPaymentMethodId = option;
+                                              formasDePagos = [
+                                                FormaDePago(
+                                                    currentPaymentMethodId
+                                                        .toString(),
+                                                    montoAPagar
+                                                        .toStringAsFixed(2))
+                                              ];
+                                              setState(() {});
+                                            }),
+                                      ),
+                                Container(
+                                  margin: EdgeInsets.symmetric(
+                                      vertical: kDefaultPadding / 2),
+                                  child: DropdownButtonFormField(
+                                      value: currentPaymentType,
+                                      isExpanded: true,
+                                      validator: (val) => val == null
+                                          ? 'CAMPO OBLIGATORIO'
+                                          : null,
+                                      decoration: InputDecoration(
+                                          labelText: 'TIPO DE PAGO'),
+                                      items: paymentsTypes
+                                          .map((e) => DropdownMenuItem(
+                                              value: e.id,
+                                              child: Text(e.name ?? '')))
+                                          .toList(),
+                                      onChanged: (option) {
+                                        currentPaymentType = option;
+                                      }),
+                                ),
+                                currentPaymentMethodId == 3
+                                    ? Column(
+                                        children: [
+                                          SizedBox(height: kDefaultPadding),
+                                          DropdownButtonFormField(
+                                              validator: (val) => val == null
+                                                  ? 'CAMPO OBLIGATORIO'
+                                                  : null,
+                                              items: List.generate(banks.length,
+                                                  (index) {
+                                                var bank = banks[index];
+                                                return DropdownMenuItem(
+                                                    value: bank.id,
+                                                    child:
+                                                        Text(bank.name ?? ''));
+                                              }),
+                                              onChanged: (option) {
+                                                currentBankId = option;
+                                              }),
+                                          SizedBox(height: kDefaultPadding),
+                                          TextFormField(
+                                            controller: transfRef,
+                                            validator: (val) => val!.isEmpty
+                                                ? 'CAMPO OBLIGATORIO'
+                                                : null,
+                                            decoration: InputDecoration(
+                                                hintText: 'Escribir algo...',
+                                                labelText:
+                                                    'NUMERO DE CHEQUE O REFERENCIA'),
+                                          ),
+                                          SizedBox(height: kDefaultPadding)
+                                        ],
+                                      )
+                                    : SizedBox(height: kDefaultPadding),
+                                widget.sale.debt == 0
+                                    ? SizedBox()
+                                    : Row(
+                                        children: [
+                                          Expanded(
+                                              child: Text(
+                                                  isSale
+                                                      ? 'Deuda'
+                                                      : 'Pendiente a Devolver',
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .displayMedium
+                                                      ?.copyWith(
+                                                          color: Theme.of(
+                                                                  context)
+                                                              .primaryColor))),
+                                          Text(debt.toDop(),
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodyLarge),
+                                        ],
+                                      ),
+                                widget.sale.debt == 0
+                                    ? SizedBox()
+                                    : SizedBox(
+                                        height: kDefaultPadding,
+                                      ),
+                                widget.sale.debt == 0
+                                    ? SizedBox()
+                                    : TextFormField(
+                                        controller: amount,
                                         style: Theme.of(context)
                                             .textTheme
-                                            .bodyLarge
-                                            ?.copyWith(
-                                                color: Theme.of(context)
-                                                    .primaryColor))),
-                                Expanded(
-                                    child: Text(net,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyLarge,
-                                        textAlign: TextAlign.right))
-                              ],
-                            ),
-                            const Divider(),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                Expanded(
-                                    flex: 2,
-                                    child: Text('Descuento',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyLarge
-                                            ?.copyWith(
-                                                color: Theme.of(context)
-                                                    .primaryColor))),
-                                Expanded(
-                                    child: Text(discount,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyLarge,
-                                        textAlign: TextAlign.right))
-                              ],
-                            ),
-                            const Divider(),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                Expanded(
-                                    flex: 2,
-                                    child: Text('Itbis',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyLarge
-                                            ?.copyWith(
-                                                color: Theme.of(context)
-                                                    .primaryColor))),
-                                Expanded(
-                                    child: Text(tax,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyLarge,
-                                        textAlign: TextAlign.right))
-                              ],
-                            ),
-                            const Divider(),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                Expanded(
-                                    flex: 2,
-                                    child: Text('Total',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyLarge
-                                            ?.copyWith(
-                                                color: Theme.of(context)
-                                                    .primaryColor))),
-                                Expanded(
-                                    child: Text(total,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyLarge,
-                                        textAlign: TextAlign.right))
-                              ],
-                            ),
-                            const Divider(),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                Expanded(
-                                    flex: 2,
-                                    child: Text('Retencion Itbis',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyLarge
-                                            ?.copyWith(
-                                                color: Theme.of(context)
-                                                    .primaryColor))),
-                                Expanded(
-                                    child: Text(retentionTax,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyLarge,
-                                        textAlign: TextAlign.right))
-                              ],
-                            ),
-                            const Divider(),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                Expanded(
-                                    flex: 2,
-                                    child: Text('Retencion Isr',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyLarge
-                                            ?.copyWith(
-                                                color: Theme.of(context)
-                                                    .primaryColor))),
-                                Expanded(
-                                    child: Text(retentionIsr,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyLarge,
-                                        textAlign: TextAlign.right))
-                              ],
-                            ),
-                            const Divider(),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                Expanded(
-                                    flex: 2,
-                                    child: Text(
-                                        isSale
-                                            ? 'Total a pagar'
-                                            : 'Total a Devolver',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyLarge
-                                            ?.copyWith(
-                                                color: Theme.of(context)
-                                                    .primaryColor))),
-                                Expanded(
-                                    child: Text(amountPaid,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyLarge,
-                                        textAlign: TextAlign.right))
-                              ],
-                            ),
-                            const Divider(),
-                            SizedBox(
-                              height: kDefaultPadding,
-                            ),
-                            DropdownButtonFormField(
-                                value: currentCurrencyId,
-                                validator: (val) =>
-                                    val == null ? 'CAMPO OBLIGATORIO' : null,
-                                decoration:
-                                    InputDecoration(labelText: 'MONEDA'),
-                                items:
-                                    List.generate(currencies.length, (index) {
-                                  var currency = currencies[index];
-                                  return DropdownMenuItem(
-                                      value: currency.id,
-                                      child: Text(currency.name ?? ' '));
-                                }),
-                                onChanged: (option) {
-                                  currentCurrencyId = option;
-                                  setState(() {});
-                                }),
-                            currentCurrencyId == 2
-                                ? Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      SizedBox(height: kDefaultPadding),
-                                      TextFormField(
-                                        controller: rate,
-                                        validator: (val) => val!.isEmpty
-                                            ? 'CAMPO OBLIGATORIO'
-                                            : null,
+                                            .bodyMedium,
                                         onChanged: (_) {
                                           setState(() {});
                                         },
-                                        decoration: InputDecoration(
-                                            labelText: 'TASA DE CAMBIO',
-                                            hintText: '0.00'),
-                                      ),
-                                      SizedBox(height: kDefaultPadding)
-                                    ],
-                                  )
-                                : SizedBox(
-                                    height: kDefaultPadding,
-                                  ),
-                            widget.sale.debt == 0
-                                ? SizedBox()
-                                : Container(
-                                    margin: EdgeInsets.symmetric(
-                                        vertical: kDefaultPadding / 2),
-                                    child: DropdownButtonFormField(
-                                        value: currentPaymentMethodId,
-                                        validator: (val) => val == null
-                                            ? 'CAMPO OBLIGATORIO'
-                                            : null,
-                                        decoration: InputDecoration(
-                                            labelText: isSale
-                                                ? 'METODO DE PAGO'
-                                                : 'FORMA DE PAGO'),
-                                        items: paymentsMethods
-                                            .map((e) => DropdownMenuItem(
-                                                value: e.id,
-                                                child: Text(e.name ?? '')))
-                                            .toList(),
-                                        onChanged: (option) {
-                                          currentPaymentMethodId = option;
-                                          formasDePagos = [
-                                            FormaDePago(
-                                                currentPaymentMethodId
-                                                    .toString(),
-                                                montoAPagar.toStringAsFixed(2))
-                                          ];
-                                          setState(() {});
-                                        }),
-                                  ),
-                            Container(
-                              margin: EdgeInsets.symmetric(
-                                  vertical: kDefaultPadding / 2),
-                              child: DropdownButtonFormField(
-                                  value: currentPaymentType,
-                                  isExpanded: true,
-                                  validator: (val) =>
-                                      val == null ? 'CAMPO OBLIGATORIO' : null,
-                                  decoration: InputDecoration(
-                                      labelText: 'TIPO DE PAGO'),
-                                  items: paymentsTypes
-                                      .map((e) => DropdownMenuItem(
-                                          value: e.id,
-                                          child: Text(e.name ?? '')))
-                                      .toList(),
-                                  onChanged: (option) {
-                                    currentPaymentType = option;
-                                  }),
-                            ),
-                            currentPaymentMethodId == 3
-                                ? Column(
-                                    children: [
-                                      SizedBox(height: kDefaultPadding),
-                                      DropdownButtonFormField(
-                                          validator: (val) => val == null
-                                              ? 'CAMPO OBLIGATORIO'
-                                              : null,
-                                          items: List.generate(banks.length,
-                                              (index) {
-                                            var bank = banks[index];
-                                            return DropdownMenuItem(
-                                                value: bank.id,
-                                                child: Text(bank.name ?? ''));
-                                          }),
-                                          onChanged: (option) {
-                                            currentBankId = option;
-                                          }),
-                                      SizedBox(height: kDefaultPadding),
-                                      TextFormField(
-                                        controller: transfRef,
                                         validator: (val) => val!.isEmpty
                                             ? 'CAMPO OBLIGATORIO'
-                                            : null,
-                                        decoration: InputDecoration(
-                                            hintText: 'Escribir algo...',
-                                            labelText:
-                                                'NUMERO DE CHEQUE O REFERENCIA'),
-                                      ),
-                                      SizedBox(height: kDefaultPadding)
-                                    ],
-                                  )
-                                : SizedBox(height: kDefaultPadding),
-                            widget.sale.debt == 0
-                                ? SizedBox()
-                                : Row(
-                                    children: [
-                                      Expanded(
-                                          child: Text(
-                                              isSale
-                                                  ? 'Deuda'
-                                                  : 'Pendiente a Devolver',
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .displayMedium
-                                                  ?.copyWith(
-                                                      color: Theme.of(context)
-                                                          .primaryColor))),
-                                      Text(debt.toDop(),
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodyLarge),
-                                    ],
-                                  ),
-                            widget.sale.debt == 0
-                                ? SizedBox()
-                                : SizedBox(
-                                    height: kDefaultPadding,
-                                  ),
-                            widget.sale.debt == 0
-                                ? SizedBox()
-                                : TextFormField(
-                                    controller: amount,
-                                    style:
-                                        Theme.of(context).textTheme.bodyMedium,
-                                    onChanged: (_) {
-                                      setState(() {});
-                                    },
-                                    validator: (val) => val!.isEmpty
-                                        ? 'CAMPO OBLIGATORIO'
-                                        : !isSale &&
-                                                amountInputFormatter
-                                                        .doubleValue !=
-                                                    paidAmount
-                                            ? 'EL MONTO DEBE SER IGUAL'
-                                            : !widget.editing &&
+                                            : !isSale &&
                                                     amountInputFormatter
-                                                            .doubleValue >
+                                                            .doubleValue !=
                                                         paidAmount
-                                                ? isSale
-                                                    ? 'EL MONTO ES MAYOR QUE EL TOTAL A PAGAR'
-                                                    : 'EL MONTO ES MAYOR QUE EL TOTAL A DEVOLVER'
-                                                : widget.editing &&
+                                                ? 'EL MONTO DEBE SER IGUAL'
+                                                : !widget.editing &&
                                                         amountInputFormatter
                                                                 .doubleValue >
-                                                            debt
-                                                    ? 'EL MONTO A PAGAR ES MAYOR QUE LA DEUDA'
-                                                    : null,
-                                    inputFormatters: [amountInputFormatter],
-                                    decoration: InputDecoration(
-                                        labelText: 'MONTO', hintText: '0.00'),
-                                  ),
-                            SizedBox(
-                              height: kDefaultPadding,
-                            ),
-                            SizedBox(
-                              width: double.infinity,
-                              height: 60,
-                              child: ElevatedButton(
-                                  onPressed: isValid || widget.editing
-                                      ? _onSubmit
-                                      : null,
-                                  child: Text(widget.editing
-                                      ? 'EDITAR FACTURA'
-                                      : 'CREAR FACTURA')),
-                            )
-                          ],
-                        ))
+                                                            paidAmount
+                                                    ? isSale
+                                                        ? 'EL MONTO ES MAYOR QUE EL TOTAL A PAGAR'
+                                                        : 'EL MONTO ES MAYOR QUE EL TOTAL A DEVOLVER'
+                                                    : widget.editing &&
+                                                            amountInputFormatter
+                                                                    .doubleValue >
+                                                                debt
+                                                        ? 'EL MONTO A PAGAR ES MAYOR QUE LA DEUDA'
+                                                        : null,
+                                        inputFormatters: [amountInputFormatter],
+                                        decoration: InputDecoration(
+                                            labelText: 'MONTO',
+                                            hintText: '0.00'),
+                                      ),
+                                SizedBox(
+                                  height: kDefaultPadding,
+                                ),
+                                SizedBox(
+                                  width: double.infinity,
+                                  height: 60,
+                                  child: ElevatedButton(
+                                      onPressed: isValid || widget.editing
+                                          ? _onSubmit
+                                          : null,
+                                      child: Text(widget.editing
+                                          ? 'EDITAR FACTURA'
+                                          : 'CREAR FACTURA')),
+                                )
+                              ],
+                            ))
                       ],
                     )
                   ],

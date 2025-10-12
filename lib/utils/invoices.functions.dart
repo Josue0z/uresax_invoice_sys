@@ -292,6 +292,19 @@ pw.Document createDefaultInvoice(Sale sale) {
                             style: pw.TextStyle(fontSize: 9)),
                       ]))
                   : pw.SizedBox(),
+              sale.rate != null && sale.rate! > 1
+                  ? pw.Container(
+                      margin: pw.EdgeInsets.symmetric(
+                          vertical: kDefaultPadding / 4),
+                      child: pw.Row(children: [
+                        pw.Text('Tasa Dolar:',
+                            style: pw.TextStyle(
+                                fontSize: 9, fontWeight: pw.FontWeight.bold)),
+                        pw.SizedBox(width: 5),
+                        pw.Text(sale.rate?.toStringAsFixed(2) ?? '',
+                            style: pw.TextStyle(fontSize: 9)),
+                      ]))
+                  : pw.SizedBox(),
               sale.estadoDgiiNombre != null
                   ? pw.Container(
                       margin: pw.EdgeInsets.symmetric(
