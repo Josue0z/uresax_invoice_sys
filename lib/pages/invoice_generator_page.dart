@@ -6,6 +6,7 @@ import 'package:amount_input_formatter/amount_input_formatter.dart';
 import 'package:dio/dio.dart';
 import 'package:ecf_dgii/ecf_dgii.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
@@ -736,6 +737,13 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
     }
 
     return (paidAmount - (amountInputFormatter.doubleValue));
+  }
+
+  String get debtString {
+    if (currentCurrencyId == 2) {
+      return debt.toUS();
+    }
+    return debt.toDop();
   }
 
   String calcularCodigoModificacion(
@@ -1815,6 +1823,17 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                                           SizedBox(height: kDefaultPadding),
                                           TextFormField(
                                             controller: rate,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyMedium,
+                                            keyboardType:
+                                                TextInputType.numberWithOptions(
+                                                    decimal: true),
+                                            inputFormatters: [
+                                              FilteringTextInputFormatter.allow(
+                                                RegExp(r'^\d*\.?\d{0,2}$'),
+                                              ),
+                                            ],
                                             validator: (val) => val!.isEmpty
                                                 ? 'CAMPO OBLIGATORIO'
                                                 : null,
@@ -1932,7 +1951,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                                                           color: Theme.of(
                                                                   context)
                                                               .primaryColor))),
-                                          Text(debt.toDop(),
+                                          Text(debtString,
                                               style: Theme.of(context)
                                                   .textTheme
                                                   .bodyLarge),
