@@ -1396,7 +1396,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                             child: Column(
                           children: [
                             DropdownButtonFormField(
-                                value: currentNcfTypeId,
+                                initialValue: currentNcfTypeId,
                                 isExpanded: true,
                                 validator: (val) =>
                                     val == null ? 'CAMPO OBLIGATORIO' : null,
@@ -1798,7 +1798,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                                   height: kDefaultPadding,
                                 ),
                                 DropdownButtonFormField(
-                                    value: currentCurrencyId,
+                                    initialValue: currentCurrencyId,
                                     validator: (val) => val == null
                                         ? 'CAMPO OBLIGATORIO'
                                         : null,
@@ -1856,7 +1856,8 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                                         margin: EdgeInsets.symmetric(
                                             vertical: kDefaultPadding / 2),
                                         child: DropdownButtonFormField(
-                                            value: currentPaymentMethodId,
+                                            initialValue:
+                                                currentPaymentMethodId,
                                             validator: (val) => val == null
                                                 ? 'CAMPO OBLIGATORIO'
                                                 : null,
@@ -1885,7 +1886,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                                   margin: EdgeInsets.symmetric(
                                       vertical: kDefaultPadding / 2),
                                   child: DropdownButtonFormField(
-                                      value: currentPaymentType,
+                                      initialValue: currentPaymentType,
                                       isExpanded: true,
                                       validator: (val) => val == null
                                           ? 'CAMPO OBLIGATORIO'
