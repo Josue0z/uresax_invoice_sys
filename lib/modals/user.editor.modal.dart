@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:multi_masked_formatter/multi_masked_formatter.dart';
 import 'package:uresax_invoice_sys/apis/log.handler.dart';
 import 'package:uresax_invoice_sys/models/user.dart';
 import 'package:uresax_invoice_sys/settings.dart';
@@ -248,6 +249,10 @@ class _UserEditorModalState extends State<UserEditorModal> {
                                   ),
                             TextFormField(
                               controller: phone,
+                              inputFormatters: [
+                                MultiMaskedTextInputFormatter(
+                                    masks: ['xxx-xxx-xxxx'], separator: '-')
+                              ],
                               decoration: InputDecoration(
                                   labelText: 'TELEFONO',
                                   hintText: 'Escribir algo...'),
