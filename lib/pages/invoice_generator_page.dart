@@ -1876,7 +1876,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                                                 FormaDePago(
                                                     currentPaymentMethodId
                                                         .toString(),
-                                                    montoAPagar
+                                                    widget.sale.paid!
                                                         .toStringAsFixed(2))
                                               ];
                                               setState(() {});
