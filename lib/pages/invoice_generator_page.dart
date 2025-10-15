@@ -1,13 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-
 import 'package:amount_input_formatter/amount_input_formatter.dart';
-import 'package:dio/dio.dart';
 import 'package:ecf_dgii/ecf_dgii.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:intl/intl.dart';
@@ -1891,7 +1888,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                                                 FormaDePago(
                                                     currentPaymentMethodId
                                                         .toString(),
-                                                    widget.sale.paid!
+                                                    (widget.sale.paid ?? 0)
                                                         .toStringAsFixed(2))
                                               ];
                                               setState(() {});

@@ -1,12 +1,8 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:uresax_invoice_sys/apis/log.handler.dart';
 import 'package:uresax_invoice_sys/modals/company.editor.modal.dart';
 import 'package:uresax_invoice_sys/modals/electronic.ncf.settings.modal.dart';
-import 'package:uresax_invoice_sys/models/credit.note.item.product.dart';
-import 'package:uresax_invoice_sys/models/credit.note.item.service.dart';
 import 'package:uresax_invoice_sys/models/credit.note.product.dart';
 import 'package:uresax_invoice_sys/models/credit.note.service.dart';
 import 'package:uresax_invoice_sys/models/sale.abs.dart';

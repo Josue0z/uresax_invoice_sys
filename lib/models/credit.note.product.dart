@@ -1,12 +1,9 @@
 import 'dart:convert';
-import 'dart:ui';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:postgres/postgres.dart';
 import 'package:uresax_invoice_sys/apis/sql.dart';
 import 'package:uresax_invoice_sys/models/credit.note.item.product.dart';
-
 import 'package:uresax_invoice_sys/models/sale.abs.dart';
 import 'package:uresax_invoice_sys/models/sale.item.abs.dart';
 import 'package:uuid/uuid.dart';

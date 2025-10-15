@@ -4,7 +4,7 @@ project(uresax_invoice_sys LANGUAGES CXX)
 
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.
-set(BINARY_NAME "uresax_invoice_sys" CACHE STRING "" FORCE)
+set(BINARY_NAME "uresax_invoice_sys")
 
 set(PDFIUM_VERSION "4929" CACHE STRING "" FORCE)
 set(PDFIUM_ARCH "x64" CACHE STRING "" FORCE)
