@@ -63,7 +63,7 @@ dependencies:
   dio: any
   file_picker: ^10.2.0
   localstorage: ^5.0.0
-  ecf_dgii: ^1.0.22
+  ecf_dgii: ^1.0.23
   flutter_platform_alert: ^0.8.0
   flutter_esc_pos_utils: ^1.0.1
   pdfrx: ^2.1.12
