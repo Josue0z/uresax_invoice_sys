@@ -846,8 +846,15 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
 
       bool esEspecial = esConsumo || esEcf45;
 
+      if (cert == null) {
+        throw 'NO SE HA CONFIGURADO EL CERTIFICADO DIGITAL, NO PUEDE CONTINUAR';
+      }
+
       AuthCertModel authModel =
-          await getAuthP12(cert: cert!, password: password);
+          await getAuthP12(cert: cert, password: password);
+
+      await LogHandler.printEvent(
+          'EL CODIGO BASE 64 ${authModel.certBase64} FUE CREADO');
 
       final now = DateTime.now().toLocal();
       final dateFormat = DateFormat('dd-MM-yyyy');
@@ -893,6 +900,9 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
             montoItem:
                 item.net != null ? (item.net! * xrate).toStringAsFixed(2) : '');
       }).toList();
+
+      await LogHandler.printEvent(
+          'SE INICIO LA CREACION DEL COMPROBANTE ${sale.ncf}');
 
       EcfModel ecf = EcfModel(
           tipoEcf: ecfType,
@@ -1028,6 +1038,9 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
           items: items,
           privateKey: authModel.privateKey,
           certBase64: authModel.certBase64);
+
+      await LogHandler.printEvent(
+          'SE INICIO EL PROCESO DE ENVIO A DGII DEL COMPROBANTE ${sale.ncf}');
 
       await ecf.descargarSemilla();
       await LogHandler.printEvent(
