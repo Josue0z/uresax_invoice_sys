@@ -1058,6 +1058,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
       final response = await request.send();
 
       if (response.statusCode != 200) {
+        await sale.delete();
         throw 'NO FUE POSIBLE ENVIAR LA FACTURA ${sale.ncf} A DGII, CONTACTE CON EL ADMINISTRADOR DEL SISTEMA, ESTADO DE CODIGO [${response.statusCode}]';
       }
 
@@ -1099,7 +1100,6 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
         await sale.updateEcfInfo();
       }
     } catch (e) {
-      await sale.delete();
       rethrow;
     }
   }

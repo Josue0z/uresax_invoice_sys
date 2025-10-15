@@ -247,9 +247,30 @@ class CreditNoteAsService implements Sale {
   }
 
   @override
-  Future<Sale?> delete() {
-    // TODO: implement delete
-    throw UnimplementedError();
+  Future<Sale?> delete() async {
+    try {
+      var conn = SqlConector.connection;
+      await conn?.runTx((c) async {
+        await c.execute(
+            'DELETE FROM public."Returns" WHERE "creditNoteId" = @id',
+            parameters: {'id': id});
+
+        await c.execute(
+            Sql.named(
+                'DELETE FROM public."CreditNoteService" WHERE "creditNoteId" = @id'),
+            parameters: {'id': id});
+
+        await c.execute(
+            Sql.named('DELETE FROM public."CreditNote" WHERE id = @id'),
+            parameters: {'id': id});
+
+        await c.execute(
+          '''setval('public."${ncfTypeId}_seq"',$ncfSeq,false)''',
+        );
+      });
+    } catch (e) {
+      rethrow;
+    }
   }
 
   @override
