@@ -904,6 +904,11 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
       await LogHandler.printEvent(
           'SE INICIO LA CREACION DEL COMPROBANTE ${sale.ncf}');
 
+      formasDePagos = [
+        FormaDePago(currentPaymentMethodId.toString(),
+            (widget.sale.paid ?? 0).toStringAsFixed(2))
+      ];
+
       EcfModel ecf = EcfModel(
           tipoEcf: ecfType,
           tempDirName: 'temp_7',
@@ -1068,7 +1073,6 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
       final response = await request.send();
 
       if (response.statusCode != 200) {
-        await sale.delete();
         await LogHandler.printEvent('SE ELIMINO EL COMPROBANTE ${sale.ncf}');
         throw 'NO FUE POSIBLE ENVIAR LA FACTURA ${sale.ncf} A DGII, CONTACTE CON EL ADMINISTRADOR DEL SISTEMA, ESTADO DE CODIGO [${response.statusCode}]';
       }
@@ -1117,6 +1121,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
             'SE ACTUALIZO EL ESTADO DEL COMPROBANTE ELECTRONICO ${sale.ncf} A DGII, ESTADO: ${sale.estadoDgiiNombre}');
       }
     } catch (e) {
+      await sale.delete();
       rethrow;
     }
   }
@@ -1904,13 +1909,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                                                 .toList(),
                                             onChanged: (option) {
                                               currentPaymentMethodId = option;
-                                              formasDePagos = [
-                                                FormaDePago(
-                                                    currentPaymentMethodId
-                                                        .toString(),
-                                                    (widget.sale.paid ?? 0)
-                                                        .toStringAsFixed(2))
-                                              ];
+
                                               setState(() {});
                                             }),
                                       ),
