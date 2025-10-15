@@ -1056,6 +1056,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
 
       if (response.statusCode != 200) {
         await sale.delete();
+        await LogHandler.printEvent('SE ELIMINO EL COMPROBANTE ${sale.ncf}');
         throw 'NO FUE POSIBLE ENVIAR LA FACTURA ${sale.ncf} A DGII, CONTACTE CON EL ADMINISTRADOR DEL SISTEMA, ESTADO DE CODIGO [${response.statusCode}]';
       }
 
@@ -1087,6 +1088,9 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
       sale.ecfXmlFirmado = ecf.ecfSignXml;
       await sale.updateEcfInfo();
 
+      await LogHandler.printEvent(
+          'SE ACTUALIZO LA INFORMACION DEL COMPROBANTE ELECTRONICO ${sale.ncf}');
+
       if (estado != null) {
         var codigo = estado['codigo'] is int
             ? estado['codigo']
@@ -1095,6 +1099,9 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
         sale.estadoDgii = codigo;
 
         await sale.updateEcfInfo();
+
+        await LogHandler.printEvent(
+            'SE ACTUALIZO EL ESTADO DEL COMPROBANTE ELECTRONICO ${sale.ncf} A DGII, ESTADO: ${sale.estadoDgiiNombre}');
       }
     } catch (e) {
       rethrow;
