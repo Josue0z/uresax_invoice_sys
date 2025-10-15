@@ -109,7 +109,7 @@ Future<bool> isValidCertFilePath() async {
       return false;
     }
   } catch (e) {
-    await LogHandler.printError(e.toString());    
+    await LogHandler.printError(e.toString());
     isValid = false;
     currentElectronicNcfOption = 2;
     electronicNcfEnabled = false;
@@ -120,7 +120,7 @@ Future<bool> isValidCertFilePath() async {
 Future<bool> hasInternet() async {
   try {
     final result = await http
-        .get(Uri.parse('https://www.google.com'))
+        .get(Uri.parse('https://api.uresax.com'))
         .timeout(Duration(seconds: 5));
     return result.statusCode == 200;
   } catch (_) {

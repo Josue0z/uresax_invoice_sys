@@ -246,7 +246,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
         if (widget.sale.prefix == 'E') {
           var xhas = await hasInternet();
           if (!xhas) {
-            throw 'NO PUEDE GENERAR FACTURAS ELECTRONICAS SIN INTERNET';
+            throw 'NO PUEDE GENERAR FACTURAS ELECTRONICAS YA QUE NO TIENES ACCESO AL SERVICIO EN LA NUBE (CONTACTE CON EL ADMINISTRADOR DEL SISTEMA)';
           }
         }
 
@@ -1033,8 +1033,16 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
           certBase64: authModel.certBase64);
 
       await ecf.descargarSemilla();
+      await LogHandler.printEvent(
+          'SE DESCARGO LA SEMILLA SIN FIRMAR DEL COMPROBANTE ${sale.ncf}');
       await ecf.validarSemilla();
+
+      await LogHandler.printEvent(
+          'SE VALIDO LA SEMILLA DEL COMPROBANTE ${sale.ncf}');
       await ecf.firmar();
+
+      await LogHandler.printEvent(
+          'SE FIRMO EL XML DEL COMPROBANTE ${sale.ncf}');
       dynamic estado;
 
       final request = http.MultipartRequest('POST', Uri.parse(endPointApi))
@@ -1048,6 +1056,11 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
         ));
 
       final response = await request.send();
+
+      if (response.statusCode != 200) {
+        throw 'NO FUE POSIBLE ENVIAR LA FACTURA ${sale.ncf} A DGII, CONTACTE CON EL ADMINISTRADOR DEL SISTEMA, ESTADO DE CODIGO [${response.statusCode}]';
+      }
+
       final body = await response.stream.bytesToString();
 
       print(body);
@@ -1064,6 +1077,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
       if (ecf.trackId != '') {
         await Future.delayed(const Duration(milliseconds: 600));
         estado = await ecf.obtenerEcfEstadoDatos();
+
         await LogHandler.printEvent(estado.toString());
       }
 
@@ -1085,6 +1099,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
         await sale.updateEcfInfo();
       }
     } catch (e) {
+      await sale.delete();
       rethrow;
     }
   }

@@ -512,9 +512,27 @@ class SaleService implements Sale {
   }
 
   @override
-  Future<Sale?> delete() {
-    // TODO: implement delete
-    throw UnimplementedError();
+  Future<Sale?> delete() async {
+    try {
+      var conn = SqlConector.connection;
+      await conn?.runTx((c) async {
+        await c.execute('DELETE FROM public."Payments" WHERE "saleId" = @id',
+            parameters: {'id': id});
+
+        await c.execute(
+            Sql.named('DELETE FROM public."SaleService" WHERE "saleId" = @id'),
+            parameters: {'id': id});
+
+        await c.execute(Sql.named('DELETE FROM public."Sale" WHERE id = @id'),
+            parameters: {'id': id});
+
+        await c.execute(
+          '''setval('public."${ncfTypeId}_seq"',$ncfSeq,false)''',
+        );
+      });
+    } catch (e) {
+      rethrow;
+    }
   }
 
   static Future<List<SaleService>> getSales607Form(
