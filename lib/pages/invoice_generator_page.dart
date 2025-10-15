@@ -875,7 +875,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
                 item is SaleItemService || item is CreditNoteService
                     ? '2'
                     : '1',
-            nombreItem: item.serviceName != null && item.serviceName!.isNotEmpty
+            nombreItem: item.serviceName != null
                 ? item.serviceName ?? ''
                 : item.productName ?? '',
             descripcionItem: '',
