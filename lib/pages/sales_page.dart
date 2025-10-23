@@ -275,7 +275,10 @@ class _SalesPageState extends State<SalesPage> {
             salesOptions.add(
               {'id': 3, 'name': 'Abonar pago'},
             );
-            salesOptions.add({'id': 4, 'name': 'Editar Factura'});
+
+            if (allowEditInvoice) {
+              salesOptions.add({'id': 4, 'name': 'Editar Factura'});
+            }
           }
 
           if (sale.ecfXmlFirmado != null) {

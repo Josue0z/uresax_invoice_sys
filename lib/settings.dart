@@ -76,6 +76,8 @@ TextEditingController certPassword = TextEditingController();
 
 bool eCommerceMode = false;
 
+bool allowEditInvoice = false;
+
 List<SaleElement> elements = [];
 
 List<RetentionTax> retentionsTaxes = [];

@@ -41,6 +41,11 @@ void main() async {
             Platform.environment['URESAX_INVOICE_ECOMMERCE_MODE'] ?? 'false') ??
         false;
 
+    allowEditInvoice = bool.tryParse(
+            Platform.environment['URESAX_INVOICE_ALLOW_EDIT_INVOICE'] ??
+                'false') ??
+        false;
+
     await initLocalStorage();
 
     await windowManager.ensureInitialized();
