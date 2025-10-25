@@ -403,6 +403,9 @@ class SaleProduct implements Sale {
       if (ncfTypeId == '32') {
         seqParams = '''nextval('32_seq')''';
       }
+      if (ncfTypeId == '44') {
+        seqParams = '''nextval('44_seq')''';
+      }
       if (ncfTypeId == '45') {
         seqParams = '''nextval('45_seq')''';
       }

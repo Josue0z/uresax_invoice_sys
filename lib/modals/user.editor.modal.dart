@@ -4,6 +4,7 @@ import 'package:uresax_invoice_sys/apis/log.handler.dart';
 import 'package:uresax_invoice_sys/models/user.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/utils/functions.dart';
+import 'package:uresax_invoice_sys/widgets/password.editor.widget.dart';
 
 class UserEditorModal extends StatefulWidget {
   User user;
@@ -235,15 +236,8 @@ class _UserEditorModalState extends State<UserEditorModal> {
                                 : Column(
                                     children: [
                                       SizedBox(height: kDefaultPadding),
-                                      TextFormField(
-                                        controller: password,
-                                        validator: (val) => val!.isEmpty
-                                            ? 'CAMPO OBLIGATORIO'
-                                            : null,
-                                        decoration: InputDecoration(
-                                            labelText: 'CLAVE',
-                                            hintText: 'Escribir algo...'),
-                                      ),
+                                      PasswordEditorWidget(
+                                          controller: password),
                                       SizedBox(height: kDefaultPadding),
                                     ],
                                   ),

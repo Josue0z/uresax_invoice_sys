@@ -178,7 +178,7 @@ class SaleItemService implements SaleItem {
 
   @override
   String toString() {
-    return 'SaleItemService(id: $id, serviceId: $serviceId, discount: $discount, net: $net, tax: $tax, total: $total, retentionTax: $retentionTax, retentionIsr: $retentionIsr, saleId: $saleId, creditNoteId: $creditNoteId, quantity: $quantity)';
+    return 'SaleItemService(id: $id, serviceId: $serviceId, discount: $discount, net: $net, net18: $net18, net16: $net16, tax: $tax, tax18: $tax18, tax16: $tax16, total: $total, exemptAmount: $exemptAmount, retentionTax: $retentionTax, retentionIsr: $retentionIsr, saleId: $saleId, creditNoteId: $creditNoteId, quantity: $quantity)';
   }
 
   @override

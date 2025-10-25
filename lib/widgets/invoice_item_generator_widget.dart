@@ -211,7 +211,7 @@ class _InvoiceItemGeneratorWidgetState
     }
 
     if (currentTaxId == 1) {
-      widget.saleItem.indicadorFacturacion = 1;
+      widget.saleItem.indicadorFacturacion = 2;
       widget.saleItem.tax16 = widget.saleItem.tax;
       widget.saleItem.net16 = widget.saleItem.net;
     }

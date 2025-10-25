@@ -635,10 +635,10 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
 
   double get totalGravado {
     if (currentCurrencyId == 2) {
-      return calcsDollarsToDop[0];
+      return calcsDollarsToDop[0] - montoExento;
     }
 
-    return calcs[0];
+    return calcs[0] - montoExento;
   }
 
   double get totalGravado18 {
@@ -827,6 +827,10 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
         ecfType = EcfType.e41;
       }
 
+      if (currentNcfTypeId == '44') {
+        ecfType = EcfType.e44;
+      }
+
       if (currentNcfTypeId == '45') {
         ecfType = EcfType.e45;
       }
@@ -834,6 +838,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
       if (currentNcfTypeId == '46') {
         ecfType = EcfType.e46;
       }
+
       if (currentNcfTypeId == '47') {
         ecfType = EcfType.e47;
       }
@@ -844,7 +849,9 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
 
       bool esEcf45 = ecfType == EcfType.e45;
 
-      bool esEspecial = esConsumo || esEcf45;
+      bool esEcf44 = ecfType == EcfType.e44;
+
+      bool esEspecial = esConsumo || esEcf45 || esEcf44;
 
       if (cert == null) {
         throw 'NO SE HA CONFIGURADO EL CERTIFICADO DIGITAL, NO PUEDE CONTINUAR';
@@ -912,7 +919,7 @@ class _InvoiceGeneratorPageState extends State<InvoiceGeneratorPage> {
       EcfModel ecf = EcfModel(
           tipoEcf: ecfType,
           tempDirName: 'temp_7',
-          indicadorMontoGravado: '0',
+          indicadorMontoGravado: totalGravado > 0 ? '0' : '',
           indicadorNotaCredito: esNotaCredito
               ? calcularCodigoModificacion(
                   _currentSale!.createdAt!, widget.sale.createdAt!)

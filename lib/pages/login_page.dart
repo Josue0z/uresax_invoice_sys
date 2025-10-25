@@ -4,6 +4,7 @@ import 'package:uresax_invoice_sys/models/user.dart';
 import 'package:uresax_invoice_sys/pages/home_page.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/utils/functions.dart';
+import 'package:uresax_invoice_sys/widgets/password.editor.widget.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -44,6 +45,7 @@ class _LoginPageState extends State<LoginPage> {
               width: 350,
               child: Form(
                   key: _formKey,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
                   child: Container(
                     padding: EdgeInsets.all(kDefaultPadding),
                     decoration: BoxDecoration(
@@ -72,15 +74,9 @@ class _LoginPageState extends State<LoginPage> {
                         SizedBox(
                           height: kDefaultPadding,
                         ),
-                        TextFormField(
+                        PasswordEditorWidget(
                           controller: password,
-                          obscureText: true,
-                          validator: (val) =>
-                              val!.isEmpty ? 'CAMPO OBLIGATORIO' : null,
                           onFieldSubmitted: (_) => _onSubmit(),
-                          decoration: InputDecoration(
-                              labelText: 'CONTRASEÑA',
-                              hintText: 'Escribir algo...'),
                         ),
                         SizedBox(
                           height: kDefaultPadding,

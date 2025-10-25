@@ -131,6 +131,7 @@ Future<bool> hasInternet() async {
 showLoader(BuildContext context) async {
   return showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (ctx) {
         return AlertDialog(
           shape: RoundedRectangleBorder(

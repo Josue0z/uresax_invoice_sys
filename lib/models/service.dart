@@ -59,13 +59,7 @@ class Services implements SaleElement {
           Sql.named(
               'select id, name, price, "taxId" from public."Services" $params'),
           parameters: parameters);
-      return result
-              ?.map((e) => Services(
-                  id: e[0] as int,
-                  name: e[1] as String,
-                  price: double.parse(e[2] as String),
-                  taxId: e[3] as int))
-              .toList() ??
+      return result?.map((e) => Services.fromMap(e.toColumnMap())).toList() ??
           [];
     } catch (e) {
       rethrow;
