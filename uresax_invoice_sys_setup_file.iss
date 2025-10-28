@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "URESAX INVOICE SYS"
-#define MyAppVersion "1.0"
+#define MyAppVersion "1.0.2+3"
 #define MyAppPublisher "URENA LORENZO & ASOCIADOS SRL"
 #define MyAppExeName "uresax_invoice_sys.exe"
 #define MyAppAssocName MyAppName + " File"
@@ -12,12 +12,12 @@
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
-AppId={{9425F92E-D692-4FFD-B6D2-5F44AF23D779}
+AppId={{F89FFC8C-C33C-4289-B350-D02F2313C606}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 ;AppVerName={#MyAppName} {#MyAppVersion}
 AppPublisher={#MyAppPublisher}
-DefaultDirName={autopf}\URESAX-INVOICE
+DefaultDirName={autopf}\{#MyAppName}
 UninstallDisplayIcon={app}\{#MyAppExeName}
 ; "ArchitecturesAllowed=x64compatible" specifies that Setup cannot run
 ; on anything but x64 and Windows 11 on Arm.
@@ -32,7 +32,7 @@ DisableProgramGroupPage=yes
 ; Uncomment the following line to run in non administrative install mode (install for current user only).
 ;PrivilegesRequired=lowest
 OutputBaseFilename=uresax_invoice_sys_setup
-SetupIconFile=C:\Users\JUANPUM\Documents\uresax_invoice_sys\windows\runner\resources\app_icon.ico
+SetupIconFile=C:\Users\Dell\Documents\uresax_invoice_sys\windows\runner\resources\app_icon.ico
 SolidCompression=yes
 WizardStyle=modern
 
@@ -43,17 +43,17 @@ Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "C:\Users\JUANPUM\Documents\uresax_invoice_sys\build\windows\x64\runner\Release\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\JUANPUM\Documents\uresax_invoice_sys\build\windows\x64\runner\Release\file_selector_windows_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\JUANPUM\Documents\uresax_invoice_sys\build\windows\x64\runner\Release\flutter_platform_alert_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\JUANPUM\Documents\uresax_invoice_sys\build\windows\x64\runner\Release\flutter_windows.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\JUANPUM\Documents\uresax_invoice_sys\build\windows\x64\runner\Release\pdfium.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\JUANPUM\Documents\uresax_invoice_sys\build\windows\x64\runner\Release\pdfrx.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\JUANPUM\Documents\uresax_invoice_sys\build\windows\x64\runner\Release\printing_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\JUANPUM\Documents\uresax_invoice_sys\build\windows\x64\runner\Release\screen_retriever_windows_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\JUANPUM\Documents\uresax_invoice_sys\build\windows\x64\runner\Release\url_launcher_windows_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\JUANPUM\Documents\uresax_invoice_sys\build\windows\x64\runner\Release\window_manager_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\JUANPUM\Documents\uresax_invoice_sys\build\windows\x64\runner\Release\data\*"; DestDir: "{app}\data"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "C:\Users\Dell\Documents\uresax_invoice_sys\build\windows\x64\runner\Release\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\Dell\Documents\uresax_invoice_sys\build\windows\x64\runner\Release\file_selector_windows_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\Dell\Documents\uresax_invoice_sys\build\windows\x64\runner\Release\flutter_platform_alert_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\Dell\Documents\uresax_invoice_sys\build\windows\x64\runner\Release\flutter_windows.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\Dell\Documents\uresax_invoice_sys\build\windows\x64\runner\Release\pdfium.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\Dell\Documents\uresax_invoice_sys\build\windows\x64\runner\Release\pdfrx.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\Dell\Documents\uresax_invoice_sys\build\windows\x64\runner\Release\printing_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\Dell\Documents\uresax_invoice_sys\build\windows\x64\runner\Release\screen_retriever_windows_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\Dell\Documents\uresax_invoice_sys\build\windows\x64\runner\Release\url_launcher_windows_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\Dell\Documents\uresax_invoice_sys\build\windows\x64\runner\Release\window_manager_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\Dell\Documents\uresax_invoice_sys\build\windows\x64\runner\Release\data\*"; DestDir: "{app}\data"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Registry]

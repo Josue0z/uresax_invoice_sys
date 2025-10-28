@@ -36,6 +36,7 @@ void main() async {
     var databaseName = Platform.environment['URESAX_INVOICE_DATABASE_NAME'];
     var dbUsername = Platform.environment['URESAX_INVOICE_DATABASE_USERNAME'];
     var dbPassword = Platform.environment['URESAX_INVOICE_DATABASE_PASSWORD'];
+    var dirPath =   Platform.environment['URESAX_INVOICE_STATIC_LOCAL_SERVER_PATH'];
 
     eCommerceMode = bool.tryParse(
             Platform.environment['URESAX_INVOICE_ECOMMERCE_MODE'] ?? 'false') ??
@@ -61,7 +62,8 @@ void main() async {
     if (hostname == null ||
         databaseName == null ||
         dbUsername == null ||
-        dbPassword == null) {
+        dbPassword == null || 
+        dirPath == null) {
       throw 'NO ESTA CONFIGURADO LOS DATOS DEL SERVIDOR';
     }
 

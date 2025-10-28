@@ -3,10 +3,12 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:localstorage/localstorage.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:uresax_invoice_sys/apis/log.handler.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/utils/functions.dart';
 import 'package:path/path.dart' as path;
+import 'package:uresax_invoice_sys/widgets/password.editor.widget.dart';
 
 class ElectronicNcfSettingsModal extends StatefulWidget {
   const ElectronicNcfSettingsModal({super.key});
@@ -32,7 +34,7 @@ class _ElectronicNcfSettingsModalState
       var file = res.files.single;
       var xfile = File(file.path!);
       var ext = path.extension(file.path!);
-      var dir = Directory.current;
+      var dir = await getUresaxInvoiceDir();
 
       certFile = File(path.join(dir.path, 'certs', 'cert$ext'));
       await certFile?.create(recursive: true);
@@ -127,13 +129,12 @@ class _ElectronicNcfSettingsModalState
                                 icon: Icon(Icons.folder))),
                       ),
                       SizedBox(height: kDefaultPadding),
-                      TextFormField(
-                        controller: certPassword,
-                        obscureText: true,
-                        decoration: InputDecoration(
-                            labelText: 'CLAVE DE CERTIFICADO',
-                            hintText: 'Escribir algo...'),
-                      ),
+    
+                      PasswordEditorWidget(
+                      controller: certPassword,
+                      labelText: 'CLAVE DE CERTIFICADO', 
+                      hintText: 'Escribir algo...'),
+                      
                       SizedBox(height: kDefaultPadding),
                       DropdownButtonFormField<int>(
                           value: currentElectronicNcfOption,

@@ -3,9 +3,11 @@ import 'package:uresax_invoice_sys/settings.dart';
 
 class PasswordEditorWidget extends StatefulWidget {
   TextEditingController controller = TextEditingController();
+  String labelText;
+  String hintText;
   void Function(String)? onFieldSubmitted;
   PasswordEditorWidget(
-      {super.key, required this.controller, this.onFieldSubmitted});
+      {super.key, required this.controller, this.labelText = 'CONTRASEÑA', this.hintText = 'Escribir algo...', this.onFieldSubmitted});
 
   @override
   State<PasswordEditorWidget> createState() => _PasswordEditorWidgetState();
@@ -25,8 +27,8 @@ class _PasswordEditorWidgetState extends State<PasswordEditorWidget> {
         }
       },
       decoration: InputDecoration(
-          labelText: 'CONTRASEÑA',
-          hintText: 'Escribir algo...',
+          labelText: widget.labelText,
+          hintText: widget.hintText,
           suffixIcon: Wrap(
             children: [
               IconButton(
