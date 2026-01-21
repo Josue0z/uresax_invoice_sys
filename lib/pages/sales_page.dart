@@ -1,11 +1,16 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:moment_dart/moment_dart.dart';
 import 'package:open_file/open_file.dart';
+import 'package:uresax_invoice_sys/apis/log.handler.dart';
+import 'package:uresax_invoice_sys/apis/printers.handler.dart';
 import 'package:uresax_invoice_sys/modals/filter.sales.modal.dart';
 import 'package:uresax_invoice_sys/modals/payment.editor.modal.dart';
+import 'package:uresax_invoice_sys/models/ncftype.dart';
 import 'package:uresax_invoice_sys/models/sale.abs.dart';
+import 'package:uresax_invoice_sys/models/sale.product.dart';
 import 'package:uresax_invoice_sys/models/sale.service.dart';
 import 'package:uresax_invoice_sys/pages/invoice_generator_page.dart';
 import 'package:uresax_invoice_sys/pages/payments.sales_page.dart';
@@ -18,6 +23,7 @@ import 'package:path/path.dart' as path;
 import 'package:uresax_invoice_sys/widgets/content.error.widget.dart';
 import 'package:uresax_invoice_sys/widgets/date.range_widget.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:uresax_invoice_sys/widgets/scrollmove.event.widget.dart';
 
 class SalesPage extends StatefulWidget {
   const SalesPage({super.key});
@@ -41,6 +47,7 @@ class _SalesPageState extends State<SalesPage> {
   ];
 
   String? ncfTypeId;
+  List<NcfType> ncfsTypes = [];
   String? search;
   SaleStatus? saleStatus = SaleStatus.all;
 
@@ -50,12 +57,19 @@ class _SalesPageState extends State<SalesPage> {
 
   Future? future;
 
+  ScrollController scrollControllerY = ScrollController();
+
+  List<String> get ncfsSelected {
+  return ncfsTypes.map((e)=> e.id!).toList();
+  }
+
   Future<void> _initAsync() async {
     try {
       sales = await getSales(
           startDate: dates.first!,
           endDate: dates.last!,
           ncfTypeId: ncfTypeId,
+          ncfsTypes: ncfsSelected,
           saleStatus: saleStatus,
           estadoDgii: estadoDgii,
           search: search);
@@ -87,6 +101,7 @@ class _SalesPageState extends State<SalesPage> {
 
       var file = File(path.join(
           dir.path,
+          company?.name,
           'VENTAS',
           sale.createdAt?.format(payload: 'YYYYMM'),
           'PDFS',
@@ -114,10 +129,12 @@ class _SalesPageState extends State<SalesPage> {
         context: context,
         builder: (ctx) => FilterSalesModal(
             ncfTypeId: ncfTypeId,
+            ncfsTypes: ncfsTypes,
             saleStatus: saleStatus,
             dgiiState: estadoDgii));
     if (res is Map) {
       ncfTypeId = res['ncfTypeId'];
+      ncfsTypes = res['ncfsTypes'];
       saleStatus = res['saleStatus'];
       estadoDgii = res['dgiiState'];
 
@@ -133,6 +150,7 @@ class _SalesPageState extends State<SalesPage> {
           startDate: dates.first!,
           endDate: dates.last!,
           ncfTypeId: ncfTypeId,
+          ncfsTypes: ncfsSelected,
           estadoDgii: estadoDgii);
 
       var list = data['list'];
@@ -163,6 +181,7 @@ class _SalesPageState extends State<SalesPage> {
           startDate: dates.first!,
           endDate: dates.last!,
           ncfTypeId: ncfTypeId,
+          ncfsTypes: ncfsSelected,
           estadoDgii: estadoDgii);
 
       var list = data['list'];
@@ -228,7 +247,7 @@ class _SalesPageState extends State<SalesPage> {
   _generateXmlFile(Sale sale) async {
     try {
       var dir = await getUresaxInvoiceDir();
-      var file = File(path.join(dir.path, 'VENTAS',
+      var file = File(path.join(dir.path, company?.name, 'VENTAS',
           sale.createdAt?.format(payload: 'YYYYMM'), 'XML', '${sale.ncf}.xml'));
       await file.create(recursive: true);
       await file.writeAsString(sale.ecfXmlFirmado ?? '');
@@ -240,120 +259,175 @@ class _SalesPageState extends State<SalesPage> {
   }
 
   _onSelectedSaleOption(int? option, Sale sale) async {
-    switch (option) {
-      case 1:
-        _showInvoice(sale);
-        break;
-      case 2:
-        _showPayments(sale);
-        break;
-      case 3:
-        _showPaymentModal(sale);
-      case 4:
-        _showInvoicePage(sale);
-        break;
-      case 5:
-        _generateXmlFile(sale);
-        break;
-      default:
+    try {
+      switch (option) {
+        case 1:
+          _showInvoice(sale);
+          break;
+        case 2:
+          _showPayments(sale);
+          break;
+        case 3:
+          _showPaymentModal(sale);
+        case 4:
+          _showInvoicePage(sale);
+          break;
+        case 5:
+          _generateXmlFile(sale);
+          break;
+
+        case 6:
+          showLoader(context);
+          var items = await sale.getSaleData();
+          sale.items = items;
+          var bytes = await createDefaultTicket(sale: sale);
+          await PrinterHandler.printBytes(devicePos!, bytes);
+          await LogHandler.printEvent('SE IMPRIMIO LA FACTURA ${sale.ncf}');
+          Navigator.pop(context);
+
+          break;
+
+        case 7:
+          showLoader(context);
+          var items = await sale.getSaleData();
+          Navigator.pop(context);
+          sale.items = items;
+          await Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (ctx) => InvoiceGeneratorPage(
+                      sale: sale,
+                      items: items,
+                      editing: false,
+                      generateNcfFromProforma: true,
+                      mode: sale is SaleProduct
+                          ? SaleMode.product
+                          : SaleMode.service)));
+          await LogHandler.printEvent(
+              'SE PRE-GENERO UNA FACTURA FISCAL DESDE UNA PROFORMA - ${sale.ncf}');
+
+          break;
+        default:
+      }
+    } catch (e) {
+      if (option == 6) {
+        Navigator.pop(context);
+      }
+      rethrow;
     }
   }
 
   Widget get contentFilled {
-    return ListView.separated(
-        separatorBuilder: (ctx, i) => const Divider(),
-        itemCount: sales.length,
-        itemBuilder: (ctx, index) {
-          var sale = sales[index];
+    return ScrollMoveEventWidget(
+        scrollControllerY: scrollControllerY,
+  
+        child: ListView.separated(
+          controller: scrollControllerY,
+            separatorBuilder: (ctx, i) => const Divider(),
+            itemCount: sales.length,
+            itemBuilder: (ctx, index) {
+              var sale = sales[index];
 
-          List<Map<String, dynamic>> salesOptions = [
-            {'id': 1, 'name': 'Ver Factura'},
-            {'id': 2, 'name': 'Ver pagos'},
-          ];
+              List<Map<String, dynamic>> salesOptions = [
+                {'id': 1, 'name': 'Ver Factura'},
+                {'id': 2, 'name': 'Ver pagos'},
+              ];
 
-          if (sale.debt! > 0) {
-            salesOptions.add(
+              if (sale.debt! > 0) {
+                /* salesOptions.add(
               {'id': 3, 'name': 'Abonar pago'},
-            );
+            );*/
 
-            if (allowEditInvoice) {
-              salesOptions.add({'id': 4, 'name': 'Editar Factura'});
-            }
-          }
+                if (allowEditInvoice) {
+                  salesOptions.add({'id': 4, 'name': 'Editar Factura'});
+                }
+              }
 
-          if (sale.ecfXmlFirmado != null) {
-            salesOptions
-                .add({'id': 5, 'name': 'Generar Archivo XML del ${sale.ncf}'});
-          }
+              if (sale.ecfXmlFirmado != null) {
+                salesOptions.add(
+                    {'id': 5, 'name': 'Generar Archivo XML del ${sale.ncf}'});
+              }
 
-          return ListTile(
-            minVerticalPadding: kDefaultPadding,
-            leading: Container(
-              width: 80,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(90),
-                color: Theme.of(context).primaryColor.withOpacity(0.04),
-              ),
-              child: Center(
-                child: Icon(
-                  Icons.receipt_long_outlined,
-                  color: Theme.of(context).primaryColor,
-                  size: 24,
-                ),
-              ),
-            ),
-            title: Text(sale.ncf ?? '',
-                style: Theme.of(context).textTheme.bodyMedium),
-            subtitle: Text(sale.clientName ?? ''),
-            trailing: Wrap(
-              runAlignment: WrapAlignment.center,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                Container(
-                  padding: EdgeInsets.all(kDefaultPadding / 2),
+              if (eCommerceMode) {
+                salesOptions.add({'id': 6, 'name': 'Imprimir factura'});
+              }
+
+              if (sale.ncfTypeId == '50') {
+                salesOptions.add({'id': 7, 'name': 'Generar Factura Fiscal'});
+              }
+
+              return ListTile(
+                minVerticalPadding: kDefaultPadding,
+                 
+                leading: Container(
+                  width: 80,
                   decoration: BoxDecoration(
-                    color: sale.color.withOpacity(0.04),
+                    borderRadius: BorderRadius.circular(90),
+                    color: Theme.of(context).primaryColor.withOpacity(0.04),
                   ),
-                  child: Text(
-                    sale.paidLabel,
-                    style: TextStyle(color: sale.color, fontSize: 18),
+                  child: Center(
+                    child: Icon(
+                      Icons.receipt_long_outlined,
+                      color: Theme.of(context).primaryColor,
+                      size: 24,
+                    ),
                   ),
                 ),
-                SizedBox(width: kDefaultPadding),
-                sale.estadoDgii != null
-                    ? Container(
-                        margin: EdgeInsets.only(
-                            left: kDefaultPadding / 2, right: kDefaultPadding),
-                        padding: EdgeInsets.all(kDefaultPadding / 2),
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            color: sale.statusColorDgii.withOpacity(0.04)),
-                        child: Text(
-                          sale.estadoDgiiNombre ?? '',
-                          style: TextStyle(color: sale.statusColorDgii),
-                        ),
-                      )
-                    : SizedBox(),
-                Text(
-                    sale.currencyId == 1
-                        ? sale.total?.toDop()
-                        : sale.total?.toUS(),
+                title: Text(sale.ncf ?? '',
                     style: Theme.of(context).textTheme.bodyMedium),
-                SizedBox(width: kDefaultPadding),
-                PopupMenuButton<int>(
-                    onSelected: (option) => _onSelectedSaleOption(option, sale),
-                    itemBuilder: (ctx) {
-                      return List.generate(salesOptions.length, (index) {
-                        var option = salesOptions[index];
-                        return PopupMenuItem(
-                            value: option['id'], child: Text(option['name']));
-                      });
-                    }),
-                SizedBox(width: kDefaultPadding),
-              ],
-            ),
-          );
-        });
+                subtitle: Text(sale.clientName ?? ''),
+                trailing: Wrap(
+                  runAlignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(kDefaultPadding / 2),
+                      decoration: BoxDecoration(
+                        color: sale.color.withOpacity(0.04),
+                      ),
+                      child: Text(
+                        sale.paidLabel,
+                        style: TextStyle(color: sale.color, fontSize: 18),
+                      ),
+                    ),
+                    SizedBox(width: kDefaultPadding),
+                    sale.estadoDgii != null
+                        ? Container(
+                            margin: EdgeInsets.only(
+                                left: kDefaultPadding / 2,
+                                right: kDefaultPadding),
+                            padding: EdgeInsets.all(kDefaultPadding / 2),
+                            decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(20),
+                                color: sale.statusColorDgii.withOpacity(0.04)),
+                            child: Text(
+                              sale.estadoDgiiNombre ?? '',
+                              style: TextStyle(color: sale.statusColorDgii),
+                            ),
+                          )
+                        : SizedBox(),
+                    Text(
+                        sale.currencyId == 1
+                            ? sale.total?.toDop()
+                            : sale.total?.toUS(),
+                        style: Theme.of(context).textTheme.bodyMedium),
+                    SizedBox(width: kDefaultPadding),
+                    PopupMenuButton<int>(
+                        onSelected: (option) =>
+                            _onSelectedSaleOption(option, sale),
+                        itemBuilder: (ctx) {
+                          return List.generate(salesOptions.length, (index) {
+                            var option = salesOptions[index];
+                            return PopupMenuItem(
+                                value: option['id'],
+                                child: Text(option['name']));
+                          });
+                        }),
+                    SizedBox(width: kDefaultPadding),
+                  ],
+                ),
+              );
+            }));
   }
 
   Widget get contentLoading {
@@ -379,7 +453,9 @@ class _SalesPageState extends State<SalesPage> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
+      
           title: Text('TUS FACTURAS (${sales.length})'),
+         
           actions: [
             Wrap(
               crossAxisAlignment: WrapCrossAlignment.center,
@@ -482,15 +558,12 @@ class _SalesPageState extends State<SalesPage> {
 
               return contentEmpty;
             }),
-        floatingActionButton: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
+        floatingActionButton: Stack(
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                FloatingActionButton(
+            Positioned(right: kDefaultPadding * 3, bottom: 20, child:  FloatingActionButton(
                   onPressed: () {
                     ncfTypeId = null;
+                    ncfsTypes =[];
                     saleStatus = SaleStatus.all;
                     search = null;
 
@@ -501,13 +574,7 @@ class _SalesPageState extends State<SalesPage> {
                     searchController.clear();
                   },
                   child: Icon(Icons.restore),
-                ),
-                SizedBox(width: kDefaultPadding * 3)
-              ],
-            ),
-            SizedBox(
-              height: kDefaultPadding,
-            )
+                ),)
           ],
         ));
   }

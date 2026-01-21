@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "URESAX INVOICE SYS"
-#define MyAppVersion "1.0.2+3"
+#define MyAppVersion "1.0.8+9"
 #define MyAppPublisher "URENA LORENZO & ASOCIADOS SRL"
 #define MyAppExeName "uresax_invoice_sys.exe"
 #define MyAppAssocName MyAppName + " File"
@@ -18,6 +18,7 @@ AppVersion={#MyAppVersion}
 ;AppVerName={#MyAppName} {#MyAppVersion}
 AppPublisher={#MyAppPublisher}
 DefaultDirName={autopf}\{#MyAppName}
+DisableDirPage=no
 UninstallDisplayIcon={app}\{#MyAppExeName}
 ; "ArchitecturesAllowed=x64compatible" specifies that Setup cannot run
 ; on anything but x64 and Windows 11 on Arm.
@@ -35,6 +36,7 @@ OutputBaseFilename=uresax_invoice_sys_setup
 SetupIconFile=C:\Users\Dell\Documents\uresax_invoice_sys\windows\runner\resources\app_icon.ico
 SolidCompression=yes
 WizardStyle=modern
+
 
 [Languages]
 Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"

@@ -1,5 +1,4 @@
 import 'package:amount_input_formatter/amount_input_formatter.dart';
-import 'package:currency_text_input_formatter/currency_text_input_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:uresax_invoice_sys/models/sale.abs.dart';
 import 'package:uresax_invoice_sys/settings.dart';

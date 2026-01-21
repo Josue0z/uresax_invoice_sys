@@ -1,7 +1,10 @@
+
 import 'package:flutter/material.dart';
 import 'package:localstorage/localstorage.dart';
 import 'package:uresax_invoice_sys/apis/printers.handler.dart';
+import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/utils/functions.dart';
+
 
 class PrintersPage extends StatefulWidget {
   const PrintersPage({super.key});
@@ -11,10 +14,12 @@ class PrintersPage extends StatefulWidget {
 }
 
 class _PrintersPageState extends State<PrintersPage> {
-  List<String> printers = [];
-  // Get Printer List
+
+
+
   void startScan() async {
-    printers = await PrinterHandler.listPrinters();
+    printers = (await PrinterHandler.listPrinters());
+    printers.sort((a,b) => a.compareTo(b));
     setState(() {});
   }
 
@@ -32,17 +37,18 @@ class _PrintersPageState extends State<PrintersPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('IMPRESORAS (${printers.length})'),
+        title: Text('DISPOSITIVOS (${printers.length})'),
       ),
       body: ListView.separated(
           itemBuilder: (ctx, index) {
             final printer = printers[index];
-
+          
             return ListTile(
               title: Text(printer),
+       
               onTap: () async {
                 try {
-                  localStorage.setItem('printer', printer);
+                  localStorage.setItem('devicePos', printer);
                   Navigator.pop(context, printer);
                 } catch (e) {
                   showTopSnackBar(context,

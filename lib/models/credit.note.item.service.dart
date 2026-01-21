@@ -76,6 +76,7 @@ class CreditNoteService implements SaleItem {
     return {
       'id': id,
       'serviceId': serviceId,
+      'serviceName':serviceName,
       'discount': discount,
       'net': net,
       'tax': tax,

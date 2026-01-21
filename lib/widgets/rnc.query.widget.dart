@@ -9,12 +9,15 @@ class RncQueryWidget extends StatefulWidget {
   TextEditingController editingController;
   TextEditingController clientName;
 
+  bool editing;
+
   Function(TaxPayer?, bool isValid) onChanged;
   RncQueryWidget(
       {super.key,
       required this.editingController,
       required this.clientName,
-      required this.onChanged});
+      required this.onChanged,
+      this.editing = false});
 
   @override
   State<RncQueryWidget> createState() => _RncQueryWidgetState();
@@ -94,6 +97,7 @@ class _RncQueryWidgetState extends State<RncQueryWidget> {
         ),
         TextFormField(
           controller: widget.editingController,
+          enabled: !widget.editing,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           validator: (val) => val!.isEmpty
               ? 'CAMPO OBLIGATORIO'

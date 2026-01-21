@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:uresax_invoice_sys/modals/drivers.editor.modal.dart';
 import 'package:uresax_invoice_sys/models/drivers.dart';
 import 'package:uresax_invoice_sys/settings.dart';
+import 'package:uresax_invoice_sys/widgets/content.error.widget.dart';
 
 class DriversPage extends StatefulWidget {
   bool selectedMode;
@@ -13,6 +15,7 @@ class DriversPage extends StatefulWidget {
 }
 
 class _DriversPageState extends State<DriversPage> {
+  Future? future;
   _initAsync() async {
     try {
       drivers = await Drivers.get();
@@ -24,7 +27,9 @@ class _DriversPageState extends State<DriversPage> {
 
   @override
   initState() {
-    _initAsync();
+   setState(() {
+     future =   _initAsync();
+   });
     super.initState();
   }
 
@@ -33,37 +38,27 @@ class _DriversPageState extends State<DriversPage> {
     Navigator.pop(context, driver);
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('CONDUCTORES (${drivers.length})'),
-        actions: [
-          Wrap(
-            runAlignment: WrapAlignment.center,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              SizedBox(
-                width: 200,
-                height: 50,
-                child: TextFormField(
-                  onChanged: (words) async {
-                    drivers = await Drivers.get(search: words);
-                    setState(() {});
-                  },
-                  decoration: InputDecoration(
-                      hintText: 'Nombre...',
-                      fillColor: Colors.white,
-                      filled: true,
-                      suffixIcon: Icon(Icons.search)),
-                ),
-              ),
-              SizedBox(width: kDefaultPadding),
-            ],
-          )
+    Widget get contentEmpty {
+    return Center(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SvgPicture.asset('assets/svgs/undraw_male-avatar_zkzx.svg', width: 220)
         ],
       ),
-      body: ListView.separated(
+    );
+  }
+
+  Widget get contentLoading {
+    return Center(
+      child: CircularProgressIndicator(),
+    );
+  }
+
+
+  Widget get contentFilled {
+    return ListView.separated(
           itemBuilder: (ctx, index) {
             var driver = drivers[index];
             return ListTile(
@@ -99,18 +94,78 @@ class _DriversPageState extends State<DriversPage> {
             );
           },
           separatorBuilder: (ctx, i) => const Divider(),
-          itemCount: drivers.length),
-      floatingActionButton: FloatingActionButton(
-          onPressed: () async {
-            var res = await showDialog(
-                context: context,
-                builder: (ctx) => DriversEditorModal(driver: Drivers()));
-            if (res != null) {
-              drivers = await Drivers.get();
-              setState(() {});
+          itemCount: drivers.length);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('CONDUCTORES (${drivers.length})'),
+        actions: [
+          Wrap(
+            runAlignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              SizedBox(
+                width: 200,
+                height: 50,
+                child: TextFormField(
+                  onChanged: (words) async {
+                    drivers = await Drivers.get(search: words);
+                    setState(() {});
+                  },
+                  decoration: InputDecoration(
+                      hintText: 'Nombre...',
+                      fillColor: Colors.white,
+                      filled: true,
+                      suffixIcon: Icon(Icons.search)),
+                ),
+              ),
+              SizedBox(width: kDefaultPadding),
+              CircleAvatar(
+                  child: IconButton(
+                tooltip: 'AGREGAR CONDUCTOR',
+                onPressed: () async {
+                  var res = await showDialog(
+                      context: context,
+                      builder: (ctx) => DriversEditorModal(driver: Drivers()));
+                  if (res != null) {
+                    drivers = await Drivers.get();
+                    setState(() {});
+                  }
+                },
+                icon: Icon(Icons.add),
+              )),
+              SizedBox(width: kDefaultPadding),
+            ],
+          )
+        ],
+      ),
+      body:  FutureBuilder(
+          future: future,
+          builder: (ctx, s) {
+            if (s.connectionState == ConnectionState.waiting) {
+              return contentLoading;
             }
-          },
-          child: Icon(Icons.add)),
+
+            if (s.hasError) {
+              return ContentErrorWidget(
+                error: s.error.toString(),
+                onRetry: () {
+                  setState(() {
+                    future = _initAsync();
+                  });
+                },
+              );
+            }
+            if (s.connectionState == ConnectionState.done &&
+                drivers.isNotEmpty) {
+              return contentFilled;
+            }
+
+            return contentEmpty;
+          }),
     );
   }
 }

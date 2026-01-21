@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:uresax_invoice_sys/modals/service.editor.modal.dart';
@@ -5,6 +7,7 @@ import 'package:uresax_invoice_sys/models/service.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/utils/extensions.dart';
 import 'package:uresax_invoice_sys/widgets/content.error.widget.dart';
+import 'package:uresax_invoice_sys/widgets/scrollmove.event.widget.dart';
 
 class ServicesPage extends StatefulWidget {
   bool selectedMode;
@@ -17,6 +20,8 @@ class ServicesPage extends StatefulWidget {
 class _ServicesPageState extends State<ServicesPage> {
   List<Services> services = [];
   Future? future;
+    final TextEditingController _searchController = TextEditingController();
+  ScrollController scrollControllerY = ScrollController();
 
   _showModal({bool editing = false, required Services service}) async {
     var res = await showDialog(
@@ -50,48 +55,52 @@ class _ServicesPageState extends State<ServicesPage> {
   }
 
   Widget get contentFilled {
-    return ListView.separated(
-        separatorBuilder: (ctx, i) => const Divider(),
-        itemCount: services.length,
-        itemBuilder: (ctx, index) {
-          var service = services[index];
-          return ListTile(
-            minVerticalPadding: kDefaultPadding,
-            onTap: widget.selectedMode
-                ? () {
-                    Navigator.pop(context, service);
-                  }
-                : null,
-            leading: Container(
-              width: 80,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(90),
-                color: Theme.of(context).primaryColor.withOpacity(0.04),
-              ),
-              child: Center(
-                child: Icon(
-                  Icons.local_mall_outlined,
-                  color: Theme.of(context).primaryColor,
-                  size: 24,
+    return ScrollMoveEventWidget(
+        scrollControllerY: scrollControllerY,
+
+        child: ListView.separated(
+            controller: scrollControllerY,
+            separatorBuilder: (ctx, i) => const Divider(),
+            itemCount: services.length,
+            itemBuilder: (ctx, index) {
+              var service = services[index];
+              return ListTile(
+                minVerticalPadding: kDefaultPadding,
+                onTap: widget.selectedMode
+                    ? () {
+                        Navigator.pop(context, service);
+                      }
+                    : null,
+                leading: Container(
+                  width: 80,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(90),
+                    color: Theme.of(context).primaryColor.withOpacity(0.04),
+                  ),
+                  child: Center(
+                    child: Icon(
+                      Icons.local_mall_outlined,
+                      color: Theme.of(context).primaryColor,
+                      size: 24,
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            title: Text(service.name ?? '',
-                style: Theme.of(context).textTheme.bodyMedium),
-            trailing: Wrap(
-              children: [
-                Text(service.price?.toCoin() ?? '',
+                title: Text(service.name ?? '',
                     style: Theme.of(context).textTheme.bodyMedium),
-                SizedBox(width: kDefaultPadding),
-                IconButton(
-                    onPressed: () {
-                      _showModal(editing: true, service: service);
-                    },
-                    icon: Icon(Icons.edit))
-              ],
-            ),
-          );
-        });
+                trailing: Wrap(
+                  children: [
+                    Text(service.price?.toCoin() ?? '',
+                        style: Theme.of(context).textTheme.bodyMedium),
+                    SizedBox(width: kDefaultPadding),
+                    IconButton(
+                        onPressed: () {
+                          _showModal(editing: true, service: service);
+                        },
+                        icon: Icon(Icons.edit))
+                  ],
+                ),
+              );
+            }));
   }
 
   Widget get contentEmpty {
@@ -134,7 +143,8 @@ class _ServicesPageState extends State<ServicesPage> {
                 width: 200,
                 height: 50,
                 child: TextFormField(
-                  onChanged: (words) async {
+                  controller: _searchController,
+                  onFieldSubmitted: (words) async {
                     setState(() {
                       future = _initAsync(words);
                     });
@@ -146,7 +156,16 @@ class _ServicesPageState extends State<ServicesPage> {
                       suffixIcon: Icon(Icons.search)),
                 ),
               ),
-              SizedBox(width: kDefaultPadding)
+              SizedBox(width: kDefaultPadding),
+              CircleAvatar(
+                child: IconButton(
+                    tooltip: 'AGREGAR SERVICIO',
+                    onPressed: () {
+                      _showModal(service: Services());
+                    },
+                    icon: Icon(Icons.add)),
+              ),
+              SizedBox(width: kDefaultPadding),
             ],
           )
         ],
@@ -175,9 +194,21 @@ class _ServicesPageState extends State<ServicesPage> {
 
             return contentEmpty;
           }),
-      floatingActionButton: FloatingActionButton(
-          onPressed: () => _showModal(service: Services()),
-          child: Icon(Icons.add)),
+    floatingActionButton: Stack(
+      children: [
+        Positioned(
+          bottom: 20,
+          right: kDefaultPadding*2,
+          child: FloatingActionButton(onPressed: (){
+        setState(() {
+          _searchController.clear();
+          future = _initAsync();
+        });
+      },
+      child: Icon(Icons.restore)),)
+      ],
+    )
+          
     );
   }
 }

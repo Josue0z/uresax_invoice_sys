@@ -4,6 +4,7 @@ import 'package:uresax_invoice_sys/modals/category.editor.modal.dart';
 import 'package:uresax_invoice_sys/models/categorie.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/widgets/content.error.widget.dart';
+import 'package:uresax_invoice_sys/widgets/scrollmove.event.widget.dart';
 
 class CategoriesPage extends StatefulWidget {
   bool selectorMode;
@@ -16,6 +17,8 @@ class CategoriesPage extends StatefulWidget {
 class _CategoriesPageState extends State<CategoriesPage> {
   List<Category> categories = [];
   Future? future;
+        final TextEditingController _searchController = TextEditingController();
+  ScrollController scrollControllerY = ScrollController();
 
   _onSelected(Category? category) {
     Navigator.pop(context, category);
@@ -41,7 +44,8 @@ class _CategoriesPageState extends State<CategoriesPage> {
   }
 
   Widget get contentFilled {
-    return ListView.separated(
+    return ScrollMoveEventWidget(scrollControllerY: scrollControllerY, child: ListView.separated(
+      controller: scrollControllerY,
         itemBuilder: (ctx, index) {
           var category = categories[index];
           return ListTile(
@@ -93,7 +97,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
           );
         },
         separatorBuilder: (ctx, i) => const Divider(),
-        itemCount: categories.length);
+        itemCount: categories.length));
   }
 
   Widget get contentEmpty {
@@ -147,7 +151,8 @@ class _CategoriesPageState extends State<CategoriesPage> {
                 width: 200,
                 height: 50,
                 child: TextFormField(
-                  onChanged: (words) async {
+                  controller: _searchController,
+                  onFieldSubmitted: (words) async {
                     setState(() {
                       future = _initAsync(words);
                     });
@@ -159,6 +164,15 @@ class _CategoriesPageState extends State<CategoriesPage> {
                       suffixIcon: Icon(Icons.search)),
                 ),
               ),
+              SizedBox(width: kDefaultPadding),
+              CircleAvatar(
+                  child: IconButton(
+                tooltip: 'AGREGAR CATEGORIA',
+                onPressed: () {
+                  _showModal(category: Category());
+                },
+                icon: Icon(Icons.add),
+              )),
               SizedBox(width: kDefaultPadding),
             ],
           )
@@ -188,11 +202,20 @@ class _CategoriesPageState extends State<CategoriesPage> {
 
             return contentEmpty;
           }),
-      floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            _showModal(category: Category());
-          },
-          child: Icon(Icons.add)),
+               floatingActionButton: Stack(
+      children: [
+        Positioned(
+          bottom: 20,
+          right: kDefaultPadding*2,
+          child: FloatingActionButton(onPressed: (){
+        setState(() {
+          _searchController.clear();
+          future = _initAsync();
+        });
+      },
+      child: Icon(Icons.restore)),)
+      ],
+    )
     );
   }
 }

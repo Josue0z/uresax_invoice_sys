@@ -437,7 +437,8 @@ pw.Document createDefaultInvoice(Sale sale) {
                             ? (sale.total! -
                                     (sale.retentionIsr! + sale.retentionTax!))
                                 .toDop()
-                            : sale.amountPaid?.toUS() ?? '',
+                            : (sale.total! -
+                                    (sale.retentionIsr! + sale.retentionTax!)).toUS() ?? '',
                         style: pw.TextStyle(fontSize: 8))
                   ])),
           pw.Container(
@@ -450,10 +451,7 @@ pw.Document createDefaultInvoice(Sale sale) {
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
                     pw.Text('Total Pagado', style: pw.TextStyle(fontSize: 8)),
-                    pw.Text(
-                        sale.currencyId == 1
-                            ? sale.amountPaid?.toDop()
-                            : sale.amountPaid?.toUS() ?? '',
+                    pw.Text(sale.currencyId == 1? sale.amountPaid?.toDop(): sale.amountPaid?.toUS(),
                         style: pw.TextStyle(fontSize: 8))
                   ])),
         ]))
@@ -696,8 +694,8 @@ Future<pw.Document> createPaymentInvoice(Payment payment) async {
                       pw.Text('Fecha', style: pw.TextStyle(fontSize: 12)),
                       pw.Text(
                           payment.createdAt
-                                  ?.toLocal()
-                                  .format(payload: 'DD/MM/YYYY hh:mm:ss A') ??
+                                  ?.toUtc()
+                                  .format(payload: 'DD/MM/YYYY') ??
                               '',
                           style: pw.TextStyle(fontSize: 12)),
                     ]),
@@ -1048,6 +1046,12 @@ Future<List<int>> createDefaultTicket(
 
   if (sale.effective != 0) {
     paymentsMethods.add('EFECTIVO');
+    if (sale.paid != 0 && sale.paid! > 0) {
+      calcs.add('TOTAL PAGADO: ${sale.paid!.toDop()}');
+    }
+    if (sale.coinBack != 0 && sale.coinBack! > 0) {
+      calcs.add('DEVUELTA: ${sale.coinBack!.toDop()}');
+    }
   }
 
   if (sale.creditCard != 0) {

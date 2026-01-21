@@ -26,6 +26,21 @@ class _ElectronicNcfSettingsModalState
     {'id': 2, 'name': 'DESACTIVADO'}
   ];
 
+  List<Map<String,dynamic>> statesDgii = [
+    {
+      'id': null,
+      'name':"ESTADO"
+    },
+    {
+      'id':false,
+      'name':'DESARROLLO'
+    },
+    {
+      'id':true,
+      'name':'PRODUCCION'
+    }
+  ];
+
   bool isValid = false;
 
   _onSelectPath() async {
@@ -141,6 +156,17 @@ class _ElectronicNcfSettingsModalState
                           decoration: InputDecoration(labelText: 'FACTURACION'),
                           items: List.generate(options.length, (i) {
                             var option = options[i];
+                            return DropdownMenuItem(
+                                value: option['id'],
+                                child: Text(option['name']));
+                          }),
+                          onChanged: null),
+                          SizedBox(height: kDefaultPadding),
+                          DropdownButtonFormField<bool?>(
+                          initialValue: enabledEcfProduction,
+                          decoration: InputDecoration(labelText: 'ESTADO DGII'),
+                          items: List.generate(options.length, (i) {
+                            var option = statesDgii[i];
                             return DropdownMenuItem(
                                 value: option['id'],
                                 child: Text(option['name']));

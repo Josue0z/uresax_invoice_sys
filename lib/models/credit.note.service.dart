@@ -145,7 +145,8 @@ class CreditNoteAsService implements Sale {
       this.authorName,
       this.ncfSeq,
       this.ncfAffectedCreatedAt,
-      this.clientAddress});
+      this.clientAddress,
+      this.coinBack});
 
   @override
   Future<CreditNoteAsService?> create() async {
@@ -155,7 +156,7 @@ class CreditNoteAsService implements Sale {
       map['id'] = id;
       var seqParams = '';
       final conne = SqlConector.connection;
-      await calcDifOfNetsNcfs(ncf: ncf ?? '', createdAt: ncfAffectedCreatedAt!);
+      await calcDifOfNetsNcfs(ncfAffected: ncf ?? '',  ncfAffectedCreatedAt: ncfAffectedCreatedAt!, currentTotal: total!);
 
       if (ncfTypeId == '04') {
         seqParams = '''nextval('04_seq')''';
@@ -184,8 +185,8 @@ class CreditNoteAsService implements Sale {
             });
         await conne.execute(Sql.named('''
          INSERT INTO public."CreditNote"(
-	       id,"saleId", "clientId", ncf, discount, net, tax, total, effective, "creditCard", "checkOrTransf", "saleToCredit", law10, "typeIncomeId", "clientType", "retentionTax", "retentionIsr", "ncfTypeId", description, prefix,"invoiceTypeId","currencyId", rate, "maxSequence",tax18,tax16,tax3,net18,net16,net3,"exemptAmount","expirationDate","authorId")
-	       VALUES (@id, @saleId, @clientId, $seqParams, @discount, @net, @tax, @total, @effective, @creditCard, @checkOrTransf, @saleToCredit, @law10, @typeIncomeId, @clientType, @retentionTax, @retentionIsr, @ncfTypeId, @description, @prefix,@invoiceTypeId, @currencyId, @rate, @maxSequence,@tax18,@tax16,@tax3,@net18,@net16,@net3,@exemptAmount,@expirationDate,@authorId);
+	       id,"saleId", "clientId", ncf, discount, net, tax, total, effective, "creditCard", "checkOrTransf", "saleToCredit", law10, "typeIncomeId", "clientType", "retentionTax", "retentionIsr", "ncfTypeId", description, prefix,"invoiceTypeId","currencyId", rate, "maxSequence",tax18,tax16,tax3,net18,net16,net3,"exemptAmount","expirationDate","authorId","coinBack",paid)
+	       VALUES (@id, @saleId, @clientId, $seqParams, @discount, @net, @tax, @total, @effective, @creditCard, @checkOrTransf, @saleToCredit, @law10, @typeIncomeId, @clientType, @retentionTax, @retentionIsr, @ncfTypeId, @description, @prefix,@invoiceTypeId, @currencyId, @rate, @maxSequence,@tax18,@tax16,@tax3,@net18,@net16,@net3,@exemptAmount,@expirationDate,@authorId,@coinBack,@paid);
 
       '''), parameters: map);
 
@@ -198,8 +199,8 @@ class CreditNoteAsService implements Sale {
             subMap['creditNoteId'] = id;
             await conne.execute(
                 Sql.named('''INSERT INTO public."CreditNoteService"(
-	       id,"creditNoteId", "serviceId", discount, net, tax, total, "retentionTax", "retentionIsr", quantity, "taxId", "discountId", "retentionTaxId", "retentionIsrId",tax18,tax16,tax3,net18,net16,net3,"exemptAmount","indicadorFacturacion","indicadorAgentePercepcion")
-	       VALUES (@id, @creditNoteId, @serviceId, @discount, @net, @tax, @total, @retentionTax, @retentionIsr, @quantity, @taxId, @discountId, @retentionTaxId, @retentionIsrId,@tax18,@tax16,@tax3,@net18,@net16,@net3,@exemptAmount,@indicadorFacturacion,@indicadorAgentePercepcion); '''),
+	       id,"creditNoteId", "serviceId", discount, net, tax, total, "retentionTax", "retentionIsr", quantity, "taxId", "discountId", "retentionTaxId", "retentionIsrId",tax18,tax16,tax3,net18,net16,net3,"exemptAmount","indicadorFacturacion","indicadorAgentePercepcion","serviceName")
+	       VALUES (@id, @creditNoteId, @serviceId, @discount, @net, @tax, @total, @retentionTax, @retentionIsr, @quantity, @taxId, @discountId, @retentionTaxId, @retentionIsrId,@tax18,@tax16,@tax3,@net18,@net16,@net3,@exemptAmount,@indicadorFacturacion,@indicadorAgentePercepcion,@serviceName); '''),
                 parameters: subMap);
           }
         }
@@ -212,7 +213,7 @@ class CreditNoteAsService implements Sale {
                 'id': Uuid().v4(),
                 'creditNoteId': id,
                 'paymentMethodId': paymentMethodId,
-                'amount': paid
+                'amount':  paid
               });
         }
       });
@@ -252,7 +253,8 @@ class CreditNoteAsService implements Sale {
       var conn = SqlConector.connection;
       await conn?.runTx((c) async {
         await c.execute(
-            'DELETE FROM public."Returns" WHERE "creditNoteId" = @id',
+            Sql.named(
+                'DELETE FROM public."Returns" WHERE "creditNoteId" = @id'),
             parameters: {'id': id});
 
         await c.execute(
@@ -265,7 +267,7 @@ class CreditNoteAsService implements Sale {
             parameters: {'id': id});
 
         await c.execute(
-          '''setval('public."${ncfTypeId}_seq"',$ncfSeq,false)''',
+          '''select setval('public."${ncfTypeId}_seq"',$ncfSeq,false);''',
         );
       });
     } catch (e) {
@@ -348,7 +350,9 @@ class CreditNoteAsService implements Sale {
       'net3': net3,
       'exemptAmount': exemptAmount,
       'expirationDate': expirationDate,
-      'authorId': authorId
+      'authorId': authorId,
+      'paid': paidInvoice,
+      'coinBack': coinBack
     };
   }
 
@@ -477,7 +481,10 @@ class CreditNoteAsService implements Sale {
         authorId: map['authorId'],
         authorName: map['authorName'],
         ncfSeq: map['ncfSeq'],
-        clientAddress: map['clientAddress']);
+        clientAddress: map['clientAddress'],
+        paid: map['paid'] != null ? double.parse(map['paid']) : null,
+        coinBack:
+            map['coinBack'] != null ? double.parse(map['coinBack']) : null);
   }
 
   String toJson() => json.encode(toMap());
@@ -753,4 +760,16 @@ class CreditNoteAsService implements Sale {
     }
     return Colors.grey;
   }
+
+  @override
+  Future<void> updateStock() {
+    // TODO: implement updateStock
+    throw UnimplementedError();
+  }
+
+  @override
+  double? coinBack;
+
+  @override
+  double? paidInvoice;
 }

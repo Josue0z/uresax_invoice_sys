@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:page_route_transition/page_route_transition.dart';
 import 'package:uresax_invoice_sys/apis/log.handler.dart';
 import 'package:uresax_invoice_sys/modals/company.editor.modal.dart';
 import 'package:uresax_invoice_sys/modals/electronic.ncf.settings.modal.dart';
@@ -27,6 +28,7 @@ import 'package:uresax_invoice_sys/pages/services_page.dart';
 import 'package:uresax_invoice_sys/pages/users_page.dart';
 import 'package:uresax_invoice_sys/pages/warehouses_page.dart';
 import 'package:uresax_invoice_sys/settings.dart';
+import 'package:uresax_invoice_sys/widgets/scrollmove.event.widget.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -118,7 +120,7 @@ class _HomePageState extends State<HomePage> {
       'svg': 'assets/svgs/undraw_timeline_2gfy.svg'
     },
   ];
-
+  ScrollController scrollControllerY = ScrollController();
   late List<Map<String, dynamic>> defaultOptions = [];
 
   _showInvoiceGenerator(SaleMode mode, List<SaleItem> items, Sale sale) {
@@ -156,7 +158,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   _showUsersPage() async {
-    var res = await Navigator.push(
+    await Navigator.push(
         context, MaterialPageRoute(builder: (ctx) => UsersPage()));
     setState(() {});
   }
@@ -338,17 +340,25 @@ class _HomePageState extends State<HomePage> {
             children: [
               Text('TABLERO -  BIENVENIDO ${company?.name}!'),
               SizedBox(height: kDefaultPadding / 2),
-              Container(
-                padding: EdgeInsets.all(kDefaultPadding / 2),
-                decoration: BoxDecoration(
-                    color: Colors.white24,
-                    borderRadius: BorderRadius.circular(10)),
-                child: Text(currentUser?.username ?? '',
-                    textAlign: TextAlign.right,
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodySmall
-                        ?.copyWith(color: Colors.white)),
+              Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(kDefaultPadding / 2),
+                    decoration: BoxDecoration(
+                        color: Colors.white24,
+                        borderRadius: BorderRadius.circular(10)),
+                    child: Text(currentUser?.username ?? '',
+                        textAlign: TextAlign.right,
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodySmall
+                            ?.copyWith(color: Colors.white)),
+                  ),
+                  SizedBox(width: kDefaultPadding / 2),
+                  Text(appVersion,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Colors.white, fontWeight: FontWeight.w500))
+                ],
               )
             ],
           ),
@@ -361,7 +371,6 @@ class _HomePageState extends State<HomePage> {
                         .contains('ALLOW_VIEW_ELECTRONIC_SETTINGS')
                     ? CircleAvatar(
                         child: IconButton(
-                            tooltip: 'CONFIGURACION DE FACTURACION ELECTRONICA',
                             onPressed: _showElectronicNcfSettingsPage,
                             icon: Icon(Icons.receipt_long)),
                       )
@@ -372,7 +381,6 @@ class _HomePageState extends State<HomePage> {
                 currentUser!.permissions!.contains('ALLOW_EDIT_COMPANY')
                     ? CircleAvatar(
                         child: IconButton(
-                            tooltip: 'EDITAR DATOS DE EMPRESA',
                             onPressed: _showCompanyDetailsPage,
                             icon: Icon(Icons.store_outlined)),
                       )
@@ -383,9 +391,8 @@ class _HomePageState extends State<HomePage> {
                 currentUser!.permissions!.contains('ALLOW_VIEW_USERS')
                     ? CircleAvatar(
                         child: IconButton(
-                            tooltip: 'VER USUARIOS',
                             onPressed: _showUsersPage,
-                            icon: Icon(Icons.people_alt_outlined)),
+                            icon: Icon(Icons.people)),
                       )
                     : SizedBox(),
                 SizedBox(
@@ -421,16 +428,16 @@ class _HomePageState extends State<HomePage> {
                 ),
                 CircleAvatar(
                   child: IconButton(
-                      tooltip: 'CERRAR CUENTA',
                       onPressed: () async {
+                        Navigator.pushAndRemoveUntil(
+                            context,
+                            PageRouteTransitionBuilder(
+                                page: LoginPage(),
+                                effect: TransitionEffect.topToBottom),
+                            (_) => false);
                         await LogHandler.printEvent(
                             '${currentUser?.name} CERRO SESION');
                         currentUser = null;
-
-                        Navigator.pushAndRemoveUntil(
-                            context,
-                            MaterialPageRoute(builder: (ctx) => LoginPage()),
-                            (_) => false);
                       },
                       icon: Icon(Icons.power_settings_new_outlined)),
                 ),
@@ -470,7 +477,14 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             Expanded(
-              child: GridView.builder(
+                child: ScrollMoveEventWidget(
+                    scrollControllerY: scrollControllerY,
+                    child:  GridView.builder(
+                  controller: scrollControllerY,
+                  physics: Theme.of(context).platform == TargetPlatform.iOS ||
+                          Theme.of(context).platform == TargetPlatform.macOS
+                      ? const BouncingScrollPhysics()
+                      : const ClampingScrollPhysics(),
                   itemCount: options.length,
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 4),
@@ -481,8 +495,7 @@ class _HomePageState extends State<HomePage> {
                         onTap: () {
                           _showPage(option['id']);
                         });
-                  }),
-            )
+                  }),))
           ],
         ));
   }
@@ -503,6 +516,7 @@ class __CardHoverState extends State<_CardHover> {
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
+      opaque: false,
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: AnimatedContainer(

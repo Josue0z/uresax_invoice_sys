@@ -112,7 +112,8 @@ class SaleProduct implements Sale {
       this.authorName,
       this.ncfSeq,
       this.ncfAffectedCreatedAt,
-      this.clientAddress});
+      this.clientAddress,
+      this.coinBack});
 
   SaleProduct copyWith({
     String? id,
@@ -234,7 +235,9 @@ class SaleProduct implements Sale {
       'exemptAmount': exemptAmount,
       'expirationDate': expirationDate,
       'tipoPago': tipoPago,
-      'authorId': authorId
+      'authorId': authorId,
+      'paid':paidInvoice,
+      'coinBack': coinBack
     };
   }
 
@@ -296,7 +299,9 @@ class SaleProduct implements Sale {
         authorName: map['authorName'],
         ncfSeq: map['ncfSeq'],
         estadoDgiiNombre: map['estadoDgiiNombre'],
-        clientAddress: map['clientAddress']);
+        clientAddress: map['clientAddress'],
+        paid: map['paid'] != null ? double.parse(map['paid']) : null,
+        coinBack: map['coinBack'] != null ? double.parse(map['coinBack']) : null);
   }
 
   String toJson() => json.encode(toMap());
@@ -434,8 +439,8 @@ class SaleProduct implements Sale {
       await conne?.runTx((conne) async {
         await conne.execute(Sql.named('''
          INSERT INTO public."Sale"(
-	       id, "clientId", ncf, discount, net, tax, total, effective, "creditCard", "checkOrTransf", "saleToCredit", law10, "typeIncomeId", "clientType", "retentionTax", "retentionIsr", "ncfTypeId", description, "retentionDate", prefix,"invoiceTypeId", "currencyId", rate, "maxSequence","createdAt",tax18,tax16,tax3,net18,net16,net3,"exemptAmount","expirationDate","authorId","tipoPago")
-	       VALUES (@id, @clientId, $seqParams, @discount, @net, @tax, @total, @effective, @creditCard, @checkOrTransf, @saleToCredit, @law10, @typeIncomeId, @clientType, @retentionTax, @retentionIsr, @ncfTypeId, @description, @retentionDate, @prefix,@invoiceTypeId, @currencyId, @rate, @maxSequence, @createdAt,@tax18,@tax16,@tax3,@net18,@net16,@net3,@exemptAmount,@expirationDate,@authorId,@tipoPago);
+	       id, "clientId", ncf, discount, net, tax, total, effective, "creditCard", "checkOrTransf", "saleToCredit", law10, "typeIncomeId", "clientType", "retentionTax", "retentionIsr", "ncfTypeId", description, "retentionDate", prefix,"invoiceTypeId", "currencyId", rate, "maxSequence","createdAt",tax18,tax16,tax3,net18,net16,net3,"exemptAmount","expirationDate","authorId","tipoPago","coinBack",paid)
+	       VALUES (@id, @clientId, $seqParams, @discount, @net, @tax, @total, @effective, @creditCard, @checkOrTransf, @saleToCredit, @law10, @typeIncomeId, @clientType, @retentionTax, @retentionIsr, @ncfTypeId, @description, @retentionDate, @prefix,@invoiceTypeId, @currencyId, @rate, @maxSequence, @createdAt,@tax18,@tax16,@tax3,@net18,@net16,@net3,@exemptAmount,@expirationDate,@authorId,@tipoPago,@coinBack,@paid);
        
       '''), parameters: map);
 
@@ -447,16 +452,9 @@ class SaleProduct implements Sale {
           subMap['id'] = xid;
           subMap['saleId'] = id;
           await conne.execute(Sql.named('''INSERT INTO public."SaleProduct"(
-	       id, "productId", discount, net, tax, total, "retentionTax", "retentionIsr", "saleId", quantity, "taxId", "discountId", "retentionTaxId", "retentionIsrId",tax18,tax16,tax3,net18,net16,net3,"exemptAmount","indicadorFacturacion","indicadorAgentePercepcion")
-	       VALUES (@id, @productId, @discount, @net, @tax, @total, @retentionTax, @retentionIsr, @saleId, @quantity, @taxId, @discountId, @retentionTaxId, @retentionIsrId,@tax18,@tax16,@tax3,@net18,@net16,@net3,@exemptAmount,@indicadorFacturacion,@indicadorAgentePercepcion); '''),
+	       id, "productId", discount, net, tax, total, "retentionTax", "retentionIsr", "saleId", quantity, "taxId", "discountId", "retentionTaxId", "retentionIsrId",tax18,tax16,tax3,net18,net16,net3,"exemptAmount","indicadorFacturacion","indicadorAgentePercepcion","productName")
+	       VALUES (@id, @productId, @discount, @net, @tax, @total, @retentionTax, @retentionIsr, @saleId, @quantity, @taxId, @discountId, @retentionTaxId, @retentionIsrId,@tax18,@tax16,@tax3,@net18,@net16,@net3,@exemptAmount,@indicadorFacturacion,@indicadorAgentePercepcion,@productName); '''),
               parameters: subMap);
-
-          if (ncfTypeId != '50') {
-            await conne.execute(
-                Sql.named(
-                    '''update public."Products" set quantity = quantity - @quantity where id = @id'''),
-                parameters: {'id': item.productId, 'quantity': item.quantity});
-          }
         }
 
         if (paid != null && paid! > 0) {
@@ -507,7 +505,7 @@ class SaleProduct implements Sale {
     try {
       var conn = SqlConector.connection;
       await conn?.runTx((c) async {
-        await c.execute('DELETE FROM public."Payments" WHERE "saleId" = @id',
+        await c.execute(Sql.named('DELETE FROM public."Payments" WHERE "saleId" = @id'),
             parameters: {'id': id});
 
         await c.execute(
@@ -518,14 +516,14 @@ class SaleProduct implements Sale {
             parameters: {'id': id});
 
         await c.execute(
-          '''setval('public."${ncfTypeId}_seq"',$ncfSeq,false)''',
+          '''select setval('public."${ncfTypeId}_seq"',$ncfSeq,false);''',
         );
 
         for (var item in items) {
           await c.execute(
               Sql.named(
                   '''update public."Products" set quantity = quantity + ${item.quantity} where id = @id'''),
-              parameters: {'id': item.id});
+              parameters: {'id': item.productId});
         }
       });
     } catch (e) {
@@ -578,7 +576,9 @@ class SaleProduct implements Sale {
                   net18 = @net18,
                   net16 = @net16,
                   net3 = @net3,
-                  "exemptAmount" = @exemptAmount
+                  "exemptAmount" = @exemptAmount,
+                   paid = @paid,
+                  "coinBack" = @coinBack
                    where id = @id'''), parameters: {
           'id': id,
           'net': net,
@@ -599,7 +599,9 @@ class SaleProduct implements Sale {
           'net18': net18,
           'net16': net16,
           'net3': net3,
-          'exemptAmount': exemptAmount
+          'exemptAmount': exemptAmount,
+          'paid':paidInvoice,
+          'coinBack':coinBack
         });
 
         for (int i = 0; i < items.length; i++) {
@@ -633,6 +635,7 @@ class SaleProduct implements Sale {
             'net16': net16,
             'net3': net3,
             'exemptAmount': exemptAmount
+         
           });
         }
 
@@ -650,6 +653,29 @@ class SaleProduct implements Sale {
               });
         }
       });
+
+      var invoicesRows = await conne?.execute(
+          Sql.named('''select * from public."SalesView" where id = @id '''),
+          parameters: {'id': id});
+
+      var rows = await conne?.execute(
+          Sql.named(
+              ''' select * from public."SalesProductsView" WHERE "saleId" = @id '''),
+          parameters: {'id': id});
+
+      if (invoicesRows != null && invoicesRows.isNotEmpty) {
+        var firstRow = invoicesRows.first;
+        var sale = SaleProduct.fromMap(firstRow.toColumnMap());
+
+        var xitems = rows
+                ?.map((e) => SaleItemProduct.fromMap(e.toColumnMap()))
+                .toList() ??
+            [];
+
+        sale.items = xitems;
+
+        return sale;
+      }
       return null;
     } catch (e) {
       rethrow;
@@ -661,10 +687,8 @@ class SaleProduct implements Sale {
     try {
       final conne = SqlConector.connection;
       await conne?.runTx((conne) async {
-        DateTime paymentDate = DateTime.now();
-        if (retentionDate != null) {
-          paymentDate = retentionDate!;
-        }
+             DateTime paymentDate = DateTime.now();
+   
         await conne.execute(
             Sql.named(
                 '''insert into public."Payments" (id,"saleId","paymentMethodId", "bankId", "transfRef", amount,"createdAt") values(@id,@saleId,@paymentMethodId,@bankId, @transfRef, @amount,@createdAt)'''),
@@ -971,4 +995,33 @@ class SaleProduct implements Sale {
     }
     return Colors.grey;
   }
+  
+  @override
+  Future<void> updateStock()async {
+    try{
+      var conne = SqlConector.connection;
+              for (int i = 0; i < items.length; i++) {
+          var item = items[i];
+
+          if (ncfTypeId != '50') {
+            await conne?.execute(
+                Sql.named(
+                    '''update public."Products" set quantity = quantity - @quantity where id = @id'''),
+                parameters: {'id': item.productId, 'quantity': item.quantity});
+
+            print(item);
+          }
+        }
+    }catch(e){
+      rethrow;
+    }
+  }
+
+  @override
+  double? coinBack;
+
+  @override
+  double? paidInvoice;
+  
+
 }

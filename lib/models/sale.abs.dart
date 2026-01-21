@@ -1,3 +1,4 @@
+
 import 'dart:ui';
 
 import 'package:moment_dart/moment_dart.dart';
@@ -45,6 +46,7 @@ abstract class Sale {
   int? invoiceTypeId;
   double? amountPaid;
   double? debt;
+  double? coinBack;
   List<SaleItem> items = [];
 
   double? paid;
@@ -97,6 +99,8 @@ abstract class Sale {
 
   String? clientAddress;
 
+  double? paidInvoice;
+
   bool get isPaid {
     throw UnimplementedError();
   }
@@ -145,6 +149,10 @@ abstract class Sale {
     throw UnimplementedError();
   }
 
+  Future<void> updateStock() async {
+    throw UnimplementedError();
+  }
+
   Map<String, dynamic> toMap() {
     throw UnimplementedError();
   }
@@ -166,6 +174,7 @@ abstract class Sale {
 
 Future<List<Sale>> getSales(
     {String? ncfTypeId,
+    List<String>? ncfsTypes,
     String? search,
     SaleStatus? saleStatus,
     int? estadoDgii,
@@ -179,18 +188,18 @@ Future<List<Sale>> getSales(
       'date2': endDate.toIso8601String(),
     };
 
-    if (ncfTypeId != null) {
-      params += ' and "ncfTypeId" = @ncfTypeId';
-      parameters.addAll({'ncfTypeId': ncfTypeId});
+    if (ncfsTypes != null && ncfsTypes.isNotEmpty) {
+      params += ' "ncfTypeId" = ANY(@ncfsTypes) and ';
+      parameters.addAll({'ncfsTypes': '{${ncfsTypes.join(',')}}'});
     }
     if (estadoDgii != null) {
-      params += ' and "estadoDgii" = @estadoDgii';
+      params += ' "estadoDgii" = @estadoDgii and ';
       parameters.addAll({'estadoDgii': estadoDgii.toString()});
     }
 
     if (search != null) {
       params +=
-          ' and lower("ncf") like @ncf or lower("clientName") like @clientName';
+          ' lower("ncf") like @ncf or lower("clientName") like @clientName and ';
       parameters.addAll({
         'ncf': '%${search.toLowerCase()}%',
         'clientName': '%${search.toLowerCase()}%'
@@ -207,7 +216,7 @@ Future<List<Sale>> getSales(
 
     final conne = SqlConector.connection;
     var qr =
-        'select * from public."SalesView" where "createdAt" between @date1 and @date2 $params order by "ncf"';
+        'select * from public."SalesView" where $params ("createdAt" between @date1 and @date2) order by "ncf"';
 
     var result = await conne?.execute(Sql.named(qr), parameters: parameters);
     return result
@@ -236,16 +245,17 @@ Future<List<Sale>> getCreditNotes(
 
     if (search != null) {
       params +=
-          ' and (lower("ncf") like @ncf or lower("clientName") like @clientName)';
+          ' (lower("ncf") like @ncf or lower("clientName") like @clientName or lower("ncfAffected") like @ncfAffected) and ';
 
       parameters.addAll({
         'ncf': '%${search.toLowerCase()}%',
+        'ncfAffected': '%${search.toLowerCase()}%',
         'clientName': '%${search.toLowerCase()}%'
       });
     }
     var result = await conne?.execute(
         Sql.named(
-            'select * from public."CreditNotesView" where "createdAt" between @date1 and @date2 $params'),
+            'select * from public."CreditNotesView" where  $params ("createdAt" between @date1 and @date2) order by ncf'),
         parameters: parameters);
     return result
             ?.map((e) => e.toColumnMap()['invoiceTypeId'] == 1
@@ -260,6 +270,7 @@ Future<List<Sale>> getCreditNotes(
 
 Future<Map<String, dynamic>> getSalesTypeIncomesReport({
   String? ncfTypeId,
+  List<String>? ncfsTypes,
   int? estadoDgii,
   required DateTime startDate,
   required DateTime endDate,
@@ -271,11 +282,10 @@ Future<Map<String, dynamic>> getSalesTypeIncomesReport({
       'endDate': endDate.toIso8601String()
     };
 
-    if (ncfTypeId != null) {
-      params += ' and "ncfTypeId" = @ncfTypeId';
-      parameters['ncfTypeId'] = ncfTypeId;
+    if (ncfsTypes != null && ncfsTypes.isNotEmpty) {
+      params += ' and "ncfTypeId" = ANY(@ncfsTypes)  ';
+      parameters.addAll({'ncfsTypes': '{${ncfsTypes.join(',')}}'});
     }
-
     if (estadoDgii != null) {
       params += ' and "estadoDgii" = @estadoDgii';
       parameters['estadoDgii'] = estadoDgii.toString();
@@ -290,7 +300,7 @@ Future<Map<String, dynamic>> getSalesTypeIncomesReport({
           "typeIncomeName",
           net, tax, total, effective,
           "creditCard", "checkOrTransf", "saleToCredit",
-          law10, "retentionTax", "retentionIsr",
+          law10, "retentionTax", "retentionIsr",rate,
           1 AS signo
         FROM public."SalesView"
         WHERE "createdAt" BETWEEN @startDate AND @endDate $params
@@ -302,7 +312,7 @@ Future<Map<String, dynamic>> getSalesTypeIncomesReport({
           "typeIncomeName",
           net, tax, total, effective,
           "creditCard", "checkOrTransf", "saleToCredit",
-          law10, "retentionTax", "retentionIsr",
+          law10, "retentionTax", "retentionIsr",rate,
           -1 AS signo
         FROM public."CreditNotesView"
         WHERE "createdAt" BETWEEN @startDate AND @endDate $params
@@ -312,16 +322,16 @@ Future<Map<String, dynamic>> getSalesTypeIncomesReport({
         SELECT
           "typeIncomeName" AS "TIPO DE INGRESO",
           COUNT(*) AS "TOTAL NCFS",
-          COALESCE(SUM(net * signo), 0)::money::text AS "TOTAL NETO",
-          COALESCE(SUM(tax * signo), 0)::money::text AS "ITBIS FACTURADO",
-          COALESCE(SUM(total * signo), 0)::money::text AS "TOTAL FACTURADO",
-          COALESCE(SUM(effective * signo), 0)::money::text AS "EFECTIVO",
-          COALESCE(SUM("creditCard" * signo), 0)::money::text AS "TARJETA DE CREDITO O DEBITO",
-          COALESCE(SUM("checkOrTransf" * signo), 0)::money::text AS "CHEQUE O TRANSFERENCIA",
-          COALESCE(SUM("saleToCredit" * signo), 0)::money::text AS "VENTA A CREDITO",
-          COALESCE(SUM(law10 * signo), 0)::money::text AS "MONTO PROPINA LEGAL",
-          COALESCE(SUM("retentionTax" * signo), 0)::money::text AS "RETENCION ITBIS",
-          COALESCE(SUM("retentionIsr" * signo), 0)::money::text AS "RETENCION ISR"
+          COALESCE(SUM((net * rate) * signo), 0)::money::text AS "TOTAL NETO",
+          COALESCE(SUM((tax * rate) * signo), 0)::money::text AS "ITBIS FACTURADO",
+          COALESCE(SUM((total * rate) * signo), 0)::money::text AS "TOTAL FACTURADO",
+          COALESCE(SUM((effective * rate) * signo), 0)::money::text AS "EFECTIVO",
+          COALESCE(SUM(("creditCard" * rate) * signo), 0)::money::text AS "TARJETA DE CREDITO O DEBITO",
+          COALESCE(SUM(("checkOrTransf" * rate) * signo), 0)::money::text AS "CHEQUE O TRANSFERENCIA",
+          COALESCE(SUM(("saleToCredit" * rate) * signo), 0)::money::text AS "VENTA A CREDITO",
+          COALESCE(SUM((law10 * rate) * signo), 0)::money::text AS "MONTO PROPINA LEGAL",
+          COALESCE(SUM(("retentionTax" * rate) * signo), 0)::money::text AS "RETENCION ITBIS",
+          COALESCE(SUM(("retentionIsr" * rate) * signo), 0)::money::text AS "RETENCION ISR"
         FROM Movimientos
         GROUP BY "typeIncomeId", "typeIncomeName"
 
@@ -330,16 +340,16 @@ Future<Map<String, dynamic>> getSalesTypeIncomesReport({
         SELECT
           'TOTAL GENERAL',
           COUNT(*) AS "TOTAL NCFS",
-          COALESCE(SUM(net * signo), 0)::money::text,
-          COALESCE(SUM(tax * signo), 0)::money::text,
-          COALESCE(SUM(total * signo), 0)::money::text,
-          COALESCE(SUM(effective * signo), 0)::money::text,
-          COALESCE(SUM("creditCard" * signo), 0)::money::text,
-          COALESCE(SUM("checkOrTransf" * signo), 0)::money::text,
-          COALESCE(SUM("saleToCredit" * signo), 0)::money::text,
-          COALESCE(SUM(law10 * signo), 0)::money::text,
-          COALESCE(SUM("retentionTax" * signo), 0)::money::text,
-          COALESCE(SUM("retentionIsr" * signo), 0)::money::text
+          COALESCE(SUM((net * rate) * signo), 0)::money::text,
+          COALESCE(SUM((tax * rate) * signo), 0)::money::text,
+          COALESCE(SUM((total * rate) * signo), 0)::money::text,
+          COALESCE(SUM((effective * rate) * signo), 0)::money::text,
+          COALESCE(SUM(("creditCard" * rate) * signo), 0)::money::text,
+          COALESCE(SUM(("checkOrTransf" * rate) * signo), 0)::money::text,
+          COALESCE(SUM(("saleToCredit" * rate) * signo), 0)::money::text,
+          COALESCE(SUM((law10 * rate) * signo), 0)::money::text,
+          COALESCE(SUM(("retentionTax" * rate) * signo), 0)::money::text,
+          COALESCE(SUM(("retentionIsr" * rate) * signo), 0)::money::text
         FROM Movimientos
       ) AS reporte
       ORDER BY "TIPO DE INGRESO"
@@ -427,6 +437,7 @@ Future<Map<String, dynamic>> getSalesTypeIncomesReport({
 
 Future<Map<String, dynamic>> getSalesReportByTypeNcf(
     {String? ncfTypeId,
+    List<String>? ncfsTypes,
     int? estadoDgii,
     required DateTime startDate,
     required DateTime endDate}) async {
@@ -438,106 +449,79 @@ Future<Map<String, dynamic>> getSalesReportByTypeNcf(
       'endDate': endDate.toIso8601String()
     };
 
-    if (ncfTypeId != null) {
-      params += ' and "ncfTypeId" = @ncfTypeId';
-      parameters.addAll({
-        'ncfTypeId': ncfTypeId,
-      });
+    if (ncfsTypes != null && ncfsTypes.isNotEmpty) {
+      params += ' and "ncfTypeId" = ANY(@ncfsTypes)  ';
+      parameters.addAll({'ncfsTypes': '{${ncfsTypes.join(',')}}'});
     }
 
     if (estadoDgii != null) {
       params += ' and "estadoDgii" = @estadoDgii';
       parameters.addAll({'estadoDgii': estadoDgii.toString()});
     }
+
     final conne = SqlConector.connection;
 
     var res = await conne?.execute(Sql.named('''
-  WITH Totales AS (
-    SELECT
-        "ncfTypeName" AS "NCF",
-        count(*) AS "TOTAL NCFS",
-        COALESCE(sum(net), 0) AS "TOTAL NETO", 
-        COALESCE(sum(tax), 0) AS "ITBIS FACTURADO", 
-        COALESCE(sum(total), 0) AS "TOTAL FACTURADO", 
-        COALESCE(sum(effective), 0) AS "EFECTIVO", 
-        COALESCE(sum("creditCard"), 0) AS "TARJETA DE CREDITO O DEBITO",
-        COALESCE(sum("checkOrTransf"), 0) AS "CHEQUE O TRANSFERENCIA",
-        COALESCE(sum("saleToCredit"), 0) AS "VENTA A CREDITO", 
-        COALESCE(sum(law10), 0) AS "MONTO PROPINA LEGAL",
-        COALESCE(sum("retentionTax"), 0) AS "RETENCION ITBIS", 
-        COALESCE(sum("retentionIsr"), 0) AS "RETENCION ISR"
-    FROM public."SalesView"
-    WHERE "createdAt" BETWEEN @startDate AND @endDate $params
-    GROUP BY "ncfTypeId", "ncfTypeName"
+ WITH Movimientos AS (
+  SELECT
+    "ncfTypeId",
+    "ncfTypeName",
+    net, tax, total, effective,
+    "creditCard", "checkOrTransf", "saleToCredit",
+    law10, "retentionTax", "retentionIsr", rate,
+    1 AS signo
+  FROM public."SalesView"
+  WHERE "createdAt" BETWEEN @startDate AND @endDate $params
 
-    UNION ALL
-
-    SELECT
-        "ncfTypeName" AS "NCF",
-        count(*) AS "TOTAL NCFS",
-        -COALESCE(sum(net), 0) AS "TOTAL NETO", 
-        -COALESCE(sum(tax), 0) AS "ITBIS FACTURADO", 
-        -COALESCE(sum(total), 0) AS "TOTAL FACTURADO", 
-        -COALESCE(sum(effective), 0) AS "EFECTIVO", 
-        -COALESCE(sum("creditCard"), 0) AS "TARJETA DE CREDITO O DEBITO",
-        -COALESCE(sum("checkOrTransf"), 0) AS "CHEQUE O TRANSFERENCIA",
-        -COALESCE(sum("saleToCredit"), 0) AS "VENTA A CREDITO", 
-        -COALESCE(sum(law10), 0) AS "MONTO PROPINA LEGAL",
-        -COALESCE(sum("retentionTax"), 0) AS "RETENCION ITBIS", 
-        -COALESCE(sum("retentionIsr"), 0) AS "RETENCION ISR"
-    FROM public."CreditNotesView"
-    WHERE "createdAt" BETWEEN @startDate AND @endDate $params
-    GROUP BY "ncfTypeId", "ncfTypeName"
-)
+  UNION ALL
 
   SELECT
+    "ncfTypeId",
+    "ncfTypeName",
+    net, tax, total, effective,
+    "creditCard", "checkOrTransf", "saleToCredit",
+    law10, "retentionTax", "retentionIsr", rate,
+    -1 AS signo
+  FROM public."CreditNotesView"
+  WHERE "createdAt" BETWEEN @startDate AND @endDate $params
+)
+
+SELECT * FROM (
+  SELECT
     "ncfTypeName" AS "NCF",
-    count(*) as "TOTAL NCFS",
-    COALESCE(sum(net), 0)::money::text as "TOTAL NETO", 
-    COALESCE(sum(tax), 0)::money::text as "ITBIS FACTURADO", 
-    COALESCE(sum(total), 0)::money::text as "TOTAL FACTURADO", 
-    COALESCE(sum(effective), 0)::money::text as "EFECTIVO", 
-    COALESCE(sum("creditCard"), 0)::money::text as "TARJETA DE CREDITO O DEBITO",
-    COALESCE(sum("checkOrTransf"), 0)::money::text as "CHEQUE O TRANSFERENCIA",
-    COALESCE(sum("saleToCredit"), 0)::money::text as  "VENTA A CREDITO", 
-    COALESCE(sum(law10), 0)::money::text as "MONTO PROPINA LEGAL",
-    COALESCE(sum("retentionTax"), 0)::money::text as "RETENCION ITBIS", 
-    COALESCE(sum("retentionIsr"), 0)::money::text as "RETENCION ISR"
-FROM public."SalesView"
-WHERE "createdAt" BETWEEN @startDate AND @endDate $params
-GROUP BY "ncfTypeId","ncfTypeName"
-UNION ALL
-SELECT
-    "ncfTypeName" AS "NCF",
-    count(*) as "TOTAL NCFS",
-    COALESCE(sum(net), 0)::money::text as "TOTAL NETO", 
-    COALESCE(sum(tax), 0)::money::text as "ITBIS FACTURADO", 
-    COALESCE(sum(total), 0)::money::text as "TOTAL FACTURADO", 
-    COALESCE(sum(effective), 0)::money::text as "EFECTIVO", 
-    COALESCE(sum("creditCard"), 0)::money::text as "TARJETA DE CREDITO O DEBITO",
-    COALESCE(sum("checkOrTransf"), 0)::money::text as "CHEQUE O TRANSFERENCIA",
-    COALESCE(sum("saleToCredit"), 0)::money::text as  "VENTA A CREDITO", 
-    COALESCE(sum(law10), 0)::money::text as "MONTO PROPINA LEGAL",
-    COALESCE(sum("retentionTax"), 0)::money::text as "RETENCION ITBIS", 
-    COALESCE(sum("retentionIsr"), 0)::money::text as "RETENCION ISR"
-FROM public."CreditNotesView"
-WHERE "createdAt" BETWEEN @startDate AND @endDate $params
-GROUP BY  "ncfTypeId","ncfTypeName"
-UNION ALL
-SELECT
-    'TOTAL GENERAL' AS "NCF",
-    SUM("TOTAL NCFS"),
-    SUM("TOTAL NETO")::money::text,
-    SUM("ITBIS FACTURADO")::money::text,
-    SUM("TOTAL FACTURADO")::money::text,
-    SUM("EFECTIVO")::money::text,
-    SUM("TARJETA DE CREDITO O DEBITO")::money::text,
-    SUM("CHEQUE O TRANSFERENCIA")::money::text,
-    SUM("VENTA A CREDITO")::money::text,
-    SUM("MONTO PROPINA LEGAL")::money::text,
-    SUM("RETENCION ITBIS")::money::text,
-    SUM("RETENCION ISR")::money::text
-FROM Totales;
+    COUNT(*) AS "TOTAL NCFS",
+    COALESCE(SUM((net * rate) * signo),0)::money::text AS "TOTAL NETO",
+    COALESCE(SUM((tax * rate) * signo),0)::money::text AS "ITBIS FACTURADO",
+    COALESCE(SUM((total * rate) * signo),0)::money::text AS "TOTAL FACTURADO",
+    COALESCE(SUM((effective * rate) * signo),0)::money::text AS "EFECTIVO",
+    COALESCE(SUM(("creditCard" * rate) * signo),0)::money::text AS "TARJETA DE CREDITO O DEBITO",
+    COALESCE(SUM(("checkOrTransf" * rate) * signo),0)::money::text AS "CHEQUE O TRANSFERENCIA",
+    COALESCE(SUM(("saleToCredit" * rate) * signo),0)::money::text AS "VENTA A CREDITO",
+    COALESCE(SUM((law10 * rate) * signo),0)::money::text AS "MONTO PROPINA LEGAL",
+    COALESCE(SUM(("retentionTax" * rate) * signo),0)::money::text AS "RETENCION ITBIS",
+    COALESCE(SUM(("retentionIsr" * rate) * signo),0)::money::text AS "RETENCION ISR"
+  FROM Movimientos
+  GROUP BY "ncfTypeId","ncfTypeName"
+
+  UNION ALL
+
+  SELECT
+    'TOTAL GENERAL',
+    COUNT(*) AS "TOTAL NCFS",
+    COALESCE(SUM((net * rate) * signo),0)::money::text,
+    COALESCE(SUM((tax * rate) * signo),0)::money::text,
+    COALESCE(SUM((total * rate) * signo),0)::money::text,
+    COALESCE(SUM((effective * rate) * signo),0)::money::text,
+    COALESCE(SUM(("creditCard" * rate) * signo),0)::money::text,
+    COALESCE(SUM(("checkOrTransf" * rate) * signo),0)::money::text,
+    COALESCE(SUM(("saleToCredit" * rate) * signo),0)::money::text,
+    COALESCE(SUM((law10 * rate) * signo),0)::money::text,
+    COALESCE(SUM(("retentionTax" * rate) * signo),0)::money::text,
+    COALESCE(SUM(("retentionIsr" * rate) * signo),0)::money::text
+  FROM Movimientos
+) AS reporte
+ORDER BY "NCF";
+
  '''), parameters: parameters);
 
     var list = res?.map((e) => e.toColumnMap()).toList() ?? [];
@@ -693,17 +677,62 @@ Future<List<Sale>> getSalesListByIdAndNcf(
 }
 
 Future<void> calcDifOfNetsNcfs(
-    {required String ncf, required DateTime createdAt}) async {
+    {required String ncfAffected,
+    required DateTime ncfAffectedCreatedAt,
+    required double currentTotal}) async {
   try {
     final conne = SqlConector.connection;
-    String date = createdAt.format(payload: 'YYYY-MM-DD');
-    var res = await conne?.execute(Sql.named('''
-         select * from public."CreditNotesView" where "ncfAffected" = @ncf and to_char("ncfAffectedCreatedAt",'YYYY-MM-DD') = @createdAt
-    '''), parameters: {'ncf': ncf, 'createdAt': date});
+    String date = ncfAffectedCreatedAt.format(payload: 'YYYY-MM-DD');
 
-    if (res != null && res.isNotEmpty) {
-      throw 'EL COMPROBANTE $ncf DE LA FECHA $date YA FUE ANULADO';
+    var ncfOriginal = await conne?.execute(
+        Sql.named(
+          '''select * from public."SalesView" WHERE ncf = @ncf and to_char("createdAt",'YYYY-MM-DD') = @createdAt''',
+        ),
+        parameters: {'ncf': ncfAffected, 'createdAt': date});
+
+    var ncfCreditNote = await conne?.execute(Sql.named('''
+         select sum(total)  as "total" from public."CreditNotesView" where "ncfAffected" = @ncfAffected and "estadoDgii" != 2
+    '''), parameters: {'ncfAffected': ncfAffected});
+
+    if (ncfCreditNote != null && ncfCreditNote.isNotEmpty) {
+      var sale = ncfOriginal?.first.toColumnMap();
+      var creditNote = ncfCreditNote.first.toColumnMap();
+
+      var saleTotal = sale?['total'] != null ? double.parse(sale?['total']) : 0;
+      var creditNoteTotal =
+          creditNote['total'] != null ? double.parse(creditNote['total']) : 0;
+
+      var dif = saleTotal - creditNoteTotal;
+
+      if (dif == 0) {
+        throw 'EL COMPROBANTE $ncfAffected YA FUE ANULADO COMPLETAMENTE';
+      }
     }
+  } catch (e) {
+    rethrow;
+  }
+}
+
+Future<double> getCreditNoteAmountByNcf({
+  required String ncfAffected,
+  required DateTime ncfAffectedCreatedAt,
+}) async {
+  try {
+    final conne = SqlConector.connection;
+
+    var ncfCreditNote = await conne?.execute(Sql.named('''
+         select sum("amountPaid")  as "amountPaid" from public."CreditNotesView" where "ncfAffected" = @ncfAffected and "estadoDgii" != 2
+    '''), parameters: {'ncfAffected': ncfAffected});
+
+    if (ncfCreditNote != null && ncfCreditNote.isNotEmpty) {
+      var creditNote = ncfCreditNote.first.toColumnMap();
+
+      var creditNoteTotal =
+          creditNote['amountPaid'] != null ? double.parse(creditNote['amountPaid'].toString()) : 0;
+
+      return creditNoteTotal.toDouble();
+    }
+    return 0.0;
   } catch (e) {
     rethrow;
   }

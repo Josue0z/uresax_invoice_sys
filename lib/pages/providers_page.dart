@@ -4,6 +4,7 @@ import 'package:uresax_invoice_sys/modals/provider.editor.modal.dart';
 import 'package:uresax_invoice_sys/models/provider.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/widgets/content.error.widget.dart';
+import 'package:uresax_invoice_sys/widgets/scrollmove.event.widget.dart';
 
 class ProvidersPage extends StatefulWidget {
   bool selectorMode;
@@ -16,6 +17,8 @@ class ProvidersPage extends StatefulWidget {
 class _ProvidersPageState extends State<ProvidersPage> {
   List<Providers> providers = [];
   Future? future;
+  final TextEditingController _searchController = TextEditingController();
+  ScrollController scrollControllerY = ScrollController();
 
   _onSelected(Providers provider) {
     Navigator.pop(context, provider);
@@ -53,8 +56,9 @@ class _ProvidersPageState extends State<ProvidersPage> {
   }
 
   Widget get contentFilled {
-    return ListView.separated(
+    return ScrollMoveEventWidget(scrollControllerY: scrollControllerY, child:  ListView.separated(
         itemCount: providers.length,
+        controller: scrollControllerY,
         separatorBuilder: (ctx, i) => const Divider(),
         itemBuilder: (ctx, index) {
           var provider = providers[index];
@@ -98,7 +102,7 @@ class _ProvidersPageState extends State<ProvidersPage> {
               ],
             ),
           );
-        });
+        }));
   }
 
   Widget get contentEmpty {
@@ -145,7 +149,8 @@ class _ProvidersPageState extends State<ProvidersPage> {
                 width: 200,
                 height: 50,
                 child: TextFormField(
-                  onChanged: (words) async {
+                  controller: _searchController,
+                  onFieldSubmitted: (words) async {
                     setState(() {
                       future = _initAsync(words);
                     });
@@ -157,7 +162,17 @@ class _ProvidersPageState extends State<ProvidersPage> {
                       suffixIcon: Icon(Icons.search)),
                 ),
               ),
-              SizedBox(width: kDefaultPadding)
+              SizedBox(width: kDefaultPadding),
+              CircleAvatar(
+                  child: IconButton(
+                onPressed: () {
+                  _showProviderEditorModal(context,
+                      provider: Providers(), editing: false);
+                },
+                icon: Icon(Icons.add),
+                tooltip: 'AGREGAR PROVEEDOR',
+              )),
+              SizedBox(width: kDefaultPadding),
             ],
           )
         ],
@@ -186,12 +201,21 @@ class _ProvidersPageState extends State<ProvidersPage> {
 
             return contentEmpty;
           }),
-      floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            _showProviderEditorModal(context,
-                provider: Providers(), editing: false);
-          },
-          child: Icon(Icons.add)),
+    
+         floatingActionButton: Stack(
+      children: [
+        Positioned(
+          bottom: 20,
+          right: kDefaultPadding*2,
+          child: FloatingActionButton(onPressed: (){
+        setState(() {
+          _searchController.clear();
+          future = _initAsync();
+        });
+      },
+      child: Icon(Icons.restore)),)
+      ],
+    )
     );
   }
 }

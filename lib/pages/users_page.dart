@@ -34,6 +34,7 @@ class _UsersPageState extends State<UsersPage> {
 
   @override
   void initState() {
+    if(!mounted)return;
     _initAsync();
     super.initState();
   }
@@ -43,6 +44,18 @@ class _UsersPageState extends State<UsersPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('TUS USUARIOS (${users.length})'),
+        actions:[
+          CircleAvatar(
+            child:IconButton(
+              tooltip: 'AGREGAR USUARIO',
+              icon:Icon(Icons.add),
+              onPressed: (){
+                _showUserModal(user: User());
+              },
+            )
+          ),
+          SizedBox(width: kDefaultPadding)
+        ]
       ),
       body: ListView.separated(
         separatorBuilder: (ctx, i) => const Divider(),
@@ -105,11 +118,7 @@ class _UsersPageState extends State<UsersPage> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            _showUserModal(user: User());
-          },
-          child: Icon(Icons.add)),
+     
     );
   }
 }

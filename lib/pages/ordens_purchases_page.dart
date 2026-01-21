@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:moment_dart/moment_dart.dart';
 import 'package:open_file/open_file.dart';
 import 'package:uresax_invoice_sys/models/entry.warehouse.item.model.dart';
@@ -13,6 +14,7 @@ import 'package:uresax_invoice_sys/utils/extensions.dart';
 import 'package:uresax_invoice_sys/utils/functions.dart';
 import 'package:uresax_invoice_sys/utils/invoices.functions.dart';
 import 'package:path/path.dart' as path;
+import 'package:uresax_invoice_sys/widgets/content.error.widget.dart';
 
 class OrdensPurchasesPage extends StatefulWidget {
   const OrdensPurchasesPage({super.key});
@@ -23,6 +25,8 @@ class OrdensPurchasesPage extends StatefulWidget {
 
 class _OrdensPurchasesPageState extends State<OrdensPurchasesPage> {
   List<OrdenModel> ordens = [];
+
+  Future? future;
 
   _initAsync() async {
     try {
@@ -106,19 +110,8 @@ class _OrdensPurchasesPageState extends State<OrdensPurchasesPage> {
     await OpenFile.open(file.path);
   }
 
-  @override
-  void initState() {
-    _initAsync();
-    super.initState();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('ORDENES DE COMPRAS (${ordens.length})'),
-      ),
-      body: ListView.separated(
+  Widget get contentFilled {
+    return ListView.separated(
           itemBuilder: (ctx, index) {
             List<Map<String, dynamic>> options = [];
 
@@ -186,7 +179,65 @@ class _OrdensPurchasesPageState extends State<OrdensPurchasesPage> {
             );
           },
           separatorBuilder: (ctx, i) => const Divider(),
-          itemCount: ordens.length),
+          itemCount: ordens.length);
+  }
+
+    Widget get contentEmpty {
+    return Center(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SvgPicture.asset('assets/svgs/undraw_logistics_8vri.svg', width: 280)
+        ],
+      ),
+    );
+  }
+
+  Widget get contentLoading {
+    return Center(
+      child: CircularProgressIndicator(),
+    );
+  }
+
+
+
+  @override
+  void initState() {
+   setState(() {
+     future =  _initAsync();
+   });
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('ORDENES DE COMPRAS (${ordens.length})'),
+      ),
+      body:FutureBuilder(future: future, builder: (ctx,s){
+          if (s.connectionState == ConnectionState.waiting) {
+              return contentLoading;
+            }
+
+            if (s.hasError) {
+              return ContentErrorWidget(
+                error: s.error.toString(),
+                onRetry: () {
+                  setState(() {
+                    future = _initAsync();
+                  });
+                },
+              );
+            }
+            if (s.connectionState == ConnectionState.done &&
+                ordens.isNotEmpty) {
+              return contentFilled;
+            }
+
+            return contentEmpty;
+      }),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           _showOrdenGeneratorPage(orden: OrdenModel(items: [OrdenItemModel()]));

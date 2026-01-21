@@ -1,10 +1,14 @@
 import 'dart:convert';
+import 'dart:ffi';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:pdf/widgets.dart';
 import 'package:uresax_invoice_sys/models/sale.abs.dart';
 import 'package:uresax_invoice_sys/pages/pdf.view_page.dart';
 import 'package:uresax_invoice_sys/settings.dart';
+import 'package:win32/win32.dart';
+import 'package:ffi/ffi.dart';
+
 
 class PrinterHandler {
   /// Detecta la plataforma actual
@@ -33,6 +37,35 @@ class PrinterHandler {
       throw UnsupportedError('Plataforma no soportada');
     }
   }
+
+
+static Future<List<Map<String, String>>> listSerialDevices() async {
+  if (Platform.isWindows) {
+    final result = await Process.run('powershell', [
+      '-Command',
+      '''
+      Get-WmiObject Win32_SerialPort | Where-Object { \$_.PNPDeviceID -like "USB*" } | ForEach-Object { "\$(\$_.Name)|\$(\$_.DeviceID)" }
+      '''
+    ]);
+
+    print(result.stdout); // Para depurar
+
+    return LineSplitter.split(result.stdout.toString())
+        .where((line) => line.contains('|'))
+        .map((line) {
+          final parts = line.split('|');
+          return {
+            'name': parts[0].trim(),
+            'deviceId': parts[1].trim(),
+          };
+        }).toList();
+  } else {
+    throw UnsupportedError('Solo compatible con Windows');
+  }
+}
+
+
+
 
   /// Imprime un PDF desde bytes en Windows, macOS o Linux
   static Future<void> printPdfBytes(
@@ -81,10 +114,43 @@ class PrinterHandler {
   static Future<void> printBytes(
       String printerName, List<int> escPosBytes) async {
     if (isWindows) {
-      final tempFile = File('C:\\temp\\printjob.bin');
-      await tempFile.writeAsBytes(escPosBytes);
-      await Process.run(
-          'cmd', ['/c', 'copy /b ${tempFile.path} "$printerName"']);
+          final printerNamePtr = printerName.toNativeUtf16();
+  final docInfo = calloc<DOC_INFO_1>();
+docInfo.ref.pDocName = 'Flutter POS'.toNativeUtf16();
+docInfo.ref.pOutputFile = nullptr;
+docInfo.ref.pDatatype = 'RAW'.toNativeUtf16();
+
+
+  final hPrinter = calloc<HANDLE>();
+  final success = OpenPrinter(printerNamePtr, hPrinter, nullptr);
+
+  if (success == 0) {
+    print('No se pudo abrir la impresora');
+    calloc.free(printerNamePtr);
+    calloc.free(hPrinter);
+    free(docInfo);
+    return;
+  }
+
+  StartDocPrinter(hPrinter.value, 1, docInfo);
+  StartPagePrinter(hPrinter.value);
+
+  final dataPtr = calloc<Uint8>(escPosBytes.length);
+  final byteList = dataPtr.asTypedList(escPosBytes.length);
+  byteList.setAll(0, escPosBytes);
+
+  int bytesWritten = 0;
+  WritePrinter(hPrinter.value, dataPtr, escPosBytes.length, calloc<Uint32>()..value = bytesWritten);
+
+  EndPagePrinter(hPrinter.value);
+  EndDocPrinter(hPrinter.value);
+  ClosePrinter(hPrinter.value);
+
+  calloc.free(printerNamePtr);
+  calloc.free(dataPtr);
+  calloc.free(hPrinter);
+  free(docInfo);
+
     } else if (isMacOS) {
       final process = await Process.start('lp', ['-d', printerName]);
       process.stdin.add(escPosBytes);

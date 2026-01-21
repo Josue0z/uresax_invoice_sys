@@ -74,6 +74,7 @@ class SaleItemService implements SaleItem {
     return {
       'id': id,
       'serviceId': serviceId,
+      'serviceName':serviceName,
       'discount': discount,
       'net': net,
       'tax': tax,
@@ -133,6 +134,7 @@ class SaleItemService implements SaleItem {
   }
 
   factory SaleItemService.fromMap(Map<String, dynamic> map) {
+
     return SaleItemService(
         id: map['id'],
         serviceId: map['serviceId'],
@@ -168,7 +170,8 @@ class SaleItemService implements SaleItem {
             : null,
         indicadorFacturacion: map['indicadorFacturacion'],
         indicadorAgentePercepcion: map['indicadorAgentePercepcion'],
-        price: double.parse(map['price']));
+        price: double.parse(map['price']),
+        );
   }
 
   String toJson() => json.encode(toMap());

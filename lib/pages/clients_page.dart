@@ -5,6 +5,7 @@ import 'package:uresax_invoice_sys/models/client.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/utils/functions.dart';
 import 'package:uresax_invoice_sys/widgets/content.error.widget.dart';
+import 'package:uresax_invoice_sys/widgets/scrollmove.event.widget.dart';
 
 class ClientsPage extends StatefulWidget {
   bool selectorMode;
@@ -20,6 +21,8 @@ class ClientsPage extends StatefulWidget {
 class _ClientsPageState extends State<ClientsPage> {
   List<Client> clients = [];
   Future? future;
+      final TextEditingController _searchController = TextEditingController();
+  ScrollController scrollControllerY =ScrollController();
   _initAsync([String? words]) async {
     try {
       clients = await Client.get(search: words);
@@ -40,7 +43,8 @@ class _ClientsPageState extends State<ClientsPage> {
   }
 
   Widget get contentFilled {
-    return ListView.separated(
+    return ScrollMoveEventWidget(scrollControllerY: scrollControllerY, child: ListView.separated(
+      controller: scrollControllerY,
         separatorBuilder: (ctx, i) => const Divider(),
         itemCount: clients.length,
         itemBuilder: (ctx, index) {
@@ -83,7 +87,7 @@ class _ClientsPageState extends State<ClientsPage> {
               ],
             ),
           );
-        });
+        }));
   }
 
   Widget get contentEmpty {
@@ -126,7 +130,8 @@ class _ClientsPageState extends State<ClientsPage> {
                 width: 200,
                 height: 50,
                 child: TextFormField(
-                  onChanged: (words) async {
+                  controller: _searchController,
+                  onFieldSubmitted: (words) async {
                     setState(() {
                       future = _initAsync(words);
                     });
@@ -139,6 +144,25 @@ class _ClientsPageState extends State<ClientsPage> {
                 ),
               ),
               SizedBox(width: kDefaultPadding),
+              CircleAvatar(
+                  child: IconButton(
+                tooltip: 'AGREGAR CLIENTE',
+                onPressed: () async {
+                  var res = await _showClientModal(
+                      client:
+                          Client(identification: widget.client?.identification ?? ''));
+                  if (res == 'CREATE') {
+                    setState(() {
+                      future = _initAsync();
+                    });
+                    showTopSnackBar(context,
+                        message: 'SE CREO UN CLIENTE', color: Colors.green);
+                  }
+                },
+                icon: Icon(Icons.add),
+              )
+              ),
+                SizedBox(width: kDefaultPadding),
             ],
           )
         ],
@@ -167,21 +191,20 @@ class _ClientsPageState extends State<ClientsPage> {
 
             return contentEmpty;
           }),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          var res = await _showClientModal(
-              client:
-                  Client(identification: widget.client?.identification ?? ''));
-          if (res == 'CREATE') {
-            setState(() {
-              future = _initAsync();
-            });
-            showTopSnackBar(context,
-                message: 'SE CREO UN CLIENTE', color: Colors.green);
-          }
-        },
-        child: Icon(Icons.add),
-      ),
+            floatingActionButton: Stack(
+      children: [
+        Positioned(
+          bottom: 20,
+          right: kDefaultPadding*2,
+          child: FloatingActionButton(onPressed: (){
+        setState(() {
+          _searchController.clear();
+          future = _initAsync();
+        });
+      },
+      child: Icon(Icons.restore)),)
+      ],
+    )
     );
   }
 }

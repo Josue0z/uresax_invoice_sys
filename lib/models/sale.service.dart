@@ -112,7 +112,8 @@ class SaleService implements Sale {
       this.authorName,
       this.ncfSeq,
       this.ncfAffectedCreatedAt,
-      this.clientAddress});
+      this.clientAddress,
+      this.coinBack});
 
   SaleService copyWith({
     String? id,
@@ -266,7 +267,9 @@ class SaleService implements Sale {
       'exemptAmount': exemptAmount,
       'expirationDate': expirationDate,
       'tipoPago': tipoPago,
-      'authorId': authorId
+      'authorId': authorId,
+      'paid': paidInvoice,
+      'coinBack': coinBack
     };
   }
 
@@ -328,7 +331,10 @@ class SaleService implements Sale {
         authorId: map['authorId'],
         authorName: map['authorName'],
         ncfSeq: map['ncfSeq'],
-        clientAddress: map['clientAddress']);
+        clientAddress: map['clientAddress'],
+        paid: map['paid'] != null ? double.parse(map['paid']) : null,
+        coinBack:
+            map['coinBack'] != null ? double.parse(map['coinBack']) : null);
   }
 
   String toJson() => json.encode(toMap());
@@ -455,8 +461,8 @@ class SaleService implements Sale {
             });
         await conne.execute(Sql.named('''
          INSERT INTO public."Sale"(
-	       id, "clientId", ncf, discount, net, tax, total, effective, "creditCard", "checkOrTransf", "saleToCredit", law10, "typeIncomeId", "clientType", "retentionTax", "retentionIsr", "ncfTypeId", description, "retentionDate", prefix,"invoiceTypeId", "currencyId", rate, "maxSequence","createdAt",tax18,tax16,tax3,net18,net16,net3,"exemptAmount","expirationDate","authorId","tipoPago")
-	       VALUES (@id, @clientId, $seqParams, @discount, @net, @tax, @total, @effective, @creditCard, @checkOrTransf, @saleToCredit, @law10, @typeIncomeId, @clientType, @retentionTax, @retentionIsr, @ncfTypeId, @description, @retentionDate, @prefix,@invoiceTypeId, @currencyId, @rate, @maxSequence, @createdAt,@tax18,@tax16,@tax3,@net18,@net16,@net3,@exemptAmount,@expirationDate,@authorId,@tipoPago);
+	       id, "clientId", ncf, discount, net, tax, total, effective, "creditCard", "checkOrTransf", "saleToCredit", law10, "typeIncomeId", "clientType", "retentionTax", "retentionIsr", "ncfTypeId", description, "retentionDate", prefix,"invoiceTypeId", "currencyId", rate, "maxSequence","createdAt",tax18,tax16,tax3,net18,net16,net3,"exemptAmount","expirationDate","authorId","tipoPago","coinBack",paid)
+	       VALUES (@id, @clientId, $seqParams, @discount, @net, @tax, @total, @effective, @creditCard, @checkOrTransf, @saleToCredit, @law10, @typeIncomeId, @clientType, @retentionTax, @retentionIsr, @ncfTypeId, @description, @retentionDate, @prefix,@invoiceTypeId, @currencyId, @rate, @maxSequence, @createdAt,@tax18,@tax16,@tax3,@net18,@net16,@net3,@exemptAmount,@expirationDate,@authorId,@tipoPago,@coinBack,@paid);
 
       '''), parameters: map);
 
@@ -467,8 +473,8 @@ class SaleService implements Sale {
           subMap['id'] = xid;
           subMap['saleId'] = id;
           await conne.execute(Sql.named('''INSERT INTO public."SaleService"(
-	       id, "serviceId", discount, net, tax, total, "retentionTax", "retentionIsr", "saleId", quantity, "taxId", "discountId", "retentionTaxId", "retentionIsrId",tax18,tax16,tax3,net18,net16,net3,"exemptAmount","indicadorFacturacion","indicadorAgentePercepcion")
-	       VALUES (@id, @serviceId, @discount, @net, @tax, @total, @retentionTax, @retentionIsr, @saleId, @quantity, @taxId, @discountId, @retentionTaxId, @retentionIsrId,@tax18,@tax16,@tax3,@net18,@net16,@net3,@exemptAmount,@indicadorFacturacion,@indicadorAgentePercepcion); '''),
+	       id, "serviceId", discount, net, tax, total, "retentionTax", "retentionIsr", "saleId", quantity, "taxId", "discountId", "retentionTaxId", "retentionIsrId",tax18,tax16,tax3,net18,net16,net3,"exemptAmount","indicadorFacturacion","indicadorAgentePercepcion","serviceName")
+	       VALUES (@id, @serviceId, @discount, @net, @tax, @total, @retentionTax, @retentionIsr, @saleId, @quantity, @taxId, @discountId, @retentionTaxId, @retentionIsrId,@tax18,@tax16,@tax3,@net18,@net16,@net3,@exemptAmount,@indicadorFacturacion,@indicadorAgentePercepcion,@serviceName); '''),
               parameters: subMap);
         }
 
@@ -482,7 +488,7 @@ class SaleService implements Sale {
                 'paymentMethodId': paymentMethodId,
                 'bankId': bankId,
                 'transfRef': transfRef,
-                'amount': paid
+                'amount':  paid
               });
         }
       });
@@ -520,7 +526,8 @@ class SaleService implements Sale {
     try {
       var conn = SqlConector.connection;
       await conn?.runTx((c) async {
-        await c.execute('DELETE FROM public."Payments" WHERE "saleId" = @id',
+        await c.execute(
+            Sql.named('DELETE FROM public."Payments" WHERE "saleId" = @id'),
             parameters: {'id': id});
 
         await c.execute(
@@ -531,7 +538,7 @@ class SaleService implements Sale {
             parameters: {'id': id});
 
         await c.execute(
-          '''setval('public."${ncfTypeId}_seq"',$ncfSeq,false)''',
+          '''select setval('public."${ncfTypeId}_seq"',$ncfSeq,false);''',
         );
       });
     } catch (e) {
@@ -581,7 +588,9 @@ class SaleService implements Sale {
                   net18 = @net18,
                   net16 = @net16,
                   net3 = @net3,
-                  "exemptAmount" = @exemptAmount
+                  "exemptAmount" = @exemptAmount,
+                  paid = @paid,
+                  "coinBack" = @coinBack
                   where id = @id'''), parameters: {
           'id': id,
           'net': net,
@@ -602,7 +611,9 @@ class SaleService implements Sale {
           'net18': net18,
           'net16': net16,
           'net3': net3,
-          'exemptAmount': exemptAmount
+          'exemptAmount': exemptAmount,
+          'paid':paidInvoice,
+          'coinBack':coinBack
         });
 
         for (int i = 0; i < items.length; i++) {
@@ -635,7 +646,8 @@ class SaleService implements Sale {
             'net18': net18,
             'net16': net16,
             'net3': net3,
-            'exemptAmount': exemptAmount
+            'exemptAmount': exemptAmount,
+      
           });
         }
 
@@ -653,6 +665,29 @@ class SaleService implements Sale {
               });
         }
       });
+
+      var invoicesRows = await conne?.execute(
+          Sql.named('''select * from public."SalesView" where id = @id '''),
+          parameters: {'id': id});
+
+      var rows = await conne?.execute(
+          Sql.named(
+              ''' select  * from public."SalesServicesView" WHERE "saleId" = @id '''),
+          parameters: {'id': id});
+
+      if (invoicesRows != null && invoicesRows.isNotEmpty) {
+        var firstRow = invoicesRows.first;
+        var sale = SaleService.fromMap(firstRow.toColumnMap());
+
+        var xitems = rows
+                ?.map((e) => SaleItemService.fromMap(e.toColumnMap()))
+                .toList() ??
+            [];
+
+        sale.items = xitems;
+
+        return sale;
+      }
       return null;
     } catch (e) {
       rethrow;
@@ -665,9 +700,7 @@ class SaleService implements Sale {
       final conne = SqlConector.connection;
       await conne?.runTx((conne) async {
         DateTime paymentDate = DateTime.now();
-        if (retentionDate != null) {
-          paymentDate = retentionDate!;
-        }
+
         await conne.execute(
             Sql.named(
                 '''insert into public."Payments" (id,"saleId","paymentMethodId", "bankId", "transfRef", amount, "createdAt") values(@id,@saleId,@paymentMethodId,@bankId, @transfRef, @amount, @createdAt)'''),
@@ -787,6 +820,8 @@ class SaleService implements Sale {
 
   @override
   bool get isPaid {
+
+
     return debt == 0 ? true : false;
   }
 
@@ -947,4 +982,16 @@ class SaleService implements Sale {
     }
     return Colors.grey;
   }
+
+  @override
+  Future<void> updateStock() {
+    // TODO: implement updateStock
+    throw UnimplementedError();
+  }
+
+  @override
+  double? coinBack;
+
+  @override
+  double? paidInvoice;
 }

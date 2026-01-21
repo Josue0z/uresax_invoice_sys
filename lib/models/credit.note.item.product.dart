@@ -76,6 +76,7 @@ class CreditNoteProduct implements SaleItem {
     return {
       'id': id,
       'productId': productId,
+      'productName':productName,
       'discount': discount,
       'net': net,
       'tax': tax,
@@ -205,6 +206,7 @@ class CreditNoteProduct implements SaleItem {
         retentionTaxId: map['retentionTaxId'],
         retentionIsrId: map['retentionIsrId'],
         chassis: map['chassis'],
+        licensePlate: map['licensePlate'],
         enabled: true,
         tax18: map['tax18'] != null ? double.parse(map['tax18']) : null,
         tax16: map['tax16'] != null ? double.parse(map['tax16']) : null,
@@ -217,7 +219,8 @@ class CreditNoteProduct implements SaleItem {
             : null,
         indicadorFacturacion: map['indicadorFacturacion'],
         indicadorAgentePercepcion: map['indicadorAgentePercepcion'],
-        price: double.parse(map['price']));
+        price: double.parse(map['price']),
+        );
   }
 
   String toJson() => json.encode(toMap());

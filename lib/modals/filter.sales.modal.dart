@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:uresax_invoice_sys/models/ncftype.dart';
 import 'package:uresax_invoice_sys/settings.dart';
+import 'package:multiselect/multiselect.dart';
 
 class FilterSalesModal extends StatefulWidget {
   String? ncfTypeId;
+  List<NcfType> ncfsTypes;
   SaleStatus? saleStatus;
   int? dgiiState;
   FilterSalesModal(
       {super.key,
       required this.saleStatus,
       required this.ncfTypeId,
+      required this.ncfsTypes,
       required this.dgiiState});
 
   @override
@@ -16,6 +20,7 @@ class FilterSalesModal extends StatefulWidget {
 }
 
 class _FilterSalesModalState extends State<FilterSalesModal> {
+
   List<Map<String, dynamic>> options = [
     {'id': SaleStatus.all, 'name': 'TODAS'},
     {'id': SaleStatus.paid, 'name': 'PAGADA'},
@@ -25,6 +30,7 @@ class _FilterSalesModalState extends State<FilterSalesModal> {
   _onSaved() async {
     Navigator.pop(context, {
       'ncfTypeId': widget.ncfTypeId,
+      'ncfsTypes': widget.ncfsTypes,
       'saleStatus': widget.saleStatus,
       'dgiiState': widget.dgiiState
     });
@@ -58,7 +64,50 @@ class _FilterSalesModalState extends State<FilterSalesModal> {
             SizedBox(
               height: kDefaultPadding,
             ),
-            DropdownButtonFormField<String>(
+            DropDownMultiSelect(
+              options: ncfs,
+              selectedValues: widget.ncfsTypes,
+              isDense: true,
+              whenEmpty: 'TIPO DE COMPROBANTE',
+              decoration: InputDecoration(
+                  labelText: 'TIPO DE COMPROBANTE',
+                  hintText: 'SELECCIONAR',
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(20))),
+              menuItembuilder: (ncf) {
+                return ListTile(
+                  title: Text(ncf.name ?? ''),
+                  selected: widget.ncfsTypes.contains(ncf),
+                  onTap: () {
+                    setState(() {
+                      if (ncf.id != null) {
+                        if (widget.ncfsTypes.contains(ncf)) {
+                          widget.ncfsTypes.remove(ncf);
+                        } else {
+                          widget.ncfsTypes.add(ncf);
+                        }
+                   
+                      }else{
+                        widget.ncfsTypes = [];
+                      }
+                    });
+                    Navigator.pop(context);
+                  },
+                );
+              },
+              childBuilder: (ncfs) {
+                return Padding(
+                    padding: EdgeInsets.symmetric(
+                        vertical: kDefaultPadding, horizontal: kDefaultPadding),
+                    child: Text(
+                      ncfs.map((e) => e.id).join('-'),
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ));
+              },
+              onChanged: (ncfs) {},
+            ),
+
+            /*DropdownButtonFormField<String>(
                 initialValue: widget.ncfTypeId,
                 isExpanded: true,
                 decoration: InputDecoration(labelText: 'TIPO DE COMPROBANTE'),
@@ -68,7 +117,14 @@ class _FilterSalesModalState extends State<FilterSalesModal> {
                     .toList(),
                 onChanged: (option) {
                   widget.ncfTypeId = option;
-                }),
+                  if (option == null) {
+                    widget.ncfsTypes = [];
+                  } else {
+                    if (!widget.ncfsTypes.contains(option)) {
+                      widget.ncfsTypes.add(option);
+                    }
+                  }
+                }),*/
             SizedBox(height: kDefaultPadding),
             DropdownButtonFormField<SaleStatus>(
                 initialValue: widget.saleStatus,

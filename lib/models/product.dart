@@ -100,6 +100,17 @@ class Products implements SaleElement {
     }
   }
 
+  Future<void> delete() async {
+    try {
+      final conne = SqlConector.connection;
+      await conne?.execute(
+          Sql.named('''delete from public."Products" where id = @id'''),
+          parameters: {'id': id});
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   static Future<List<Products>> get({String? search}) async {
     try {
       final conne = SqlConector.connection;
@@ -197,27 +208,28 @@ class Products implements SaleElement {
 
   factory Products.fromMap(Map<String, dynamic> map) {
     return Products(
-        id: map['id'],
-        name: map['name'],
-        quantity: map['quantity'],
-        factor: map['factor'] != null ? double.parse(map['factor']) : null,
-        price: map['price'] != null ? double.parse(map['price']) : null,
-        quantityResultFactor: map['quantityResultFactor'] != null
-            ? double.parse(map['quantityResultFactor'])
-            : null,
-        total: map['total'] != null ? double.parse(map['total']) : null,
-        createdAt: map['createdAt'],
-        chassis: map['chassis'],
-        licensePlate: map['licensePlate'],
-        taxId: map['taxId'],
-        providerId: map['providerId'],
-        providerName: map['providerName'],
-        wareHouseId: map['wareHouseId'],
-        wareHouseName: map['wareHouseName'],
-        code: map['code'],
-        cost: map['cost'] != null ? double.parse(map['cost']) : null,
-        categoryId: map['categoryId'],
-        categoryName: map['categoryName']);
+      id: map['id'],
+      name: map['name'],
+      quantity: map['quantity'],
+      factor: map['factor'] != null ? double.parse(map['factor']) : null,
+      price: map['price'] != null ? double.parse(map['price']) : null,
+      quantityResultFactor: map['quantityResultFactor'] != null
+          ? double.parse(map['quantityResultFactor'])
+          : null,
+      total: map['total'] != null ? double.parse(map['total']) : null,
+      createdAt: map['createdAt'],
+      chassis: map['chassis'],
+      licensePlate: map['licensePlate'],
+      taxId: map['taxId'],
+      providerId: map['providerId'],
+      providerName: map['providerName'],
+      wareHouseId: map['wareHouseId'],
+      wareHouseName: map['wareHouseName'],
+      code: map['code'],
+      cost: map['cost'] != null ? double.parse(map['cost']) : null,
+      categoryId: map['categoryId'],
+      categoryName: map['categoryName'],
+    );
   }
 
   String toJson() => json.encode(toMap());

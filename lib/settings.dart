@@ -9,6 +9,7 @@ import 'package:uresax_invoice_sys/models/discount.dart';
 import 'package:uresax_invoice_sys/models/ncftype.dart';
 import 'package:uresax_invoice_sys/models/override.codes.dart';
 import 'package:uresax_invoice_sys/models/payment.method.dart';
+import 'package:uresax_invoice_sys/models/payment.mode.dart';
 import 'package:uresax_invoice_sys/models/payment.type.dart';
 import 'package:uresax_invoice_sys/models/permission.dart';
 import 'package:uresax_invoice_sys/models/provider.dart';
@@ -21,6 +22,8 @@ import 'package:uresax_invoice_sys/models/taxes.dart';
 import 'package:uresax_invoice_sys/models/type.income.dart';
 import 'package:uresax_invoice_sys/models/user.dart';
 import 'package:uresax_invoice_sys/models/warehouse.dart';
+
+
 
 Company? company;
 
@@ -41,6 +44,8 @@ List<Taxes> taxes = [];
 List<Currency> currencies = [];
 
 List<PaymentType> paymentsTypes = [];
+
+List<PaymentMode> paymentsModes = [];
 
 List<OverrideCode> overrideCodes = [];
 
@@ -68,18 +73,40 @@ int? currentElectronicNcfOption = 2;
 
 File? certFile;
 
+
+
 bool isValid = false;
 
 TextEditingController certPath = TextEditingController();
 
 TextEditingController certPassword = TextEditingController();
 
-bool eCommerceMode = false;
 
-bool allowEditInvoice = false;
+var hostname = Platform.environment['URESAX_INVOICE_DATABASE_HOSTNAME'];
+var databaseName = Platform.environment['URESAX_INVOICE_DATABASE_NAME'];
+var dbUsername = Platform.environment['URESAX_INVOICE_DATABASE_USERNAME'];
+var dbPassword = Platform.environment['URESAX_INVOICE_DATABASE_PASSWORD'];
+var dirPath =   Platform.environment['URESAX_INVOICE_STATIC_LOCAL_SERVER_PATH'];
+var port = Platform.environment['URESAX_INVOICE_DATABASE_PORT'];
 
 List<SaleElement> elements = [];
 
 List<RetentionTax> retentionsTaxes = [];
 
 List<RetentionIsr> retentionsIsrs = [];
+List<String> printers =[];
+
+String? devicePos;
+
+
+bool eCommerceMode = bool.tryParse(
+            Platform.environment['URESAX_INVOICE_ECOMMERCE_MODE'] ?? 'false') ?? false;
+
+bool enabledEcfProduction = bool.parse(Platform.environment['URESAX_INVOICE_ENABLED_ECF_PRODUCTION'] ?? 'false');
+
+bool allowEditInvoice = bool.tryParse(
+            Platform.environment['URESAX_INVOICE_ALLOW_EDIT_INVOICE'] ??
+                'false') ??
+        false;
+
+String appVersion = 'Desconocida';

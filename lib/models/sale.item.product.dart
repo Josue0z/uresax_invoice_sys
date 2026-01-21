@@ -77,6 +77,7 @@ class SaleItemProduct implements SaleItem {
     return {
       'id': id,
       'productId': productId,
+      'productName': productName,
       'discount': discount,
       'net': net,
       'tax': tax,
@@ -218,7 +219,7 @@ class SaleItemProduct implements SaleItem {
 
   @override
   String toString() {
-    return 'SaleItemProduct(id: $id, serviceId: $serviceId, discount: $discount, net: $net, tax: $tax, total: $total, retentionTax: $retentionTax, retentionIsr: $retentionIsr, saleId: $saleId, creditNoteId: $creditNoteId, quantity: $quantity)';
+    return 'SaleItemProduct(id: $id, productId: $productId, productName: $productName, serviceId: $serviceId, discount: $discount, net: $net, tax: $tax, total: $total, retentionTax: $retentionTax, retentionIsr: $retentionIsr, saleId: $saleId, creditNoteId: $creditNoteId, quantity: $quantity, price: $price, indicadorFacturacion: $indicadorFacturacion)';
   }
 
   @override

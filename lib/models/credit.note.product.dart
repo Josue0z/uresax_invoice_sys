@@ -167,7 +167,8 @@ class CreditNoteAsProduct implements Sale {
       this.authorName,
       this.ncfSeq,
       this.ncfAffectedCreatedAt,
-      this.clientAddress});
+      this.clientAddress,
+      this.coinBack});
 
   @override
   // TODO: implement color
@@ -182,7 +183,7 @@ class CreditNoteAsProduct implements Sale {
       var seqParams = '';
       final conne = SqlConector.connection;
 
-      await calcDifOfNetsNcfs(ncf: ncf ?? '', createdAt: ncfAffectedCreatedAt!);
+      await calcDifOfNetsNcfs(ncfAffected: ncf ?? '', ncfAffectedCreatedAt: ncfAffectedCreatedAt!,currentTotal: total!);
 
       if (ncfTypeId == '04') {
         seqParams = '''nextval('04_seq')''';
@@ -236,7 +237,7 @@ class CreditNoteAsProduct implements Sale {
          "currencyId", 
          rate, 
          "maxSequence",
-         tax18,tax16,tax3,net18,net16,net3,"exemptAmount","expirationDate","authorId")
+         tax18,tax16,tax3,net18,net16,net3,"exemptAmount","expirationDate","authorId","coinBack", paid)
 	       VALUES (
          @id, 
          @saleId, 
@@ -262,7 +263,7 @@ class CreditNoteAsProduct implements Sale {
          @currencyId, 
          @rate, 
          @maxSequence,
-         @tax18,@tax16,@tax3,@net18,@net16,@net3,@exemptAmount,@expirationDate,@authorId);
+         @tax18,@tax16,@tax3,@net18,@net16,@net3,@exemptAmount,@expirationDate,@authorId,@coinBack,@paid);
 
       '''), parameters: map);
 
@@ -275,17 +276,9 @@ class CreditNoteAsProduct implements Sale {
             subMap['creditNoteId'] = id;
             await conne.execute(
                 Sql.named('''INSERT INTO public."CreditNoteProduct"(
-	       id,"creditNoteId", "productId", discount, net, tax, total, "retentionTax", "retentionIsr", quantity, "taxId", "discountId", "retentionTaxId", "retentionIsrId",tax18,tax16,tax3,net18,net16,net3,"exemptAmount","indicadorFacturacion","indicadorAgentePercepcion")
-	       VALUES (@id, @creditNoteId, @productId, @discount, @net, @tax, @total, @retentionTax, @retentionIsr, @quantity, @taxId, @discountId, @retentionTaxId, @retentionIsrId,@tax18,@tax16,@tax3,@net18,@net16,@net3,@exemptAmount,@indicadorFacturacion,@indicadorAgentePercepcion); '''),
+	       id,"creditNoteId", "productId", discount, net, tax, total, "retentionTax", "retentionIsr", quantity, "taxId", "discountId", "retentionTaxId", "retentionIsrId",tax18,tax16,tax3,net18,net16,net3,"exemptAmount","indicadorFacturacion","indicadorAgentePercepcion","productName")
+	       VALUES (@id, @creditNoteId, @productId, @discount, @net, @tax, @total, @retentionTax, @retentionIsr, @quantity, @taxId, @discountId, @retentionTaxId, @retentionIsrId,@tax18,@tax16,@tax3,@net18,@net16,@net3,@exemptAmount,@indicadorFacturacion,@indicadorAgentePercepcion,@productName); '''),
                 parameters: subMap);
-
-            await conne.execute(
-                Sql.named(
-                    ''' update public."Products" set quantity = quantity + @quantity where id = @id'''),
-                parameters: {
-                  'id': item.productId,
-                  'quantity': item.returnQuantity
-                });
           }
         }
 
@@ -297,7 +290,7 @@ class CreditNoteAsProduct implements Sale {
                 'id': Uuid().v4(),
                 'creditNoteId': id,
                 'paymentMethodId': paymentMethodId,
-                'amount': paid
+                'amount':  paid
               });
         }
       });
@@ -337,7 +330,8 @@ class CreditNoteAsProduct implements Sale {
       var conn = SqlConector.connection;
       await conn?.runTx((c) async {
         await c.execute(
-            'DELETE FROM public."Returns" WHERE "creditNoteId" = @id',
+            Sql.named(
+                'DELETE FROM public."Returns" WHERE "creditNoteId" = @id'),
             parameters: {'id': id});
 
         await c.execute(
@@ -350,14 +344,14 @@ class CreditNoteAsProduct implements Sale {
             parameters: {'id': id});
 
         await c.execute(
-          '''setval('public."${ncfTypeId}_seq"',$ncfSeq,false)''',
+          '''select setval('public."${ncfTypeId}_seq"',$ncfSeq,false);''',
         );
 
         for (var item in items) {
           await c.execute(
               Sql.named(
                   '''update public."Products" set quantity = quantity - ${item.quantity} where id = @id'''),
-              parameters: {'id': item.id});
+              parameters: {'id': item.productId});
         }
       });
     } catch (e) {
@@ -468,7 +462,9 @@ class CreditNoteAsProduct implements Sale {
       'net3': net3,
       'exemptAmount': exemptAmount,
       'expirationDate': expirationDate,
-      'authorId': authorId
+      'authorId': authorId,
+      'paid': paidInvoice,
+      'coinBack': coinBack
     };
   }
 
@@ -621,7 +617,10 @@ class CreditNoteAsProduct implements Sale {
         authorId: map['authorId'],
         authorName: map['authorName'],
         ncfSeq: map['ncfSeq'],
-        clientAddress: map['clientAddress']);
+        clientAddress: map['clientAddress'],
+    
+        coinBack:
+            map['coinBack'] != null ? double.parse(map['coinBack']) : null);
   }
 
   String toJson() => json.encode(toMap());
@@ -854,4 +853,26 @@ class CreditNoteAsProduct implements Sale {
     }
     return Colors.grey;
   }
+
+  @override
+  Future<void> updateStock() async {
+    try {
+      var conne = SqlConector.connection;
+      for (int i = 0; i < items.length; i++) {
+        var item = items[i];
+        await conne?.execute(
+            Sql.named(
+                ''' update public."Products" set quantity = quantity + @quantity where id = @id'''),
+            parameters: {'id': item.productId, 'quantity': item.quantity});
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  double? coinBack;
+
+  @override
+  double? paidInvoice;
 }

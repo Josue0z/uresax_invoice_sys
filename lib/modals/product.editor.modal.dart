@@ -289,6 +289,8 @@ class _ProductEditorModalState extends State<ProductEditorModal> {
                           margin: EdgeInsets.only(bottom: kDefaultPadding),
                           child: DropdownButtonFormField<int>(
                               initialValue: currentTaxId,
+                              decoration: InputDecoration(
+                                  labelText: 'TIPO DE IMPUESTO'),
                               items: List.generate(taxes.length, (index) {
                                 var tax = taxes[index];
                                 return DropdownMenuItem(

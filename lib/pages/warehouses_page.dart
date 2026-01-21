@@ -15,6 +15,7 @@ class WareHousesPage extends StatefulWidget {
 
 class _WareHousesPageState extends State<WareHousesPage> {
   List<WareHouses> wareHouses = [];
+  final TextEditingController _searchController = TextEditingController();
   Future? future;
 
   Widget get contentFilled {
@@ -140,7 +141,8 @@ class _WareHousesPageState extends State<WareHousesPage> {
                 width: 200,
                 height: 50,
                 child: TextFormField(
-                  onChanged: (words) async {
+                  controller: _searchController,
+                  onFieldSubmitted: (words) async {
                     setState(() {
                       future = _initAsync(words);
                     });
@@ -152,7 +154,16 @@ class _WareHousesPageState extends State<WareHousesPage> {
                       suffixIcon: Icon(Icons.search)),
                 ),
               ),
-              SizedBox(width: kDefaultPadding)
+              SizedBox(width: kDefaultPadding),
+              CircleAvatar(
+                child: IconButton(
+                    onPressed: () {
+                      _showWareHousesEditorModal(context,
+                          wareHouse: WareHouses(), editing: false);
+                    },
+                    icon: Icon(Icons.add)),
+              ),
+              SizedBox(width: kDefaultPadding),
             ],
           )
         ],
@@ -181,12 +192,20 @@ class _WareHousesPageState extends State<WareHousesPage> {
 
             return contentEmpty;
           }),
-      floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            _showWareHousesEditorModal(context,
-                wareHouse: WareHouses(), editing: false);
-          },
-          child: Icon(Icons.add)),
+        floatingActionButton: Stack(
+      children: [
+        Positioned(
+          bottom: 20,
+          right: kDefaultPadding*2,
+          child: FloatingActionButton(onPressed: (){
+        setState(() {
+          _searchController.clear();
+          future = _initAsync();
+        });
+      },
+      child: Icon(Icons.restore)),)
+      ],
+    )
     );
   }
 }

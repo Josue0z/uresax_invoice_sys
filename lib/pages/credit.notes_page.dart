@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -13,6 +14,7 @@ import 'package:path/path.dart' as path;
 import 'package:uresax_invoice_sys/widgets/content.error.widget.dart';
 import 'package:uresax_invoice_sys/widgets/date.range_widget.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:uresax_invoice_sys/widgets/scrollmove.event.widget.dart';
 
 class CreditNotesPage extends StatefulWidget {
   const CreditNotesPage({super.key});
@@ -37,6 +39,8 @@ class _CreditNotesPageState extends State<CreditNotesPage> {
 
   Future? future;
 
+  ScrollController scrollControllerY = ScrollController();
+
   _showInvoice(Sale sale) async {
     try {
       var items = await sale.getSaleData();
@@ -55,6 +59,7 @@ class _CreditNotesPageState extends State<CreditNotesPage> {
 
       var file = File(path.join(
           dir.path,
+          company?.name,
           'NOTAS DE CREDITO',
           sale.createdAt?.format(payload: 'YYYYMM'),
           'PDFS',
@@ -70,7 +75,7 @@ class _CreditNotesPageState extends State<CreditNotesPage> {
   _generateXmlFile(Sale sale) async {
     try {
       var dir = await getUresaxInvoiceDir();
-      var file = File(path.join(dir.path, 'VENTAS',
+      var file = File(path.join(dir.path, company?.name, 'NOTAS DE CREDITO',
           sale.createdAt?.format(payload: 'YYYYMM'), 'XML', '${sale.ncf}.xml'));
       await file.create(recursive: true);
       await file.writeAsString(sale.ecfXmlFirmado ?? '');
@@ -122,77 +127,83 @@ class _CreditNotesPageState extends State<CreditNotesPage> {
   }
 
   Widget get contentFilled {
-    return ListView.separated(
-        separatorBuilder: (ctx, i) => const Divider(),
-        itemCount: creditNotes.length,
-        itemBuilder: (ctx, index) {
-          var item = creditNotes[index];
-          salesOptions = [
-            {'id': 1, 'name': 'Ver Factura'},
-          ];
+    return ScrollMoveEventWidget(
+        scrollControllerY: scrollControllerY,
+        child: ListView.separated(
+            controller: scrollControllerY,
+            separatorBuilder: (ctx, i) => const Divider(),
+            itemCount: creditNotes.length,
+            itemBuilder: (ctx, index) {
+              var item = creditNotes[index];
+              salesOptions = [
+                {'id': 1, 'name': 'Ver Factura'},
+              ];
 
-          if (item.ecfXmlFirmado != null) {
-            salesOptions
-                .add({'id': 2, 'name': 'Generar Archivo XML del ${item.ncf}'});
-          }
-          return ListTile(
-            minVerticalPadding: kDefaultPadding,
-            leading: Container(
-              width: 80,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(90),
-                color: Theme.of(context).primaryColor.withOpacity(0.04),
-              ),
-              child: Center(
-                child: Icon(
-                  Icons.receipt_long_outlined,
-                  color: Theme.of(context).primaryColor,
-                  size: 24,
+              if (item.ecfXmlFirmado != null) {
+                salesOptions.add(
+                    {'id': 2, 'name': 'Generar Archivo XML del ${item.ncf}'});
+              }
+              return ListTile(
+                minVerticalPadding: kDefaultPadding,
+                leading: Container(
+                  width: 80,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(90),
+                    color: Theme.of(context).primaryColor.withOpacity(0.04),
+                  ),
+                  child: Center(
+                    child: Icon(
+                      Icons.receipt_long_outlined,
+                      color: Theme.of(context).primaryColor,
+                      size: 24,
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            title: Text('${item.ncf} - ${item.ncfAffected}',
-                style: Theme.of(context).textTheme.bodyMedium),
-            subtitle: Text(item.clientName ?? ''),
-            trailing: Wrap(
-              runAlignment: WrapAlignment.center,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                item.estadoDgii != null
-                    ? Container(
-                        margin: EdgeInsets.only(
-                            left: kDefaultPadding / 2, right: kDefaultPadding),
-                        padding: EdgeInsets.all(kDefaultPadding / 2),
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            color: item.statusColorDgii.withOpacity(0.04)),
-                        child: Text(
-                          item.estadoDgiiNombre ?? '',
-                          style: TextStyle(color: item.statusColorDgii),
-                        ),
-                      )
-                    : SizedBox(),
-                Text(
-                    item.currencyId == 1
-                        ? item.total?.toDop()
-                        : item.total?.toUS(),
+                title: Text('${item.ncf} - ${item.ncfAffected}',
                     style: Theme.of(context).textTheme.bodyMedium),
-                SizedBox(width: kDefaultPadding),
-                PopupMenuButton<int>(
-                    onSelected: (option) => _onSelectedSaleOption(option, item),
-                    itemBuilder: (ctx) {
-                      return List.generate(salesOptions.length, (index) {
-                        var option = salesOptions[index];
+                subtitle: Text(item.clientName ?? ''),
+                trailing: Wrap(
+                  runAlignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    item.estadoDgii != null
+                        ? Container(
+                            margin: EdgeInsets.only(
+                                left: kDefaultPadding / 2,
+                                right: kDefaultPadding),
+                            padding: EdgeInsets.all(kDefaultPadding / 2),
+                            decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(20),
+                                color: item.statusColorDgii.withOpacity(0.04)),
+                            child: Text(
+                              item.estadoDgiiNombre ?? '',
+                              style: TextStyle(color: item.statusColorDgii),
+                            ),
+                          )
+                        : SizedBox(),
+                    Text(
+                        item.currencyId == 1
+                            ? item.total?.toDop()
+                            : item.total?.toUS(),
+                        style: Theme.of(context).textTheme.bodyMedium),
+                    SizedBox(width: kDefaultPadding),
+                    PopupMenuButton<int>(
+                        onSelected: (option) =>
+                            _onSelectedSaleOption(option, item),
+                        itemBuilder: (ctx) {
+                          return List.generate(salesOptions.length, (index) {
+                            var option = salesOptions[index];
 
-                        return PopupMenuItem(
-                            value: option['id'], child: Text(option['name']));
-                      });
-                    }),
-                SizedBox(width: kDefaultPadding),
-              ],
-            ),
-          );
-        });
+                            return PopupMenuItem(
+                                value: option['id'],
+                                child: Text(option['name']));
+                          });
+                        }),
+                    SizedBox(width: kDefaultPadding),
+                  ],
+                ),
+              );
+            }));
   }
 
   Widget get contentLoading {
@@ -204,115 +215,106 @@ class _CreditNotesPageState extends State<CreditNotesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('TUS NOTAS DE CREDITO (${creditNotes.length})'),
-        actions: [
-          Wrap(
-            runAlignment: WrapAlignment.center,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              SizedBox(
-                width: 190,
-                child: TextFormField(
-                  controller: searchController,
-                  onFieldSubmitted: (words) {
-                    search = words;
+        appBar: AppBar(
+          title: Text('TUS NOTAS DE CREDITO (${creditNotes.length})'),
+          actions: [
+            Wrap(
+              runAlignment: WrapAlignment.center,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                SizedBox(
+                  width: 190,
+                  child: TextFormField(
+                    controller: searchController,
+                    onFieldSubmitted: (words) {
+                      search = words;
+                      setState(() {
+                        future = _initAsync();
+                      });
+                    },
+                    decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                            borderSide:
+                                BorderSide(style: BorderStyle.none, width: 0)),
+                        fillColor: Colors.white,
+                        filled: true,
+                        hintText: 'BUSCAR NCF...',
+                        suffixIcon: Wrap(
+                          runAlignment: WrapAlignment.center,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            Icon(Icons.search),
+                            SizedBox(width: kDefaultPadding)
+                          ],
+                        )),
+                  ),
+                ),
+                SizedBox(width: kDefaultPadding),
+                SizedBox(
+                  width: 290,
+                  child: DateRangeWidget(
+                      dates: dates,
+                      onChanged: (xdates) async {
+                        dates = [
+                          xdates.first,
+                          xdates.last!.copyWith(
+                            hour: 23,
+                            minute: 59,
+                            second: 59,
+                          )
+                        ];
+                        setState(() {
+                          future = _initAsync();
+                        });
+                      }),
+                ),
+                SizedBox(
+                  width: kDefaultPadding,
+                ),
+              ],
+            )
+          ],
+        ),
+        body: FutureBuilder(
+            future: future,
+            builder: (ctx, s) {
+              if (s.connectionState == ConnectionState.waiting) {
+                return contentLoading;
+              }
+
+              if (s.hasError) {
+                return ContentErrorWidget(
+                  error: s.error.toString(),
+                  onRetry: () {
                     setState(() {
                       future = _initAsync();
                     });
                   },
-                  decoration: InputDecoration(
-                      border: OutlineInputBorder(
-                          borderSide:
-                              BorderSide(style: BorderStyle.none, width: 0)),
-                      fillColor: Colors.white,
-                      filled: true,
-                      hintText: 'BUSCAR NCF...',
-                      suffixIcon: Wrap(
-                        runAlignment: WrapAlignment.center,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        children: [
-                          Icon(Icons.search),
-                          SizedBox(width: kDefaultPadding)
-                        ],
-                      )),
-                ),
-              ),
-              SizedBox(width: kDefaultPadding),
-              SizedBox(
-                width: 290,
-                child: DateRangeWidget(
-                    dates: dates,
-                    onChanged: (xdates) async {
-                      dates = [
-                        xdates.first,
-                        xdates.last!.copyWith(
-                          hour: 23,
-                          minute: 59,
-                          second: 59,
-                        )
-                      ];
-                      setState(() {
-                        future = _initAsync();
-                      });
-                    }),
-              ),
-              SizedBox(
-                width: kDefaultPadding,
-              ),
-            ],
-          )
-        ],
-      ),
-      body: FutureBuilder(
-          future: future,
-          builder: (ctx, s) {
-            if (s.connectionState == ConnectionState.waiting) {
-              return contentLoading;
-            }
+                );
+              }
+              if (s.connectionState == ConnectionState.done &&
+                  creditNotes.isNotEmpty) {
+                return contentFilled;
+              }
 
-            if (s.hasError) {
-              return ContentErrorWidget(
-                error: s.error.toString(),
-                onRetry: () {
-                  setState(() {
-                    future = _initAsync();
-                  });
-                },
-              );
-            }
-            if (s.connectionState == ConnectionState.done &&
-                creditNotes.isNotEmpty) {
-              return contentFilled;
-            }
-
-            return contentEmpty;
-          }),
-      floatingActionButton: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              FloatingActionButton(
-                onPressed: () {
-                  search = null;
-
-                  searchController.clear();
-                  setState(() {
-                    future = _initAsync();
-                  });
-                },
-                child: Icon(Icons.restore),
-              ),
-              SizedBox(width: kDefaultPadding * 3)
-            ],
-          ),
-          SizedBox(
-            height: kDefaultPadding,
-          )
-        ],
-      ),
-    );
+              return contentEmpty;
+            }),
+        floatingActionButton: Stack(
+          children: [
+            Positioned(
+              bottom: 20,
+              right: kDefaultPadding * 2,
+              child: FloatingActionButton(
+                  onPressed: () {
+                    setState(() {
+                      searchController.clear();
+                      search = null;
+                      future = _initAsync();
+                    });
+                  },
+                  child: Icon(Icons.restore)),
+            )
+          ],
+        ));
   }
 }

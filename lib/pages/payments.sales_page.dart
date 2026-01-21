@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:moment_dart/moment_dart.dart';
 import 'package:open_file/open_file.dart';
 import 'package:uresax_invoice_sys/models/payment.dart';
@@ -10,6 +11,7 @@ import 'package:uresax_invoice_sys/utils/extensions.dart';
 import 'package:uresax_invoice_sys/utils/functions.dart';
 import 'package:uresax_invoice_sys/utils/invoices.functions.dart';
 import 'package:path/path.dart' as path;
+import 'package:uresax_invoice_sys/widgets/content.error.widget.dart';
 
 class PaymentSalesPage extends StatefulWidget {
   Sale sale;
@@ -21,6 +23,7 @@ class PaymentSalesPage extends StatefulWidget {
 
 class _PaymentSalesPageState extends State<PaymentSalesPage> {
   List<Payment> payments = [];
+  Future? future;
   _initAsync() async {
     try {
       payments = await Payment.get(saleId: widget.sale.id ?? '');
@@ -46,19 +49,8 @@ class _PaymentSalesPageState extends State<PaymentSalesPage> {
     await OpenFile.open(file.path);
   }
 
-  @override
-  void initState() {
-    _initAsync();
-    super.initState();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('${widget.sale.ncf} - PAGOS (${payments.length})'),
-      ),
-      body: ListView.separated(
+  Widget get contentFilled {
+    return ListView.separated(
           separatorBuilder: (ctx, i) => const Divider(),
           itemCount: payments.length,
           itemBuilder: (ctx, index) {
@@ -85,8 +77,7 @@ class _PaymentSalesPageState extends State<PaymentSalesPage> {
               trailing: Wrap(
                 children: [
                   Text(pay.createdAt!
-                      .toLocal()
-                      .format(payload: 'DD/MM/YYYY hh:mm:ss A')),
+                      .format(payload: 'DD/MM/YYYY')),
                   SizedBox(width: kDefaultPadding),
                   Text(pay.currencyId == 1
                       ? pay.amount?.toDop()
@@ -99,6 +90,64 @@ class _PaymentSalesPageState extends State<PaymentSalesPage> {
                 ],
               ),
             );
+          });
+  }
+
+    Widget get contentEmpty {
+    return Center(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SvgPicture.asset('assets/svgs/undraw_wallet_diag.svg', width: 250)
+        ],
+      ),
+    );
+  }
+
+  Widget get contentLoading {
+    return Center(
+      child: CircularProgressIndicator(),
+    );
+  }
+
+  @override
+  void initState() {
+   setState(() {
+      future =  _initAsync();
+   });
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('${widget.sale.ncf} - PAGOS (${payments.length})'),
+      ),
+      body:  FutureBuilder(
+          future: future,
+          builder: (ctx, s) {
+            if (s.connectionState == ConnectionState.waiting) {
+              return contentLoading;
+            }
+
+            if (s.hasError) {
+              return ContentErrorWidget(
+                error: s.error.toString(),
+                onRetry: () {
+                  setState(() {
+                    future = _initAsync();
+                  });
+                },
+              );
+            }
+            if (s.connectionState == ConnectionState.done &&
+                payments.isNotEmpty) {
+              return contentFilled;
+            }
+
+            return contentEmpty;
           }),
     );
   }

@@ -128,7 +128,10 @@ class _ServiceEditorModalState extends State<ServiceEditorModal> {
                     height: kDefaultPadding,
                   ),
                   DropdownButtonFormField<int>(
-                      value: currentTaxId,
+                      initialValue: currentTaxId,
+                      decoration: InputDecoration( 
+                        labelText: 'TIPO DE IMPUESTO'
+                      ),
                       items: List.generate(taxes.length, (index) {
                         var tax = taxes[index];
                         return DropdownMenuItem(

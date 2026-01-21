@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:uresax_invoice_sys/apis/log.handler.dart' show LogHandler;
+import 'package:uresax_invoice_sys/modals/pos_selector.modal.dart';
 import 'package:uresax_invoice_sys/models/user.dart';
 import 'package:uresax_invoice_sys/pages/home_page.dart';
+import 'package:uresax_invoice_sys/pages/pos_screen.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/utils/functions.dart';
 import 'package:uresax_invoice_sys/widgets/password.editor.widget.dart';
+import 'package:page_route_transition/page_route_transition.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -21,12 +24,29 @@ class _LoginPageState extends State<LoginPage> {
   _onSubmit() async {
     if (_formKey.currentState!.validate()) {
       try {
+        showLoader(context);
         currentUser = await User.login(username.text, password.text);
-        LogHandler.printEvent('EL USUARIO: ${currentUser?.name} INICIO SESION');
-        await Navigator.pushAndRemoveUntil(context,
-            MaterialPageRoute(builder: (ctx) => HomePage()), (_) => false);
+        await LogHandler.printEvent('EL USUARIO: ${currentUser?.name} INICIO SESION');
+
+        if(currentUser != null){
+
+          if(currentUser!.permissions!.contains('ALLOW_VIEW_POS_SCREEN')){
+
+             if(!eCommerceMode){
+                 throw 'NO ESTA HABILITADO EL MODO COMERCIO';
+             }
+
+           Navigator.pop(context);
+           await showDialog(context: context, builder: (ctx) => PosSelectorModal());
+          }else{
+            await Navigator.pushAndRemoveUntil(context, PageRouteTransitionBuilder(page: const HomePage(), effect: TransitionEffect.leftToRight),(_) => false);
+          }
+
+        }
+ 
       } catch (e) {
-        LogHandler.printError(e.toString());
+        Navigator.pop(context);
+        await LogHandler.printError(e.toString());
         showTopSnackBar(context, message: e.toString(), color: Colors.red);
       }
     }
@@ -76,7 +96,9 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         PasswordEditorWidget(
                           controller: password,
-                          onFieldSubmitted: (_) => _onSubmit(),
+                          onFieldSubmitted: (_) {
+                             _onSubmit();
+                          },
                         ),
                         SizedBox(
                           height: kDefaultPadding,

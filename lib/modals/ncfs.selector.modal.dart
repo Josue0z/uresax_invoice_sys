@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uresax_invoice_sys/apis/log.handler.dart';
 import 'package:uresax_invoice_sys/models/sale.abs.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/utils/functions.dart';
@@ -15,6 +16,7 @@ class _NcfsSelectorModalState extends State<NcfsSelectorModal> {
   List<Sale> sales = [];
   TextEditingController rncOrId = TextEditingController();
   TextEditingController ncf = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   Sale? _currentSale;
   _onSubmit() async {
     try {
@@ -42,6 +44,7 @@ class _NcfsSelectorModalState extends State<NcfsSelectorModal> {
   Widget build(BuildContext context) {
     return Dialog(
       child: Form(
+          key: _formKey,
           child: SizedBox(
               width: 400,
               height: 400,
@@ -71,6 +74,9 @@ class _NcfsSelectorModalState extends State<NcfsSelectorModal> {
                       ),
                       TextFormField(
                         controller: rncOrId,
+                        validator: (val) => val!.isEmpty
+                            ? 'CAMPO DEL RNC/CEDULA OBLIGATORIO'
+                            : null,
                         decoration: InputDecoration(
                             labelText: 'RNC/CEDULA',
                             hintText: 'Escribir algo...'),
@@ -81,6 +87,8 @@ class _NcfsSelectorModalState extends State<NcfsSelectorModal> {
                       TextFormField(
                         controller: ncf,
                         onFieldSubmitted: (_) => _onSubmit(),
+                        validator: (val) =>
+                            val!.isEmpty ? 'CAMPO DEL NCF OBLIGATORIO' : null,
                         decoration: InputDecoration(
                             labelText: 'NCF',
                             hintText: 'Escribir algo...',
@@ -102,7 +110,12 @@ class _NcfsSelectorModalState extends State<NcfsSelectorModal> {
                                   selected: _currentSale?.id == sale.id,
                                   title: Text(sale.ncf ?? ''),
                                   onTap: () {
-                                    _currentSale = sale;
+                                    if (_currentSale != null) {
+                                      _currentSale = null;
+                                    } else {
+                                      _currentSale = sale;
+                                    }
+
                                     setState(() {});
                                   },
                                 );
@@ -115,11 +128,17 @@ class _NcfsSelectorModalState extends State<NcfsSelectorModal> {
                         height: 50,
                         child: ElevatedButton(
                             onPressed: () async {
-                              try {
-                                Navigator.pop(context, _currentSale);
-                              } catch (e) {
-                                showTopSnackBar(context,
-                                    message: e.toString(), color: Colors.red);
+                              if (_formKey.currentState!.validate()) {
+                                try {
+                                  if (_currentSale == null) {
+                                    throw 'DEBE SELECCIONAR EL NCF';
+                                  }
+                                  Navigator.pop(context, _currentSale);
+                                } catch (e) {
+                                  showTopSnackBar(context,
+                                      message: e.toString(), color: Colors.red);
+                                  await LogHandler.printError(e.toString());
+                                }
                               }
                             },
                             child: Text('APLICAR')),

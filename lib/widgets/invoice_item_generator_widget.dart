@@ -12,7 +12,6 @@ import 'package:uresax_invoice_sys/models/sale.element.abs.dart';
 import 'package:uresax_invoice_sys/models/sale.item.abs.dart';
 import 'package:uresax_invoice_sys/models/sale.item.product.dart';
 import 'package:uresax_invoice_sys/models/sale.item.service.dart';
-import 'package:uresax_invoice_sys/models/sale.product.dart';
 import 'package:uresax_invoice_sys/models/service.dart';
 import 'package:uresax_invoice_sys/models/taxes.dart';
 import 'package:uresax_invoice_sys/pages/discounts_page.dart';
@@ -248,6 +247,9 @@ class _InvoiceItemGeneratorWidgetState
 
     totalToPay.text = amountPaid.toStringAsFixed(2);
 
+    widget.saleItem.productName = el?.name;
+    widget.saleItem.serviceName = el?.name;
+
     widget.onChanged(widget.saleItem);
   }
 
@@ -283,6 +285,7 @@ class _InvoiceItemGeneratorWidgetState
 
   void _syncControllersWithSaleItem() {
     currenId = widget.saleItem.serviceId ?? widget.saleItem.productId;
+
     el = widget.saleItem is SaleItemService ||
             widget.saleItem is CreditNoteService
         ? Services(
@@ -293,6 +296,8 @@ class _InvoiceItemGeneratorWidgetState
             id: widget.saleItem.productId,
             name: widget.saleItem.productName,
             price: widget.saleItem.price);
+    widget.saleItem.productName = el?.name;
+    widget.saleItem.serviceName = el?.name;
 
     discountId = widget.saleItem.discountId;
 
@@ -302,6 +307,15 @@ class _InvoiceItemGeneratorWidgetState
     currentTaxId = widget.saleItem.taxId;
     currentRetentionIsrId = widget.saleItem.retentionIsrId;
     currentRetentionTaxId = widget.saleItem.retentionTaxId;
+
+    if (currentRetentionTaxId != null) {
+      retentionTax =
+          retentionsTaxes.firstWhere((e) => e.id == currentRetentionTaxId);
+    }
+    if (currentRetentionIsrId != null) {
+      retentionIsr =
+          retentionsIsrs.firstWhere((e) => e.id == currentRetentionIsrId);
+    }
 
     _calc();
   }
@@ -421,8 +435,9 @@ class _InvoiceItemGeneratorWidgetState
                 context: context,
                 title: title,
                 initialValue: el,
-                enabled: widget.saleItem is SaleItemProduct ||
-                    widget.saleItem is SaleItemService,
+                enabled: !widget.editing &&
+                    (widget.saleItem is SaleItemProduct ||
+                        widget.saleItem is SaleItemService),
                 validator: (val) {
                   return el?.id == null ? 'CAMPO OBLIGATORIO' : null;
                 },
@@ -454,8 +469,9 @@ class _InvoiceItemGeneratorWidgetState
                 context: context,
                 initialValue: discountEl,
                 title: 'DESCUENTO',
-                enabled: widget.saleItem is SaleItemProduct ||
-                    widget.saleItem is SaleItemService,
+                enabled: !widget.editing &&
+                    (widget.saleItem is SaleItemProduct ||
+                        widget.saleItem is SaleItemService),
                 screen: DiscountsPage(selectorMode: true),
                 onChanged: widget.saleItem is CreditNoteProduct ||
                         widget.saleItem is CreditNoteService
@@ -473,7 +489,7 @@ class _InvoiceItemGeneratorWidgetState
           SizedBox(
             width: 150,
             child: DropdownButtonFormField(
-                value: currentTaxId,
+                initialValue: currentTaxId,
                 decoration: InputDecoration(labelText: 'ITBIS'),
                 items: taxes
                     .map((e) => DropdownMenuItem(

@@ -46,7 +46,7 @@ class NcfsList {
       final conne = SqlConector.connection;
       var result = await conne?.execute(
           Sql.named(
-              'select * from public."NcfsListView" where "ncfTypeId" = @ncfTypeId and finish = false'),
+              'select * from public."NcfsListView" where "ncfTypeId" = @ncfTypeId'),
           parameters: {'ncfTypeId': ncfTypeId});
 
       if (result!.isEmpty) return null;
@@ -138,6 +138,31 @@ UPDATE public."NcfsList"
     } catch (e) {
       rethrow;
     }
+  }
+
+  Future<Map<String,dynamic>?> checkIfExistAvailable()async{
+     try{
+      final conne = SqlConector.connection;
+      var result = await conne?.execute(Sql.named('select * from public."NcfsList" where "ncfTypeId" = @ncfTypeId and finish = false'),parameters: {
+        'ncfTypeId': ncfTypeId
+      });
+      if(result != null){
+       
+        if(result.isNotEmpty){
+          return {
+            'msg': 'EXISTE $ncfTypeName DISPONIBLES'
+          };
+      }else{
+        return {
+          'error':'NO EXISTE $ncfTypeName DISPONIBLES'
+        };
+      }
+      }
+      return null;
+      
+     }catch(e){
+      rethrow;
+     }
   }
 
   NcfsList copyWith({

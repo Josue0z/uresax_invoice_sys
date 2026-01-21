@@ -1,11 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:uresax_invoice_sys/apis/log.handler.dart';
 import 'package:uresax_invoice_sys/modals/product.editor.modal.dart';
 import 'package:uresax_invoice_sys/models/product.dart';
 import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/utils/extensions.dart';
 import 'package:uresax_invoice_sys/utils/functions.dart';
 import 'package:uresax_invoice_sys/widgets/content.error.widget.dart';
+import 'package:uresax_invoice_sys/widgets/scrollmove.event.widget.dart';
 
 class ProductsPage extends StatefulWidget {
   bool selectedMode;
@@ -20,6 +24,8 @@ class ProductsPage extends StatefulWidget {
 class _ProductsPageState extends State<ProductsPage> {
   List<Products> products = [];
   Future? future;
+  final TextEditingController _searchController = TextEditingController();
+  ScrollController scrollControllerY = ScrollController();
 
   _showModal({bool editing = false, required Products product}) async {
     var res = await showDialog(
@@ -42,6 +48,27 @@ class _ProductsPageState extends State<ProductsPage> {
     }
   }
 
+  _deleteProduct(Products product) async {
+    try {
+      var isConfirm =
+          await showConfirm(context, title: 'DESEAS ELIMINAR PRODUCTO?');
+      if (isConfirm == true) {
+        showLoader(context);
+        await product.delete();
+        setState(() {
+          future = _initAsync();
+        });
+        showTopSnackBar(context,
+            message: 'PRODUCTO ELIMINADO!', color: Colors.green);
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      Navigator.pop(context);
+      showTopSnackBar(context, message: e.toString(), color: Colors.red);
+      await LogHandler.printError(e.toString());
+    }
+  }
+
   _initAsync([String? words]) async {
     try {
       products = await Products.get(search: words);
@@ -53,74 +80,86 @@ class _ProductsPageState extends State<ProductsPage> {
   }
 
   Widget get contentFilled {
-    return ListView.separated(
-        separatorBuilder: (ctx, i) => const Divider(),
-        itemCount: products.length,
-        itemBuilder: (ctx, index) {
-          var product = products[index];
-          return ListTile(
-            minVerticalPadding: kDefaultPadding,
-            onTap: widget.selectedMode
-                ? () {
-                    try {
-                      if (product.quantity == 0 && !widget.isOrdenGenerator) {
-                        throw 'NO EXISTEN ${product.name} EN EL INVENTARIO';
+    return ScrollMoveEventWidget(
+        scrollControllerY: scrollControllerY,
+        child: ListView.separated(
+            controller: scrollControllerY,
+            separatorBuilder: (ctx, i) => const Divider(),
+            itemCount: products.length,
+            itemBuilder: (ctx, index) {
+              var product = products[index];
+              return ListTile(
+                minVerticalPadding: kDefaultPadding,
+                onTap: widget.selectedMode
+                    ? () {
+                        try {
+                          if (product.quantity == 0 &&
+                              !widget.isOrdenGenerator) {
+                            throw 'NO EXISTEN ${product.name} EN EL INVENTARIO';
+                          }
+                          Navigator.pop(context, product);
+                        } catch (e) {
+                          showTopSnackBar(context,
+                              message: e.toString(), color: Colors.red);
+                        }
                       }
-                      Navigator.pop(context, product);
-                    } catch (e) {
-                      showTopSnackBar(context,
-                          message: e.toString(), color: Colors.red);
-                    }
-                  }
-                : null,
-            leading: Container(
-              width: 80,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(90),
-                color: Theme.of(context).primaryColor.withOpacity(0.04),
-              ),
-              child: Center(
-                child: Icon(
-                  Icons.inventory_2_outlined,
-                  color: Theme.of(context).primaryColor,
-                  size: 24,
-                ),
-              ),
-            ),
-            title: Text(
-              product.name ?? '',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            subtitle: Text(
-                '${product.wareHouseName} - ${product.providerName} - ${product.categoryName} / ${product.price?.toCoin()}'),
-            trailing: Wrap(
-              runAlignment: WrapAlignment.center,
-              alignment: WrapAlignment.center,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                Container(
-                  padding: EdgeInsets.all(kDefaultPadding / 2),
+                    : null,
+                leading: Container(
+                  width: 80,
                   decoration: BoxDecoration(
-                      color: product.color.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(50)),
-                  child: Text(
-                    product.quantity.toString(),
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(color: product.color),
+                    borderRadius: BorderRadius.circular(90),
+                    color: Theme.of(context).primaryColor.withOpacity(0.04),
+                  ),
+                  child: Center(
+                    child: Icon(
+                      Icons.inventory_2_outlined,
+                      color: Theme.of(context).primaryColor,
+                      size: 24,
+                    ),
                   ),
                 ),
-                SizedBox(width: kDefaultPadding),
-                IconButton(
-                    onPressed: () {
-                      _showModal(product: product, editing: true);
-                    },
-                    icon: Icon(Icons.edit))
-              ],
-            ),
-          );
-        });
+                title: Text(
+                  product.name ?? '',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                subtitle: Text(
+                    '${product.wareHouseName} - ${product.providerName} - ${product.categoryName} / ${product.price?.toCoin()}'),
+                trailing: Wrap(
+                  runAlignment: WrapAlignment.center,
+                  alignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(kDefaultPadding / 2),
+                      decoration: BoxDecoration(
+                          color: product.color.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(50)),
+                      child: Text(
+                        product.quantity == 0
+                            ? 'AGOTADO'
+                            : product.quantity.toString(),
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyMedium
+                            ?.copyWith(color: product.color),
+                      ),
+                    ),
+                    SizedBox(width: kDefaultPadding),
+                    IconButton(
+                        onPressed: () {
+                          _showModal(product: product, editing: true);
+                        },
+                        icon: Icon(Icons.edit)),
+                    SizedBox(width: kDefaultPadding),
+                    IconButton(
+                        onPressed: () {
+                          _deleteProduct(product);
+                        },
+                        icon: Icon(Icons.delete))
+                  ],
+                ),
+              );
+            }));
   }
 
   Widget get contentEmpty {
@@ -164,7 +203,8 @@ class _ProductsPageState extends State<ProductsPage> {
                 width: 200,
                 height: 50,
                 child: TextFormField(
-                  onChanged: (words) async {
+                  controller: _searchController,
+                  onFieldSubmitted: (words) async {
                     setState(() {
                       future = _initAsync(words);
                     });
@@ -176,6 +216,25 @@ class _ProductsPageState extends State<ProductsPage> {
                       suffixIcon: Icon(Icons.search)),
                 ),
               ),
+              SizedBox(width: kDefaultPadding),
+              CircleAvatar(
+                child: IconButton(
+                    onPressed: () {
+                      setState(() {
+                        _searchController.clear();
+                        future = _initAsync();
+                      });
+                    },
+                    icon: Icon(Icons.restore)),
+              ),
+              SizedBox(width: kDefaultPadding),
+              CircleAvatar(
+                  child: IconButton(
+                      tooltip: 'AGREGAR PRODUCTO',
+                      onPressed: () {
+                        _showModal(product: Products());
+                      },
+                      icon: Icon(Icons.add))),
               SizedBox(width: kDefaultPadding),
             ],
           )
@@ -205,11 +264,6 @@ class _ProductsPageState extends State<ProductsPage> {
 
             return contentEmpty;
           }),
-      floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            _showModal(product: Products());
-          },
-          child: Icon(Icons.add)),
     );
   }
 }

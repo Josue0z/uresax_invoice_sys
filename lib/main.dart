@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -14,8 +14,11 @@ import 'package:uresax_invoice_sys/models/discount.dart';
 import 'package:uresax_invoice_sys/models/ncftype.dart';
 import 'package:uresax_invoice_sys/models/override.codes.dart';
 import 'package:uresax_invoice_sys/models/payment.method.dart';
+import 'package:uresax_invoice_sys/models/payment.mode.dart';
 import 'package:uresax_invoice_sys/models/payment.type.dart';
 import 'package:uresax_invoice_sys/models/permission.dart';
+import 'package:uresax_invoice_sys/models/retention.isr.dart';
+import 'package:uresax_invoice_sys/models/retention.tax.dart';
 import 'package:uresax_invoice_sys/models/role.dart';
 import 'package:uresax_invoice_sys/models/symbol.dart';
 import 'package:uresax_invoice_sys/models/taxes.dart';
@@ -26,28 +29,24 @@ import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/utils/functions.dart';
 import 'package:uresax_invoice_sys/widgets/startup-loader.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 void main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
+    await initLocalStorage();
+
+    if (eCommerceMode) {
+      devicePos = localStorage.getItem('devicePos');
+    }
+
+    var packageInfo = await PackageInfo.fromPlatform();
+
+    appVersion = 'Versión: ${packageInfo.version}+${packageInfo.buildNumber}';
+
     pdfrxFlutterInitialize();
 
-    var hostname = Platform.environment['URESAX_INVOICE_DATABASE_HOSTNAME'];
-    var databaseName = Platform.environment['URESAX_INVOICE_DATABASE_NAME'];
-    var dbUsername = Platform.environment['URESAX_INVOICE_DATABASE_USERNAME'];
-    var dbPassword = Platform.environment['URESAX_INVOICE_DATABASE_PASSWORD'];
-    var dirPath =   Platform.environment['URESAX_INVOICE_STATIC_LOCAL_SERVER_PATH'];
-
-    eCommerceMode = bool.tryParse(
-            Platform.environment['URESAX_INVOICE_ECOMMERCE_MODE'] ?? 'false') ??
-        false;
-
-    allowEditInvoice = bool.tryParse(
-            Platform.environment['URESAX_INVOICE_ALLOW_EDIT_INVOICE'] ??
-                'false') ??
-        false;
-
-    await initLocalStorage();
+    List<String> errors = [];
 
     await windowManager.ensureInitialized();
 
@@ -59,17 +58,39 @@ void main() async {
         center: true,
         title: 'URESAX INVOICE SYS');
 
-    if (hostname == null ||
-        databaseName == null ||
-        dbUsername == null ||
-        dbPassword == null || 
-        dirPath == null) {
-      throw 'NO ESTA CONFIGURADO LOS DATOS DEL SERVIDOR';
+    if (hostname == null) {
+      errors.add('URESAX_INVOICE_DATABASE_HOSTNAME,\n');
+    }
+
+    if (databaseName == null) {
+      errors.add('URESAX_INVOICE_DATABASE_NAME,\n');
+    }
+
+    if (dbUsername == null) {
+      errors.add('URESAX_INVOICE_DATABASE_USERNAME,\n');
+    }
+
+    if (dbPassword == null) {
+      errors.add('URESAX_INVOICE_DATABASE_PASSWORD,\n');
+    }
+
+    if (dirPath == null) {
+      errors.add('URESAX_INVOICE_STATIC_LOCAL_SERVER_PATH,\n');
+    }
+
+    if (port == null) {
+      errors.add('URESAX_INVOICE_DATABASE_PORT,\n');
+    }
+
+    if (errors.isNotEmpty) {
+      errors.insert(
+          0, 'Faltan las siguientes variables de entorno:\n'.toUpperCase());
+      throw errors.join();
     }
 
     await SqlConector.initialize();
 
-    runApp(MyApp());
+      runApp(MyApp());
 
     windowManager.waitUntilReadyToShow(windowOptions, () async {
       await windowManager.show();
@@ -100,6 +121,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   bool loading = true;
+
   _initAsync() async {
     company = await Company.get();
     ncfs = [NcfType(name: 'TIPO DE COMPROBANTE'), ...await NcfType.get()];
@@ -124,6 +146,10 @@ class _MyAppState extends State<MyApp> {
       PaymentType(name: 'TIPO DE PAGO'),
       ...await PaymentType.get()
     ];
+    paymentsModes = [
+      PaymentMode(name: 'MODO DE PAGO'),
+      ...await PaymentMode.get()
+    ];
 
     overrideCodes = [
       OverrideCode(name: 'CODIGO DE MODIFICACION'),
@@ -142,6 +168,15 @@ class _MyAppState extends State<MyApp> {
     symbols = [SymbolModel(name: 'SIMBOLO'), ...await SymbolModel.get()];
 
     dgiiStates = [DgiiState(name: 'ESTADO DGII'), ...await DgiiState.get()];
+
+    retentionsTaxes = [
+      RetentionTax(name: 'RETENCION ITBIS'),
+      ...await RetentionTax.get()
+    ];
+    retentionsIsrs = [
+      RetentionIsr(name: 'RETENCION ISR'),
+      ...await RetentionIsr.get()
+    ];
 
     await isValidCertFilePath();
 
@@ -172,9 +207,19 @@ class _MyAppState extends State<MyApp> {
           supportedLocales: [
             Locale('es', 'ES'),
           ],
+         
           debugShowCheckedModeBanner: false,
           scrollBehavior: ScrollConfiguration.of(context).copyWith(
-              dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse}),
+              physics: Theme.of(context).platform == TargetPlatform.iOS ||
+                      Theme.of(context).platform == TargetPlatform.macOS
+                  ? const BouncingScrollPhysics()
+                  : const ClampingScrollPhysics(),
+              dragDevices: {
+                PointerDeviceKind.touch,
+                PointerDeviceKind.mouse,
+                PointerDeviceKind.trackpad,
+                PointerDeviceKind.unknown
+              }),
           theme: ThemeData(
               primaryColor: const Color(0xFF2196F3),
               primarySwatch: Colors.blue,

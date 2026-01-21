@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:uresax_invoice_sys/modals/discount.editor.modal.dart';
 import 'package:uresax_invoice_sys/models/discount.dart';
+import 'package:uresax_invoice_sys/settings.dart';
 import 'package:uresax_invoice_sys/widgets/content.error.widget.dart';
+import 'package:uresax_invoice_sys/widgets/scrollmove.event.widget.dart';
 
 class DiscountsPage extends StatefulWidget {
   bool selectorMode;
@@ -15,6 +19,9 @@ class DiscountsPage extends StatefulWidget {
 class _DiscountsPageState extends State<DiscountsPage> {
   List<Discount> discounts = [];
   Future? future;
+
+  ScrollController scrollControllerY = ScrollController();
+
 
   _showModal({bool editing = false, required Discount discount}) async {
     var res = await showDialog(
@@ -40,36 +47,40 @@ class _DiscountsPageState extends State<DiscountsPage> {
   }
 
   Widget get contentFilled {
-    return ListView.separated(
-        itemBuilder: (ctx, index) {
-          var discount = discounts[index];
-          return ListTile(
-            onTap: widget.selectorMode
-                ? () {
-                    _onSelected(discount);
-                  }
-                : null,
-            title: Text(discount.name ?? ''),
-            trailing: Wrap(
-              children: [
-                widget.selectorMode
-                    ? IconButton(
+    return ScrollMoveEventWidget(
+        scrollControllerY: scrollControllerY,
+ 
+        child: ListView.separated(
+           controller: scrollControllerY,
+            itemBuilder: (ctx, index) {
+              var discount = discounts[index];
+              return ListTile(
+                onTap: widget.selectorMode
+                    ? () {
+                        _onSelected(discount);
+                      }
+                    : null,
+                title: Text(discount.name ?? ''),
+                trailing: Wrap(
+                  children: [
+                    widget.selectorMode
+                        ? IconButton(
+                            onPressed: () {
+                              _onSelected(discount);
+                            },
+                            icon: Icon(Icons.arrow_right))
+                        : SizedBox(),
+                    IconButton(
                         onPressed: () {
-                          _onSelected(discount);
+                          _showModal(discount: discount, editing: true);
                         },
-                        icon: Icon(Icons.arrow_right))
-                    : SizedBox(),
-                IconButton(
-                    onPressed: () {
-                      _showModal(discount: discount, editing: true);
-                    },
-                    icon: Icon(Icons.edit))
-              ],
-            ),
-          );
-        },
-        separatorBuilder: (ctx, i) => const Divider(),
-        itemCount: discounts.length);
+                        icon: Icon(Icons.edit))
+                  ],
+                ),
+              );
+            },
+            separatorBuilder: (ctx, i) => const Divider(),
+            itemCount: discounts.length));
   }
 
   Widget get contentEmpty {
@@ -114,6 +125,24 @@ class _DiscountsPageState extends State<DiscountsPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('DESCUENTOS (${discounts.length})'),
+        actions: [
+          Wrap(
+            runAlignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              CircleAvatar(
+                child: IconButton(
+                  tooltip: 'AGREGAR DESCUENTO',
+                  onPressed: () {
+                    _showModal(discount: Discount());
+                  },
+                  icon: Icon(Icons.add),
+                ),
+              ),
+              SizedBox(width: kDefaultPadding)
+            ],
+          )
+        ],
       ),
       body: FutureBuilder(
           future: future,
@@ -139,11 +168,6 @@ class _DiscountsPageState extends State<DiscountsPage> {
 
             return contentEmpty;
           }),
-      floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            _showModal(discount: Discount());
-          },
-          child: Icon(Icons.add)),
     );
   }
 }

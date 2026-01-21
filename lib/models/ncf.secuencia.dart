@@ -50,11 +50,6 @@ class NcfSecuencia {
         SELECT setval('public."${id}_seq"',$lastValue, false);
     ''');
 
-      await conne?.execute('''
-     ALTER SEQUENCE public."${id}_seq"
-     MAXVALUE $maxValue      
-     CYCLE;            
-    ''');
     } catch (e) {
       rethrow;
     }
